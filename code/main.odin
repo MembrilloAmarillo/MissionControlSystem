@@ -386,7 +386,15 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
             set_next_layout_style(style)
             make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
             ui_pop_style()
-          } 
+          }
+
+          base_concat := [?]string {
+            SequenceContainer.base.base.t_name.t_restriction.val,
+            "#_BaseName_",
+            SequenceContainer.base.base.t_name.t_restriction.val,
+            "_%d"
+          }
+
           row += 1
           set_layout_next_row(auto_cast row)
         }
