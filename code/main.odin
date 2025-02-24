@@ -197,6 +197,11 @@ consume_app_state_events :: proc(state: ^orbitmcs_state) {
 
 orbit_show_home :: proc() {}
 
+
+// We set it as global as long as Im not sure where to put this
+//
+TmContainerExpandList : []bool
+
 // FIX PERFORMANCE: Instead of the displaying in a tree, just show it
 // on an array.
 //
@@ -368,33 +373,80 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
     row  := 1
     set_layout_next_row( auto_cast row)
     set_layout_next_column(0)
+
+    if len(TmContainerExpandList) == 0 {
+     TmContainerExpandList = make([]bool, n_rows)
+    }
+
     system_node : ^utils.node_tree(^xtce.SpaceSystemType) = cast(^utils.node_tree(^xtce.SpaceSystemType))&xml_handler.system
     for system := system_node; system != nil && !limit_on_screen; system = system.next {
       for SequenceContainer in xtce.GetSequenceContainer(system.element) {
+
         if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
           limit_on_screen = true
         }
+
         if l_it >= row_start_it && !limit_on_screen {
           set_layout_next_column(0)
-          if math.mod(cast(f32)row, 2.) == 0 {
-            style := ui_context.theme.background_panel
-            style.color_rect00 *= 0.9
-            style.color_rect01 *= 0.9
-            style.color_rect10 *= 0.9
-            style.color_rect11 *= 0.9
-            style.corner_radius = 6
-            set_next_layout_style(style)
-            make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
-            ui_pop_style()
-          }
 
-          base_concat := [?]string {
+          style := ui_context.theme.background_panel
+          style.color_rect00 *= 0.95
+          style.color_rect01 *= 0.95
+          style.color_rect10 *= 0.95
+          style.color_rect11 *= 0.95
+          style.corner_radius = 0
+          set_next_layout_style(style)
+          //make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
+          defer ui_pop_style()
+
+          container_concat := [?]string {
+            TmContainerExpandList[l_it] ? "v " : "> ",
             SequenceContainer.base.base.t_name.t_restriction.val,
             "#_BaseName_",
             SequenceContainer.base.base.t_name.t_restriction.val,
             "_%d"
           }
 
+          base_container_concat := [?]string {
+            len(SequenceContainer.t_BaseContainer.t_containerRef.t_restriction.val) > 0 ? SequenceContainer.t_BaseContainer.t_containerRef.t_restriction.val : "-",
+            "#_ContainerBase_",
+            SequenceContainer.t_BaseContainer.t_containerRef.t_restriction.val,
+            "_%d"
+          }
+
+          label_box := make_box_from_key(strings.concatenate(container_concat[:], ui_context.per_frame_arena_allocator), box_flags = UI_Options{.DRAW_RECT, .DRAW_STRING, .HOVER_ANIMATION}, key = cast(^byte)&l_it)
+          set_next_hover_cursor(label_box, glfw.HAND_CURSOR)
+	         label_box_input := consume_box_event(label_box)
+	         //@static left_click := false
+
+	         if .LEFT_CLICK == label_box_input {
+	          TmContainerExpandList[l_it] = !TmContainerExpandList[l_it]
+	         }
+
+          set_layout_next_column(1)
+          make_box_from_key(strings.concatenate(base_container_concat[:], ui_context.per_frame_arena_allocator), box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, key = cast(^byte)&l_it)
+          // Lister panel for all parameters inside the telemetry container
+          //
+          if TmContainerExpandList[l_it] {
+           set_layout_ui_parent_seed(label_box)
+           set_layout_next_column(0)
+           for entry in SequenceContainer.t_EntryList.t_choice_0.t_ParameterRefEntryType6 {
+            entry_concat := [?]string {
+             ">> ",
+             len(entry.t_parameterRef.t_restriction.val) > 0 ? entry.t_parameterRef.t_restriction.val : "-",
+             "#_param_ref_",
+             entry.t_parameterRef.t_restriction.val,
+             "_%p"
+            }
+           //l_it += 1
+           row  += 1
+           set_layout_next_row(auto_cast row)
+           make_box_from_key(strings.concatenate(entry_concat[:], ui_context.per_frame_arena_allocator), box_flags = UI_Options{.DRAW_RECT, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER},key = cast(^byte)label_box)
+           //label(entry.t_parameterRef.t_restriction.val)
+          }
+          for entry in SequenceContainer.t_EntryList.t_choice_0.t_ContainerRefEntryType4 {
+          }
+         }
           row += 1
           set_layout_next_row(auto_cast row)
         }
@@ -405,9 +457,9 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
    {
     set_layout_next_row(0)
     set_layout_next_column(0)
-    label("Parameter Name#_par_name_%p", cast(^byte)clicked_tab)
+    label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
     set_layout_next_column(1)
-    label("Parameter Type#_param_type_%p",cast(^byte)clicked_tab)
+    label("Base Container#_base_container_%p",cast(^byte)clicked_tab)
     set_layout_next_column(2)
     label("Read Only#_read_only_%p", cast(^byte)clicked_tab)
     set_layout_next_column(3)

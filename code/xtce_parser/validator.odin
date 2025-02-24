@@ -2343,7 +2343,7 @@ LoadDynamicValueType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Ele
     switch n.element.first {
     case LINEAR_ADJUSTMENT_TYPE: {
       type.t_LinearAdjustment = LoadLinearAdjustmentType(n)
-    } 
+    }
     case PARAMETER_INSTANCE_REF_TYPE: {
       type.t_ParameterInstanceRef = LoadParameterInstanceRefType(n)
     }
@@ -2374,19 +2374,19 @@ LoadIntegerValueType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Ele
       d : DiscreteLookupListType
       d = LoadDiscreteLookupListType(node)
       type.t_choice_0 = d
-    } 
+    }
     case DYNAMIC_VALUE_TYPE : {
       d : DynamicValueType
       d = LoadDynamicValueType(node)
       type.t_choice_0 = d
-    } 
+    }
     case "xs_long": {
       if len(n.element.second.attribs) > 0 {
         l : xs_long = xs_long_get_default()
         l.integer   = auto_cast strconv.atoi(n.element.second.attribs[0].val)
         type.t_choice_0 = l
       }
-    } 
+    }
     case: {}
     }
 
@@ -2426,6 +2426,31 @@ LoadContainerType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Eleme
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+LoadSequenceEntryType ::  proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> SequenceEntryType {
+ type : SequenceEntryType = {
+  t_shortDescription = LoadShortDescriptionType(node),
+  t_AncillaryDataSet = LoadAncillaryDataSetType(node),
+  t_TimeAssociation  = LoadTimeAssociationType(node),
+  t_IncludeCondition = LoadMatchCriteriaType(node),
+ }
+
+ utils.TODO(#procedure, "Not full type implementation yet")
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadParameterRefEntryType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ParameterRefEntryType {
+ type : ParameterRefEntryType = {
+  base = LoadSequenceEntryType(node),
+  t_parameterRef = LoadNameReferenceType(node, "parameterRef")
+ }
+
+ return type
+}
+// ----------------------------------------------------------------------------------------------------------------- //
+
 LoadEntryListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> EntryListType {
  type : EntryListType
 
@@ -2437,12 +2462,14 @@ LoadEntryListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Eleme
    utils.pop_stack(&stack)
 
    switch n.element.first {
-    case ARRAY_PARAMETER_REF_ENTRY_TYPE: {} 
-    case INDIRECT_PARAMETER_REF_ENTRY_TYPE : {} 
-    case STREAM_SEGMENT_ENTRY_TYPE: {} 
-    case CONTAINER_SEGMENT_REF_ENTRY_TYPE : {} 
-    case PARAMETER_SEGMENT_REF_ENTRY_TYPE: {} 
-    case PARAMETER_REF_ENTRY_TYPE: {} 
+    case ARRAY_PARAMETER_REF_ENTRY_TYPE: {}
+    case INDIRECT_PARAMETER_REF_ENTRY_TYPE : {}
+    case STREAM_SEGMENT_ENTRY_TYPE: {}
+    case CONTAINER_SEGMENT_REF_ENTRY_TYPE : {}
+    case PARAMETER_SEGMENT_REF_ENTRY_TYPE: {}
+    case PARAMETER_REF_ENTRY_TYPE: {
+     append(&type.t_choice_0.t_ParameterRefEntryType6, LoadParameterRefEntryType(n))
+    }
     case: {}
    }
 
@@ -2487,7 +2514,7 @@ LoadRestrictionCriteriaType :: proc( node : ^utils.node_tree(utils.tuple(string,
 LoadBaseContainerType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> BaseContainerType {
  type : BaseContainerType = {
   t_RestrictionCriteria = LoadRestrictionCriteriaType(node, "RestrictionCriteria"),
-  t_containerRef        = LoadNameReferenceType(node, "containerRef") 
+  t_containerRef        = LoadNameReferenceType(node, "containerRef")
  }
 
  return type
@@ -2532,7 +2559,7 @@ LoadSequenceContainerTypes :: proc( node : ^utils.node_tree(utils.tuple(string, 
    n := utils.get_front_stack(&stack)
    utils.pop_stack(&stack)
 
-   if n.element.first == "SequenceContainer" {
+   if n.element.first == SEQUENCE_CONTAINER_TYPE {
     member := LoadSequenceContainerType(n)
     append(&types, member)
    }

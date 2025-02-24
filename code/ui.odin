@@ -105,10 +105,10 @@ Rect2D :: struct {
 UI_AnimationData :: struct {
 	id              : u64,
 	bouncing        : u32,
-	animation_dt    : f32, 
-	current         : f32, 
-	target          : f32, 
-	currentVelocity : f32, 
+	animation_dt    : f32,
+	current         : f32,
+	target          : f32,
+	currentVelocity : f32,
 	smoothTime      : f32,
 	maxSpeed        : f32,
 	output          : f32
@@ -156,7 +156,7 @@ Layout :: struct {
 	axis:               axis_type "By default the layout will be done vertically",
 	box_preferred_size: glsl.vec2,
 	parent_box:         ^Box,
-	parent_seed:        u64 "This id can be deferent from the parent box",
+	parent_seed:        utils.Stack(u64, MAX_LAYOUT_STACK) "This id can be deferent from the parent box",
 	padding:            glsl.vec2,
 	string_padding:     glsl.vec2
 }
@@ -596,7 +596,7 @@ ui_hspacer :: proc( space : f32 ) {
 set_layout_ui_parent_seed :: proc( box : ^Box ) {
  layout := get_layout_stack()
 	if layout != nil && box != nil {
-		layout.parent_seed = box.id
+	 utils.push_stack(&layout.parent_seed, box.id)
 	}
 }
 
@@ -604,8 +604,8 @@ set_layout_ui_parent_seed :: proc( box : ^Box ) {
 
 unset_layout_ui_parent_seed :: proc() {
  layout := get_layout_stack()
- if layout != nil {
-		layout.parent_seed = 0
+ if layout != nil && layout.parent_seed.push_count > 0 {
+		utils.pop_stack(&layout.parent_seed)
 	}
 }
 
@@ -931,7 +931,7 @@ make_box_no_key :: proc(
 			}
 		}
 	} else {
-	 parent_seed := layout.parent_seed // if it is not set is 0
+	 parent_seed := layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0 // if it is not set is 0
 	 if layout.parent_box == nil {
    string_hash := hash.get_hash_from_key( text )
    bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed)
@@ -944,10 +944,15 @@ make_box_no_key :: proc(
  		}
 	 }
 	 else {
-	  string_hash := hash.get_hash_from_key( text, layout.parent_box.id )
+	  string_hash : u64
+	  if parent_seed > 0 {
+	   string_hash = hash.get_hash_from_key( text, parent_seed )
+	  } else {
+	   string_hash = hash.get_hash_from_key( text, layout.parent_box.id )
+	  }
 	  // if there is a parent seed set, it has higher priority than it default set parent box
 	  //
-   bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, layout.parent_seed > 0 ? layout.parent_seed : layout.parent_box.id)
+   bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed > 0 ? parent_seed : layout.parent_box.id)
 		 for &v in bucket {
  			if v != nil {
  				if v.id == string_hash {
@@ -969,11 +974,15 @@ make_box_no_key :: proc(
 		if layout == nil {
 			box.id = hash.insert_table(&ui_context.hash_boxes, text, box)
 		} else {
+		 parent_seed := layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0
 		 if layout.parent_box == nil {
-		  box.id = hash.insert_table(&ui_context.hash_boxes, text, box)
+		  box.id = hash.insert_table(&ui_context.hash_boxes, text, box, parent_seed)
 		 }
 		 else {
-			 box.id = hash.insert_table(&ui_context.hash_boxes, text, box, layout.parent_box.id)
+		  if parent_seed == 0 {
+		   parent_seed = layout.parent_box.id
+		  }
+			 box.id = hash.insert_table(&ui_context.hash_boxes, text, box, parent_seed)
 			}
 		}
 
@@ -989,7 +998,7 @@ make_box_no_key :: proc(
 	box.title_string = text //strings.clone(text, ui_context.per_frame_arena_allocator)
 	box.key_text     = text
 
-	// ============= Animations =================== 
+	// ============= Animations ===================
 	//
 	if .HOVER_ANIMATION in box_flags {
 		anim_data_bucket := hash.lookup_table_bucket(&ui_context.animation_data, text)
@@ -1583,7 +1592,10 @@ button :: proc(label: string, id: ^byte = nil) -> EventResults {
 
 // ------------------------------------------------------------------- //
 
-label :: proc(label: string, id: ^byte = nil) {
+// TODO: Probably not the best to return a box, but I need it some cases
+// if I want to use a created label as a parent
+//
+label :: proc(label: string, id: ^byte = nil) -> ^Box {
 	box: ^Box
 	set_next_layout_style(ui_context.theme.text)
 	defer utils.pop_stack(&ui_context.style)
@@ -1597,6 +1609,8 @@ label :: proc(label: string, id: ^byte = nil) {
 		)
 	}
 	event := consume_box_event(box)
+
+	return box
 }
 
 // ------------------------------------------------------------------- //
@@ -1856,24 +1870,24 @@ add_rect :: proc(
 
 UI_SmoothDampAnim :: proc(animation_dt, current, target, currentVelocity, smoothTime, maxSpeed : f32) -> (smoothTime_t, currentVelocity_t, target_t, output_t : f32)
 {
-	smoothTime_t = math.max(smoothTime, 0.001) 
-	omega       := 2. / smoothTime_t 
-	x           := omega * animation_dt 
+	smoothTime_t = math.max(smoothTime, 0.001)
+	omega       := 2. / smoothTime_t
+	x           := omega * animation_dt
 	exp         := 1. / (1. + x + 0.48 * x * x + 0.235 * x * x * x)
 	change      := current - target
-	originalTo  := target 
+	originalTo  := target
 
 	maxChange   := maxSpeed * smoothTime_t
 	change       = clamp(change, -maxChange, maxChange)
 	target_t     = current - change
 
 	temp        := (currentVelocity + omega * change) * animation_dt
-	currentVelocity_t = (currentVelocity - omega * temp) * exp 
+	currentVelocity_t = (currentVelocity - omega * temp) * exp
 
-	output_t = target_t + (change + temp) * exp 
+	output_t = target_t + (change + temp) * exp
 
 	if (originalTo - current > 0.) && (output_t > originalTo) {
-		output_t = originalTo 
+		output_t = originalTo
 		currentVelocity_t = (output_t - originalTo) / animation_dt
 	}
 
@@ -2071,7 +2085,7 @@ ui_build :: proc() {
 							anim_data.current,
 							anim_data.target,
 							anim_data.currentVelocity,
-							anim_data.smoothTime, 
+							anim_data.smoothTime,
 							anim_data.maxSpeed
 						)
 
@@ -2082,7 +2096,7 @@ ui_build :: proc() {
 	   			if box.is_animating && anim_data.output <= anim_data.smoothTime {
 	   				box.is_animating  = false
 	   				anim_data.target  = 1
-	   				anim_data.current = 0 
+	   				anim_data.current = 0
 	   				anim_data.output  = 0
 	   			}
 	   			else if box.is_animating {
