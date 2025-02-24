@@ -1110,7 +1110,20 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
         }
        }
        /* -------------------------- COMMAND META DATA HANDLING ------------------------------------ */
-       case COMMAND_META_DATA_TYPE: {}
+       case COMMAND_META_DATA_TYPE: {
+        type : CommandMetaDataType = {
+         t_ParameterTypeSet    = LoadParameterTypeSetType( node_it_dst ),
+        	t_ArgumentTypeSet     = LoadArgumentTypeSetType( node_it_dst ),
+        	t_MetaCommandSet      = LoadMetaCommandSetType( node_it_dst ),
+        	t_CommandContainerSet = LoadCommandContainerSetType( node_it_dst ),
+        	t_StreamSet           = LoadStreamSetType( node_it_dst ),
+        	t_AlgorithmSet        = LoadAlgorithmSetType( node_it_dst ),
+        }
+
+       	LoadParameterSetType( node_it_dst, &type.t_ParameterSet )
+
+        system_node.element.t_CommandMetaData = type
+       }
        /* -------------------------- SERVICE SET TYPE HANDLING ------------------------------------ */
        case SERVICE_SET_TYPE: {}
        /* ------------------------- TELEMETRY META DATA HANDLING ----------------------------------- */
@@ -1871,7 +1884,8 @@ LoadToStringType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
-LoadPositiveLongType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> PositiveLongType {
+
+ LoadPositiveLongType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> PositiveLongType {
   type : PositiveLongType = {
     t_restriction = xs_long_get_default()
   }
@@ -2585,6 +2599,359 @@ LoadContainerSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.El
  data.t_choice_0.t_SequenceContainerType0 = LoadSequenceContainerTypes( node )
 }
 
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadParameterTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ParameterTypeSetType {
+ type : ParameterTypeSetType = {}
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentTypeSetType {
+ type : ArgumentTypeSetType = {}
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentAssignmentType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentAssignmentType {
+ type : ArgumentAssignmentType = {
+  t_argumentName = LoadNameReferenceType(node, "argumentName"),
+  t_argumentValue = xs_string_get_default()
+ }
+
+ attr, _ := internal_DepthFirstSearch_Node(node, "argumentValue")
+ if len(attr.key) > 0 {
+  type.t_argumentValue.val = attr.val
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentAssignmentListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentAssignmentListType {
+ type : ArgumentAssignmentListType = {}
+
+
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+ for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   if n.element.first == ARGUMENT_ASSIGNMENT_TYPE {
+    append(&type.t_ArgumentAssignment, LoadArgumentAssignmentType(n))
+   }
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadBaseMetaCommandType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> BaseMetaCommandType {
+ type : BaseMetaCommandType = {
+  t_ArgumentAssignmentList = LoadArgumentAssignmentListType(node),
+  t_metaCommandRef         = LoadNameReferenceType(node, "metaCommandRef")
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentType {
+ type : ArgumentType = {
+  base = LoadNameDescriptionType( node ),
+  t_argumentTypeRef = LoadNameReferenceType( node, "argumentTypeRef" ),
+  t_initialValue = xs_string_get_default()
+ }
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "initialValue")
+  if len(attr.key) > 0 {
+   type.t_initialValue.val = attr.val
+  }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentListType {
+ type : ArgumentListType = {}
+
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+
+ for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   if n.element.first == ARGUMENT_TYPE {
+    append(&type.t_Argument, LoadArgumentType(n))
+   }
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentLocationInContainerInBitsType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentLocationInContainerInBitsType {
+ type : ArgumentLocationInContainerInBitsType =  {}
+
+ utils.TODO(#procedure)
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentRepeatType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentRepeatType {
+ type : ArgumentRepeatType = {}
+
+ utils.TODO(#procedure)
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentMatchCriteriaType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentMatchCriteriaType {
+ type : ArgumentMatchCriteriaType = {}
+
+ utils.TODO(#procedure)
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentSequenceEntryType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentSequenceEntryType {
+ type : ArgumentSequenceEntryType = {
+  t_LocationInContainerInBits = LoadArgumentLocationInContainerInBitsType(node),
+  t_RepeatEntry               = LoadArgumentRepeatType(node),
+  t_IncludeCondition          = LoadArgumentMatchCriteriaType(node),
+  t_AncillaryDataSet         = LoadAncillaryDataSetType(node),
+  t_shortDescription          = LoadShortDescriptionType(node)
+ }
+
+ return type
+}
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentFixedValueEntryType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentFixedValueEntryType {
+ type : ArgumentFixedValueEntryType = {
+  base = LoadArgumentSequenceEntryType(node),
+  t_name = xs_string_get_default(),
+  t_binaryValue = xs_hex_binary_get_default(),
+  t_sizeInBits  = LoadPositiveLongType(node)
+ }
+
+ attr, _ := internal_DepthFirstSearch_Node(node, "name")
+ type.t_name.val = attr.val
+
+ attr, _ = internal_DepthFirstSearch_Node(node, "binaryValue")
+ type.t_binaryValue.val = auto_cast strconv.atoi(attr.val)
+
+ attr, _ = internal_DepthFirstSearch_Node(node, "sizeInBits")
+ type.t_sizeInBits.t_restriction.integer = auto_cast strconv.atoi(attr.val)
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentArgumentRefEntryType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentArgumentRefEntryType {
+ type : ArgumentArgumentRefEntryType = {
+  base = LoadArgumentSequenceEntryType(node),
+  t_argumentRef = LoadNameReferenceType(node, "argumentRef")
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentContainerRefEntryType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentContainerRefEntryType {
+ type : ArgumentContainerRefEntryType = {
+  base = LoadArgumentSequenceEntryType(node),
+  t_containerRef = LoadNameReferenceType(node, "containerRef")
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentParameterRefEntryType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentParameterRefEntryType {
+ type : ArgumentParameterRefEntryType = {
+  base = LoadArgumentSequenceEntryType(node),
+  t_parameterRef = LoadNameReferenceType(node, "parameterRef")
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadCommandContainerEntryListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> CommandContainerEntryListType {
+ type : CommandContainerEntryListType = {
+ }
+
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+
+ for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   switch n.element.first {
+    case "ArgumentFixedValueEntryType" : {
+     append(&type.t_choice_0.t_ArgumentFixedValueEntryType0, LoadArgumentFixedValueEntryType(node))
+    }
+   	case "ArgumentArrayArgumentRefEntryType" : {
+     utils.TODO("ArgumentArrayArgumentRefEntryType")
+   	}
+   	case "ArgumentArgumentRefEntryType" : {
+     append(&type.t_choice_0.t_ArgumentArgumentRefEntryType2, LoadArgumentArgumentRefEntryType(node))
+   	}
+   	case "ArgumentArrayParameterRefEntryType" : {
+     utils.TODO("ArgumentArrayParameterRefEntryType")
+   	}
+   	case "ArgumentIndirectParameterRefEntryType" : {
+     utils.TODO("ArgumentIndirectParameterRefEntryType")
+   	}
+   	case "ArgumentStreamSegmentEntryType" : {
+     utils.TODO("ArgumentStreamSegmentEntryType")
+   	}
+   	case "ArgumentContainerSegmentRefEntryType" : {
+   	 utils.TODO("ArgumentContainerSegmentRefEntryType")
+   	}
+   	case "ArgumentContainerRefEntryType" : {
+     append(&type.t_choice_0.t_ArgumentContainerRefEntryType7, LoadArgumentContainerRefEntryType(node))
+   	}
+   	case "ArgumentParameterSegmentRefEntryType" : {
+   	 utils.TODO("ArgumentParameterSegmentRefEntryType")
+   	}
+   	case "ArgumentParameterRefEntryType" : {
+     append(&type.t_choice_0.t_ArgumentParameterRefEntryType9, LoadArgumentParameterRefEntryType(node))
+   	}
+   }
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadCommandContainerType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> CommandContainerType {
+ type : CommandContainerType = {
+  base = LoadContainerType(node),
+  t_EntryList = LoadCommandContainerEntryListType( node ),
+  t_BaseContainer = LoadBaseContainerType(node)
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadMetaCommandType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> MetaCommandType {
+ type : MetaCommandType = {
+  base                             = LoadNameDescriptionType(node),
+ 	t_BaseMetaCommand                = LoadBaseMetaCommandType(node),
+ 	t_SystemName                     = xs_string_get_default(),
+ 	t_ArgumentList                   = LoadArgumentListType(node),
+ 	t_CommandContainer               = LoadCommandContainerType(node),
+ 	//t_TransmissionConstraintList     = LoadTransmissionConstraintListType(node),
+ 	//t_DefaultSignificance            = LoadSignificanceType(node),
+ 	//t_ContextSignificanceList        = LoadContextSignificanceListType(node),
+ 	//t_Interlock                      = LoadInterlockType(node),
+ 	//t_VerifierSet                    = LoadVerifierSetType(node),
+ 	//t_ParameterToSetList             = LoadParameterToSetListType(node),
+ 	//t_ParametersToSuspendAlarmsOnSet = LoadParametersToSuspendAlarmsOnSetType(node),
+ 	t_abstract                       = xs_boolean_get_default(),
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadMetaCommandSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> MetaCommandSetType {
+ type : MetaCommandSetType = {
+ }
+
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+ for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   switch n.element.first {
+    case BLOCK_META_COMMAND_TYPE : {
+     utils.TODO(BLOCK_META_COMMAND_TYPE)
+    }
+    case NAME_REFERENCE_TYPE     : {
+     append(&type.t_choice_0.t_NameReferenceType1, LoadNameReferenceType(n, "MetaCommandRef"))
+    }
+    case META_COMMAND_TYPE       : {
+     append(&type.t_choice_0.t_MetaCommandType2, LoadMetaCommandType(n))
+    }
+   }
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadCommandContainerSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> CommandContainerSetType {
+ type : CommandContainerSetType = {}
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadStreamSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> StreamSetType {
+ type : StreamSetType = {}
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadAlgorithmSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> AlgorithmSetType {
+ type : AlgorithmSetType = {}
+
+ return type
+}
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
