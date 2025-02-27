@@ -98,6 +98,16 @@ net_state :: struct {
 
 // --------------------------------------------------------------- //
 
+box_constructor :: struct {
+ rect : Rect2D,
+ text : string,
+ style : StyleParam,
+ key : ^byte,
+ flags : UI_Options
+}
+
+// --------------------------------------------------------------- //
+
 orbitmcs_state :: struct {
  enable_debug: bool,
  SHOW_FLAGS  : APP_SHOW_FLAGS,
@@ -105,7 +115,8 @@ orbitmcs_state :: struct {
  tcp_server  : net_state,
  udp_server  : net_state,
  menu_db     : db_menu_items,
- shutdown    : bool
+ shutdown    : bool,
+ hovering_boxes : utils.queue(box_constructor, 256) // IMPORTANT!!: If you put a bigger value (for example 4096) odin compiler (llvm function) will crash
 }
 
 // --------------------------------------------------------------- //
@@ -197,6 +208,20 @@ consume_app_state_events :: proc(state: ^orbitmcs_state) {
 
 orbit_show_home :: proc() {}
 
+
+// --------------------------------------------------- -------------------------------------------- //
+
+push_hovering_boxes_for_rendering :: proc(rect : Rect2D, tex : string, st : StyleParam, key : ^byte = nil, flags : UI_Options = { .NONE } ) {
+ box : box_constructor = {
+  rect  = rect,
+  text  = tex,
+  style = st,
+  key   = key,
+  flags = flags
+ }
+
+  utils.PushQueue(&app_state.hovering_boxes, box)
+}
 
 // We set it as global as long as Im not sure where to put this
 //
@@ -357,7 +382,219 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
     label("Source#_source_%p", cast(^byte)clicked_tab)
     }
    }
-   case "TM Containers": {
+   case "TC Arguments": {
+    set_layout_ui_parent_seed(clicked_tab)
+
+    layout := get_layout_stack()
+    limit_on_screen := false
+    set_layout_next_row_col(0, 5)
+    set_box_preferred_size({rect.size.x / 5, 30})
+    set_layout_next_padding(15, 0)
+    set_layout_string_padding(10, 0)
+
+    row_start_it := begin_next_layout_scrollable_section(n_rows)
+
+    l_it := 1
+    row  := 1
+    set_layout_next_row( auto_cast row)
+    set_layout_next_column(0)
+
+    system_node : ^utils.node_tree(^xtce.SpaceSystemType) = cast(^utils.node_tree(^xtce.SpaceSystemType))&xml_handler.system
+    for system := system_node; system != nil && !limit_on_screen; system = system.next {
+      ArgTypeSet := xtce.GetArgumentTypeSet(system.element)
+      for argument in ArgTypeSet.t_choice_0.t_IntegerArgumentType7 {
+
+        if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
+          limit_on_screen = true
+        }
+
+        if l_it >= row_start_it && !limit_on_screen {
+          set_layout_next_column(0)
+
+          if math.mod(cast(f32)l_it, 2.) == 0 {
+            style := ui_context.theme.background_panel
+            style.color_rect00 *= 0.95
+            style.color_rect01 *= 0.95
+            style.color_rect10 *= 0.95
+            style.color_rect11 *= 0.95
+            style.corner_radius = 6
+            set_next_layout_style(style)
+            make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
+            ui_pop_style()
+          }
+
+          fixed_int_val := xtce.GetFixedIntegerValueString(argument.base.t_initialValue)
+
+          arg_name_concat := [?]string {
+            argument.base.base.base.t_name.t_restriction.val,
+            "#_BaseName_",
+            argument.base.base.base.t_name.t_restriction.val,
+            "_%d"
+          }
+
+
+          arg_type_concat := [?]string {
+            "Integer",
+            "#_type_Integer",
+            "_%d"
+          }
+
+          arg_initial_value_concat := [?]string {
+            fixed_int_val,//len(argument.base.t_initialValue) > 0 ? argument.base.t_initialValue : "-",
+            "#_InitialValue_",
+            fixed_int_val,
+            "_%d"
+          }
+
+          buff1 : [64]u8
+          buff2 : [64]u8
+          min_val := len(fixed_int_val) > 0 ? fixed_int_val : "-"
+          max_val := len(fixed_int_val) > 0 ? fixed_int_val : "-"
+
+          arg_min_concat := [?]string {
+            min_val,
+            "#_minValue_",
+            min_val,
+            "_%d"
+          }
+          arg_max_concat := [?]string {
+            max_val,
+            "#_maxValue_",
+            max_val,
+            "_%d"
+          }
+
+          set_layout_next_column(0)
+          label(strings.concatenate(arg_name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          set_layout_next_column(1)
+          label(strings.concatenate(arg_type_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          set_layout_next_column(2)
+          label(strings.concatenate(arg_initial_value_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          set_layout_next_column(3)
+          label(strings.concatenate(arg_min_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          set_layout_next_column(4)
+          label(strings.concatenate(arg_max_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+
+          row += 1
+          set_layout_next_row(auto_cast row)
+        }
+        l_it += 1
+      }
+      for argument in ArgTypeSet.t_choice_0.t_EnumeratedArgumentType8 {
+
+        if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
+          limit_on_screen = true
+        }
+
+        if l_it >= row_start_it && !limit_on_screen {
+          set_layout_next_column(0)
+
+          if math.mod(cast(f32)l_it, 2.) == 0 {
+            style := ui_context.theme.background_panel
+            style.color_rect00 *= 0.95
+            style.color_rect01 *= 0.95
+            style.color_rect10 *= 0.95
+            style.color_rect11 *= 0.95
+            style.corner_radius = 6
+            set_next_layout_style(style)
+            make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
+            ui_pop_style()
+          }
+
+          arg_name_concat := [?]string {
+            argument.base.base.base.t_name.t_restriction.val,
+            "#_BaseName_",
+            argument.base.base.base.t_name.t_restriction.val,
+            "_%d"
+          }
+
+
+          arg_type_concat := [?]string {
+            "Enumerated",
+            "#_type_Integer",
+            "_%d"
+          }
+
+          arg_initial_value_concat := [?]string {
+            argument.base.t_initialValue.val,//len(argument.base.t_initialValue) > 0 ? argument.base.t_initialValue : "-",
+            "#_InitialValue_",
+            argument.base.t_initialValue.val,
+            "_%d"
+          }
+
+          set_layout_next_column(0)
+          label(strings.concatenate(arg_name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          set_layout_next_column(1)
+          enum_box := make_box_from_key(text = strings.concatenate(arg_type_concat[:], ui_context.per_frame_arena_allocator), box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER} ,key = cast(^byte)&l_it)
+          set_layout_next_column(2)
+          label(strings.concatenate(arg_initial_value_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          //set_layout_next_column(3)
+          //label(strings.concatenate(arg_min_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          //set_layout_next_column(4)
+          //label(strings.concatenate(arg_max_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          consume_box_event( enum_box )
+          if enum_box == ui_context.hover_target {
+           n_enum := len(argument.base.t_EnumerationList.t_Enumeration)
+           box_size : glsl.vec2 = {400, 30}
+           top_left := enum_box.rect.top_left
+           top_left += enum_box.rect.size
+           //set_next_box_layout({.NONE})
+           //set_next_layout(top_left, box_size, cast(u32)n_enum, 0, LayoutType.FIXED)
+           //set_box_preferred_size({300, 30})
+           //set_layout_string_padding(20, 0)
+           style := ui_context.theme.background_panel
+           style.color_rect00 *= 0.4
+           style.color_rect01 *= 0.4
+           style.color_rect10 *= 0.4
+           style.color_rect11 *= 0.4
+           style.color_text   *= 1.6
+           style.corner_radius = 6
+           push_hovering_boxes_for_rendering({top_left, box_size}, "Enumeration List", style, cast(^byte)enum_box, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
+           //set_next_layout_style(style)
+           //defer ui_pop_style()
+           //box := make_box_from_key("EnumerationList#_hover_enum_show_list_%p", top_left, box_size, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)enum_box)
+           for it in argument.base.t_EnumerationList.t_Enumeration {
+            top_left.y += 30.
+            //make_box_from_key(it.t_label.val, top_left, box_size, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, box)
+            push_hovering_boxes_for_rendering({top_left, box_size}, it.t_label.val, style, cast(^byte)enum_box, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
+           }
+          }
+          row += 1
+          set_layout_next_row(auto_cast row)
+        }
+        l_it += 1
+      }
+    }
+
+    for app_state.hovering_boxes.IdxFront != app_state.hovering_boxes.IdxTail {
+      box_conf := utils.GetFrontQueue(&app_state.hovering_boxes)
+      utils.PopQueue(&app_state.hovering_boxes)
+      box : ^Box
+      if box_conf.key == nil && len(box_conf.text) > 0 {
+       box = make_box_no_key(box_conf.text, box_conf.rect.top_left, box_conf.rect.size, box_conf.flags)
+      } else if len(box_conf.text) > 0 {
+        set_layout_ui_parent_seed(cast(^Box)box_conf.key)
+        defer unset_layout_ui_parent_seed()
+        box = make_box_no_key(box_conf.text, box_conf.rect.top_left, box_conf.rect.size, box_conf.flags)
+      }
+    }
+
+    end_next_layout_scrollable_section(n_rows)
+   {
+    set_layout_next_row(0)
+    set_layout_next_column(0)
+    label("Argument Name#_container_name_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(1)
+    label("Type#_type_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(2)
+    label("Initial Value#_vaule_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(3)
+    label("Min Range#_min_range_%p",cast(^byte)clicked_tab)
+    set_layout_next_column(4)
+    label("Max Range#_max_range_%p", cast(^byte)clicked_tab)
+    }
+   }
+   case "TM Containers" : {
     set_layout_ui_parent_seed(clicked_tab)
 
     layout := get_layout_stack()
@@ -394,9 +631,8 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
           style.color_rect01 *= 0.95
           style.color_rect10 *= 0.95
           style.color_rect11 *= 0.95
-          style.corner_radius = 0
+          style.corner_radius = 6
           set_next_layout_style(style)
-          //make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
           defer ui_pop_style()
 
           container_concat := [?]string {
@@ -432,7 +668,7 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
            set_layout_next_column(0)
            for entry in SequenceContainer.t_EntryList.t_choice_0.t_ParameterRefEntryType6 {
             entry_concat := [?]string {
-             ">> ",
+             "|> ",
              len(entry.t_parameterRef.t_restriction.val) > 0 ? entry.t_parameterRef.t_restriction.val : "-",
              "#_param_ref_",
              entry.t_parameterRef.t_restriction.val,
@@ -468,7 +704,6 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
     label("Source#_source_%p", cast(^byte)clicked_tab)
     }
    }
-   case "TC Arguments" : {}
    case "TC Commands"  : {}
    }
   }
@@ -572,8 +807,10 @@ app_state: orbitmcs_state = {
   enable_debug = false,
   SHOW_FLAGS   = APP_SHOW_FLAGS.SHOW_HOME,
   shutdown     = false,
-  menu_db      = { current_tab = &UI_NilBox}
+  menu_db      = { current_tab = &UI_NilBox },
  }
+
+// --------------------------------------------------- Main function -------------------------------------------- //
 
 main :: proc() {
 
@@ -1051,7 +1288,7 @@ when false {
       persistent_mem_used_str := strings.concatenate(persistent_mem_used[:], ui_context.per_frame_arena_allocator)
 
       if checkbox("Set Dark theme", cast(^byte)&app_state).left_click {
-       ui_context.set_dark_theme = true
+       ui_context.set_dark_theme = !ui_context.set_dark_theme
       }
       label("UI Hash table values: #hash_values_%p", cast(^byte)&app_state)
       label(allocated_str, cast(^byte)&app_state)
@@ -1093,6 +1330,22 @@ when false {
    }
   }
 
+  // to render hovering boxes
+ for app_state.hovering_boxes.IdxFront != app_state.hovering_boxes.IdxTail {
+  box_conf := utils.GetFrontQueue(&app_state.hovering_boxes)
+  utils.PopQueue(&app_state.hovering_boxes)
+  box : ^Box
+  if box_conf.key == nil && len(box_conf.text) > 0 {
+   box = make_box_no_key(box_conf.text, box_conf.rect.top_left, box_conf.rect.size, box_conf.flags)
+  } else if len(box_conf.text) > 0 {
+   box = make_box_no_key(box_conf.text, box_conf.rect.top_left, box_conf.rect.size, box_conf.flags)
+  }
+  box.zindex = ui_context.last_zindex + 1
+  ui_context.last_zindex += 1
+  box.parent = ui_context.render_root
+  box.prev = ui_context.render_root.tail
+  ui_context.render_root.tail = box
+ }
 
   clear(&render.Global_VulkanDebug.scope)
   clear(&render.Global_VulkanDebug.duration)
@@ -1100,7 +1353,7 @@ when false {
 
   ui_build()
   render.draw_frame(&vulkan_iface)
-  end := time.tick_now()
+  end  := time.tick_now()
   diff := time.tick_diff(start, end)
   last_time = time.duration_milliseconds(diff)
 

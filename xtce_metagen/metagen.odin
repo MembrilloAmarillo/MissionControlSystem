@@ -24,6 +24,9 @@ enumeration_to_string :: proc( type : restriction_type, enumeration_name : strin
     strings.write_string(&text_buffer, enumeration_name)
     strings.write_string(&text_buffer, " := [?]string { ")
     for en in type.enumeration {
+      if en == "union" {
+       break
+      }
       strings.write_rune(&text_buffer, '\"')
       strings.write_string(&text_buffer, en)
       strings.write_rune(&text_buffer, '\"')
@@ -206,15 +209,15 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
   minOccursPerType := make([]string, len(content.attr))
   maxOccursPerType := make([]string, len(content.attr))
 
-  // Check for minOccurs and maxOccurs to know if there should be 
-  // an array instead of only a type definition 
+  // Check for minOccurs and maxOccurs to know if there should be
+  // an array instead of only a type definition
   //
   for attr, idx in content.attr {
     if attr.key == "minOccurs" {
       if attr.val != "0" && attr.val != "1" {
         minOccursPerType[idx] = attr.val
       }
-    } 
+    }
     if attr.key == "maxOccurs" {
       if attr.val == "unbounded" {
         maxOccursPerType[idx] = "dynamic"
@@ -233,12 +236,12 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
           is_type_name = true
         }
       }
-      
+
       if is_type_name {
         strings.write_string(&text_buffer, (cast(string)"\tt_"))
         strings.write_string(&text_buffer, attrib.val)
         strings.write_string(&text_buffer, (cast(string)" : "))
-        
+
         if idx + 2 < len(content.attr) && len(maxOccursPerType[idx + 2]) > 0 {
           strings.write_string(&text_buffer, (cast(string)"["))
           strings.write_string(&text_buffer, maxOccursPerType[idx+2])
@@ -247,8 +250,8 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
         else if idx + 3 < len(content.attr) && len(maxOccursPerType[idx + 3]) > 0 {
           strings.write_string(&text_buffer, (cast(string)"["))
           strings.write_string(&text_buffer, maxOccursPerType[idx+3])
-          strings.write_string(&text_buffer, (cast(string)"]"))                          
-        } 
+          strings.write_string(&text_buffer, (cast(string)"]"))
+        }
         else if idx + 2 < len(content.attr) && len(minOccursPerType[idx+2]) > 0 {
           strings.write_string(&text_buffer,(cast(string)"["))
           strings.write_string(&text_buffer,minOccursPerType[idx+2])
@@ -273,7 +276,7 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
   }
 
   if len(content.simple_type.base) > 0 {
-    
+
     if len(content.simple_type.enumeration) > 0 {
       buff : [32]byte
       content_type_base := [?]string {
@@ -308,7 +311,7 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
       }
       type_struct_concat := strings.concatenate(type_struct[:], allocator = context.allocator)
 
-     
+
       it_choice_idx := 0
       for it_c := choices.next; it_c != nil; it_c = it_c.right {
         buf : [64]u8
@@ -322,7 +325,7 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
       }
 
       choice_buffer = choice_tree_to_string(choices, type_struct_concat)
-  }  
+  }
   buffer = strings.to_string( text_buffer )
 
   return buffer, choice_buffer, enumeration_buffer
@@ -331,7 +334,7 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
 // ------------------------------------------------------------------------ //
 
 gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
-  
+
   nested_content_buffer : [dynamic]string
   choice_buffer : string
   enumeration_buffer : string
@@ -362,15 +365,15 @@ gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
       minOccursPerType := make([]string, len(content.attr))
       maxOccursPerType := make([]string, len(content.attr))
 
-      // Check for minOccurs and maxOccurs to know if there should be 
-      // an array instead of only a type definition 
+      // Check for minOccurs and maxOccurs to know if there should be
+      // an array instead of only a type definition
       //
       for attr, idx in content.attr {
         if attr.key == "minOccurs" {
           if attr.val != "0" && attr.val != "1" {
             minOccursPerType[idx] = attr.val
           }
-        } 
+        }
         if attr.key == "maxOccurs" {
           if attr.val == "unbounded" {
             maxOccursPerType[idx] = "dynamic"
@@ -389,12 +392,12 @@ gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
               is_type_name = true
             }
           }
-          
+
           if is_type_name {
             os.write(file, transmute([]u8)(cast(string)"\tt_"))
             os.write(file, transmute([]u8)attrib.val)
             os.write(file, transmute([]u8)(cast(string)" : "))
-            
+
             if idx + 2 < len(content.attr) && len(maxOccursPerType[idx + 2]) > 0 {
               os.write(file, transmute([]u8)(cast(string)"["))
               os.write(file, transmute([]u8)maxOccursPerType[idx+2])
@@ -403,8 +406,8 @@ gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
             else if idx + 3 < len(content.attr) && len(maxOccursPerType[idx + 3]) > 0 {
               os.write(file, transmute([]u8)(cast(string)"["))
               os.write(file, transmute([]u8)maxOccursPerType[idx+3])
-              os.write(file, transmute([]u8)(cast(string)"]"))                          
-            } 
+              os.write(file, transmute([]u8)(cast(string)"]"))
+            }
             else if idx + 2 < len(content.attr) && len(minOccursPerType[idx+2]) > 0 {
               os.write(file, transmute([]u8)(cast(string)"["))
               os.write(file, transmute([]u8)minOccursPerType[idx+2])
@@ -429,7 +432,7 @@ gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
       }
       if content.nested_content != nil {
         for c := content.nested_content; c != nil; c = c.nested_content {
-          content_buffer, content_choice_buffer, content_enum_buffer := gen_complex_content( file, type, c ) 
+          content_buffer, content_choice_buffer, content_enum_buffer := gen_complex_content( file, type, c )
           append(&nested_content_buffer, content_choice_buffer)
           append(&nested_content_buffer, content_enum_buffer)
           os.write(file, transmute([]u8)content_buffer)
@@ -506,11 +509,29 @@ gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
         os.write(file, has_namespace("xtce", content.base) ? base[len("xtce:"):] : xs_base)
        os.write(file, transmute([]u8)(cast(string)",\n"))
       }
-
       enumeration_buffer = enumeration_to_string( content, strings.concatenate({"t_", type.type_name, "_Enumeration"}))
       if len(enumeration_buffer) > 0 {
         os.write(file, transmute([]u8)(cast(string)"\tt_enumeration_values : []string,\n"))
       }
+
+      create_union := false
+      for en in content.enumeration {
+       if create_union {
+        to_print := has_namespace("xtce", en) ? en[len("xtce:"):] : strings.concatenate({"xs_", en})
+        os.write(file, transmute([]u8)(cast(string)"\t\t"))
+        os.write(file, transmute([]u8)to_print)
+        os.write(file, transmute([]u8)(cast(string)",\n"))
+       }
+       if en == "union" {
+        create_union = true
+        os.write(file, transmute([]u8)(cast(string)"\tt_union : union {\n"))
+       }
+      }
+
+      if create_union {
+       os.write(file, transmute([]u8)(cast(string)"\t}"))
+      }
+
   }
 }
 
@@ -531,7 +552,7 @@ gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
 }
 
 start :: proc(file_path: string, destination_file: string, allocator := context.allocator) {
-  
+
 
   fmt.println("[INFO] Parsing file: ", file_path)
   fmt.println("[INFO] Autogen into: ", destination_file)
@@ -546,7 +567,7 @@ start :: proc(file_path: string, destination_file: string, allocator := context.
 
   os.write(file_handler, transmute([]u8)(cast(string)"package xtce_parser\n\n"))
 
-  hash_schema(&schema, allocator)
+  hash_schema(schema, allocator)
 
   for i := 0; i < schema.xsd_hash.allocated; i += 1 {
     el_entries := schema.xsd_hash.entries[i]

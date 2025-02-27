@@ -146,8 +146,14 @@ t_ParameterSetType0:: struct {
 
 BYTE_ORDER_TYPE :: "ByteOrderType"
 ByteOrderType :: struct {
-
+	t_enumeration_values : []string,
+	t_union : union {
+		ByteOrderCommonType,
+		ByteOrderArbitraryType,
+	}
 }
+
+t_ByteOrderType_Enumeration := [?]string {  }
 
 ALARM_MULTI_RANGES_TYPE :: "AlarmMultiRangesType"
 AlarmMultiRangesType :: struct {
@@ -274,8 +280,16 @@ InputOutputTriggerAlgorithmType :: struct {
 
 FIXED_INTEGER_VALUE_TYPE :: "FixedIntegerValueType"
 FixedIntegerValueType :: struct {
-
+	t_enumeration_values : []string,
+	t_union : union {
+		xs_integer,
+		HexadecimalType,
+		OctalType,
+		BinaryType,
+	}
 }
+
+t_FixedIntegerValueType_Enumeration := [?]string {  }
 
 MATCH_CRITERIA_TYPE :: "MatchCriteriaType"
 MatchCriteriaType :: struct {
@@ -1695,6 +1709,7 @@ BLOCK_META_COMMAND_TYPE :: "BlockMetaCommandType"
 BlockMetaCommandType :: struct {
 	base : NameDescriptionType,
 	t_MetaCommandStepList : MetaCommandStepListType,
+
 }
 
 ARGUMENT_DIMENSION_LIST_TYPE :: "ArgumentDimensionListType"
@@ -2146,8 +2161,15 @@ ArgumentArrayParameterRefEntryType :: struct {
 
 EPOCH_TYPE :: "EpochType"
 EpochType :: struct {
-
+	t_enumeration_values : []string,
+	t_union : union {
+		xs_date,
+		xs_dateTime,
+		EpochTimeEnumsType,
+	}
 }
+
+t_EpochType_Enumeration := [?]string {  }
 
 TIME_WINDOW_IS_RELATIVE_TO_TYPE :: "TimeWindowIsRelativeToType"
 TimeWindowIsRelativeToType :: struct {

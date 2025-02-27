@@ -630,6 +630,10 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
       current_type_def.key.field = element.attribs[0].val
     } else if element.ident == "selector" && current_type_def.is_key {
       current_type_def.key.xpath = element.attribs[0].val
+    } else if element.ident == "union" {
+      content := &current_type_def.content.(restriction_type)
+      append(&content.enumeration, "union")
+      append(&content.enumeration, ..strings.split(element.attribs[0].val, " "))
     }
 
     values := element.value[:]
@@ -1112,7 +1116,7 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
        /* -------------------------- COMMAND META DATA HANDLING ------------------------------------ */
        case COMMAND_META_DATA_TYPE: {
         type : CommandMetaDataType = {
-         t_ParameterTypeSet    = LoadParameterTypeSetType( node_it_dst ),
+          t_ParameterTypeSet    = LoadParameterTypeSetType( node_it_dst ),
         	t_ArgumentTypeSet     = LoadArgumentTypeSetType( node_it_dst ),
         	t_MetaCommandSet      = LoadMetaCommandSetType( node_it_dst ),
         	t_CommandContainerSet = LoadCommandContainerSetType( node_it_dst ),
@@ -1291,7 +1295,9 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
             LoadEnumerationContextAlarmListType( node_it_dst, &enum_type.t_ContextAlarmList)
           }
           case ENUMERATED_DATA_TYPE: {
-            LoadEnumeratedDataType(node_it_dst, &enum_type.base)
+            // its an extension so it does not have to be instantiated like this
+            //
+            // LoadEnumeratedDataType(node_it_dst, &enum_type.base)
           }
          }
          for b := n.next; b != nil; b = b.right {
@@ -1356,7 +1362,9 @@ LoadNameType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) 
   stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
   utils.push_stack(&stack, node)
 
-  for stack.push_count > 0 {
+
+  found := false
+  for stack.push_count > 0 && !found {
     n := utils.get_front_stack(&stack)
     utils.pop_stack(&stack)
 
@@ -1365,6 +1373,7 @@ LoadNameType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) 
     for at in element.attribs {
       if at.key == "name" {
         type.t_restriction.val = at.val
+        found = true
       }
     }
 
@@ -2198,7 +2207,7 @@ LoadTelemetryDataSourceType :: proc( node : ^utils.node_tree(utils.tuple(string,
 LoadParameterPropertiesType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ParameterPropertiesType {
  type : ParameterPropertiesType = {
   t_SystemName = xs_string_get_default(),
-  t_ValidityCondition = LoadMatchCriteriaType(node),
+  t_ValidityCondition  = LoadMatchCriteriaType(node),
   t_PhysicalAddressSet = LoadPhysicalAddressSetType( node ),
   t_TimeAssociation    = LoadTimeAssociationType( node ),
   t_dataSource         = LoadTelemetryDataSourceType( node ),
@@ -2291,9 +2300,213 @@ LoadRateInStreamSetType    :: proc(node : ^utils.node_tree(utils.tuple(string, x
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+LoadParityType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ParityType {
+  type : ParityType = {}
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "type")
+  type.t_type.t_restriction = xs_string_get_default()
+  if slice.contains(t_ParityFormType_Enumeration[:], attr.val) {
+    type.t_type.t_restriction.val = attr.val
+    type.t_type.t_enumeration_values = make([]string, 1)
+    type.t_type.t_enumeration_values[0] = attr.val
+  }
+
+  type.t_bitsFromReference = LoadNonNegativeLongType()
+  attr, _ = internal_DepthFirstSearch_Node(node, "bitsFromReference")
+  type.t_bitsFromReference.t_restriction.integer = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "reference")
+  type.t_reference.t_restriction = xs_string_get_default()
+  if slice.contains(t_ReferencePointType_Enumeration[:], attr.val)
+  {
+    type.t_reference.t_restriction.val = attr.val
+    type.t_reference.t_enumeration_values = make([]string, 1)
+    type.t_reference.t_enumeration_values[0] = attr.val
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadCRCType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> CRCType {
+  type : CRCType = {}
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "Polynomial")
+  type.t_Polynomial = xs_hex_binary_get_default()
+  type.t_Polynomial.val = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "InitRemainder")
+  type.t_InitRemainder = xs_hex_binary_get_default()
+  type.t_InitRemainder.val = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "FinalXOR")
+  type.t_FinalXOR = xs_hex_binary_get_default()
+  type.t_FinalXOR.val = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "width")
+  type.t_width = LoadPositiveLongType(node)
+  type.t_width.t_restriction.integer = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "reflectData")
+  type.t_reflectData = xs_boolean_get_default()
+  type.t_reflectData.val  = attr.val == "true" ? true : false
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "reflectRemainder")
+  type.t_reflectRemainder = xs_boolean_get_default()
+  type.t_reflectRemainder.val  = attr.val == "true" ? true : false
+
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "bitsFromReference")
+  type.t_bitsFromReference = LoadNonNegativeLongType()
+  type.t_bitsFromReference.t_restriction.integer  = auto_cast strconv.atoi(attr.val)
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadChecksumType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ChecksumType {
+  type : ChecksumType = {
+    t_InputAlgorithm = LoadInputAlgorithmType(node),
+    t_bitsFromReference = LoadNonNegativeLongType(),
+    t_hashSizeInBits = LoadPositiveLongType(node)
+  }
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "bitsFromReference")
+  type.t_bitsFromReference.t_restriction.integer = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "reference")
+  if slice.contains(t_ReferencePointType_Enumeration[:], attr.val) {
+    type.t_reference.t_restriction.val = attr.val
+    type.t_reference.t_enumeration_values = make([]string, 1)
+    type.t_reference.t_enumeration_values[0] = attr.val
+  }
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "hashSizeInBits")
+  type.t_hashSizeInBits.t_restriction.integer = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "restriction")
+  if slice.contains(t_ChecksumType_Enumeration[:], attr.val) {
+    type.t_restriction = xs_string_get_default()
+    type.t_restriction.val = attr.val
+    //type.t_restriction.t_enumeration_values = make([]string, 1)
+    //type.t_restriction.t_enumeration_values[0] = attr.val
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadErrorDetectCorrectType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ErrorDetectCorrectType {
+  type : ErrorDetectCorrectType = {
+  }
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case PARITY_TYPE: {
+        t := LoadParityType(n)
+        type.t_choice_0 = t
+        found = true
+        break
+      }
+      case C_R_C_TYPE: {
+        type.t_choice_0 = LoadCRCType(n)
+        found = true
+        break
+      }
+      case CHECKSUM_TYPE: {
+        type.t_choice_0 = LoadChecksumType(n)
+        found = true
+        break
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+      utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadBitOrderType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> BitOrderType {
+  type : BitOrderType = {
+    t_restriction = xs_string_get_default(),
+    t_enumeration_values = make([]string, 1)
+  }
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    for attr in n.element.second.attribs {
+      if slice.contains(t_BitOrderType_Enumeration[:], attr.val) {
+        type.t_enumeration_values[0] = attr.val
+        type.t_restriction.val = attr.val
+        found = true
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+      utils.push_stack(&stack, it)
+    }
+  }
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadByteOrderType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ByteOrderType {
+  type : ByteOrderType = {
+  }
+
+utils.TODO(#procedure, "Not implemented well in metageneration")
+when false {
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    for attr in n.element.second.attribs {
+      if slice.contains(t_BitOrderType_Enumeration[:], attr.val) {
+        type.t_enumeration_values[0] = attr.val
+        type.t_restriction.val = attr.val
+        found = true
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+      utils.push_stack(&stack, it)
+    }
+  }
+}
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 LoadDataEncodingType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> DataEncodingType {
   type : DataEncodingType = {
-
+    t_ErrorDetectCorrect = LoadErrorDetectCorrectType(node),
+    t_bitOrder = LoadBitOrderType(node),
+    t_byteOrder = LoadByteOrderType(node)
   }
 
   return type
@@ -2536,8 +2749,94 @@ LoadBaseContainerType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.E
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+GetFixedIntegerValueString :: proc( v : FixedIntegerValueType ) -> string {
+
+ ret_s : string
+ switch type in v.t_union {
+  case xs_integer : {
+   buf : [64]u8
+   ret_s = strings.clone(strconv.itoa(buf[:], cast(int)type))
+  }
+  case HexadecimalType : {
+   ret_s = type.t_restriction.val
+  }
+  case OctalType : {
+    ret_s = type.t_restriction.val
+  }
+  case BinaryType : {
+    ret_s = type.t_restriction.val
+  }
+ }
+
+ return ret_s
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 LoadFixedIntegerValueType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> FixedIntegerValueType {
  type : FixedIntegerValueType
+
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+ found := false
+ for stack.push_count > 0 && !found {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   for attr in n.element.second.attribs {
+    if attr.key == name {
+     format_str := attr.val
+     if len(format_str) >= 2 {
+      if format_str[:2] == "0x" || format_str[:2] == "0X" {
+       format_str = HEXADECIMAL_TYPE
+      }
+      else if format_str[:2] == "0o" || format_str[:2] == "0O" {
+       format_str = OCTAL_TYPE
+      }
+      else {
+       format_str = "xs_integer"
+      }
+     }
+     else {
+      format_str = "xs_integer"
+     }
+     switch format_str {
+      case "xs_integer" : {
+       type.t_union = cast(xs_integer) strconv.atoi(n.element.second.attribs[0].val)
+       found = true
+      }
+      case HEXADECIMAL_TYPE : {
+       t : HexadecimalType
+       t.t_restriction = xs_string_get_default()
+       t.t_restriction.val = n.element.second.attribs[0].val
+       type.t_union = t
+
+       found = true
+      }
+      case OCTAL_TYPE : {
+       t : OctalType
+       t.t_restriction = xs_string_get_default()
+       t.t_restriction.val = n.element.second.attribs[0].val
+       type.t_union = t
+       found = true
+      }
+      case BINARY_TYPE : {
+       t : BinaryType
+       t.t_restriction = xs_string_get_default()
+       t.t_restriction.val = n.element.second.attribs[0].val
+       type.t_union = t
+       found = true
+      }
+     }
+    }
+   }
+
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
 
  return type
 }
@@ -2604,15 +2903,264 @@ LoadContainerSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.El
 LoadParameterTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ParameterTypeSetType {
  type : ParameterTypeSetType = {}
 
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadIntegerDataEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> IntegerDataEncodingType {
+  type : IntegerDataEncodingType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   switch n.element.first {
+    case DATA_ENCODING_TYPE : {
+      utils.TODO(ARGUMENT_STRING_DATA_TYPE)
+      type.base = LoadDataEncodingType(n)
+    }
+    case CALIBRATOR_TYPE : {
+      utils.TODO(CALIBRATOR_TYPE)
+    }
+    case CONTEXT_CALIBRATOR_TYPE : {
+      utils.TODO(CONTEXT_CALIBRATOR_TYPE)
+    }
+    case INTEGER_ENCODING_TYPE : {
+      utils.TODO(INTEGER_ENCODING_TYPE)
+    }
+    case POSITIVE_LONG_TYPE : {
+      type.t_sizeInBits = LoadPositiveLongType(n)
+    }
+    case NON_NEGATIVE_LONG_TYPE : {
+      type.t_changeThreshold = LoadNonNegativeLongType()
+    }
+  }
+
+    for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+    }
+  }
+  return type
+}
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentBaseDataType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentBaseDataType {
+  type : ArgumentBaseDataType = {
+    base = LoadNameDescriptionType(node),
+    t_UnitSet = LoadUnitSetType(node),
+    t_baseType = LoadNameReferenceType(node, "baseType"),
+  }
+
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+ for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   switch n.element.first {
+    case ARGUMENT_STRING_DATA_TYPE : {
+      utils.TODO(ARGUMENT_STRING_DATA_TYPE)
+    }
+    case INTEGER_DATA_ENCODING_TYPE : {
+      utils.TODO(INTEGER_DATA_ENCODING_TYPE)
+    }
+    case FLOAT_DATA_ENCODING_TYPE : {
+      utils.TODO(FLOAT_DATA_ENCODING_TYPE)
+    }
+    case ARGUMENT_BINARY_DATA_ENCODING_TYPE : {
+      utils.TODO(ARGUMENT_BINARY_DATA_ENCODING_TYPE)
+    }
+   }
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentIntegerDataType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentIntegerDataType {
+  type : ArgumentIntegerDataType = {
+    base = LoadArgumentBaseDataType(node),
+    t_ToString = LoadToStringType(node),
+    t_initialValue = LoadFixedIntegerValueType(node, "initialValue"),
+    t_sizeInBits = LoadPositiveLongType(node),
+    t_signed     = xs_boolean_get_default()
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadIntegerRangeType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> IntegerRangeType {
+  type : IntegerRangeType = {
+    t_minInclusive = xs_long_get_default(),
+    t_maxInclusive = xs_long_get_default()
+  }
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "minInclusive")
+  type.t_minInclusive.integer = auto_cast strconv.atoi(attr.val)
+  attr, _  = internal_DepthFirstSearch_Node(node, "maxInclusive")
+  type.t_maxInclusive.integer = auto_cast strconv.atoi(attr.val)
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadValidIntegerRangeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ValidIntegerRangeSetType {
+  type : ValidIntegerRangeSetType = {
+    t_validRangeAppliesToCalibrated = xs_boolean_get_default()
+  }
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+  for stack.push_count > 0 {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+    switch n.element.first {
+      case INTEGER_RANGE_TYPE : {
+        append(&type.t_ValidRange, LoadIntegerRangeType(node))
+      }
+      case "xs_boolean" : {
+        type.t_validRangeAppliesToCalibrated.val = n.element.second.attribs[0].val == "true" ? true : false
+      }
+    }
+    for it := n.next; it != nil; it = it.right {
+      utils.push_stack(&stack, it)
+    }
+  }
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadIntegerArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> IntegerArgumentType {
+  type : IntegerArgumentType = {
+    base = LoadArgumentIntegerDataType(node),
+    t_ValidRangeSet = LoadValidIntegerRangeSetType(node)
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+GetArgumentTypeSet :: proc( system : ^SpaceSystemType ) -> ArgumentTypeSetType {
+  return system.t_CommandMetaData.t_ArgumentTypeSet
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentEnumeratedDataType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentEnumeratedDataType {
+ type : ArgumentEnumeratedDataType = {
+  base = LoadArgumentBaseDataType(node),
+  t_initialValue = xs_string_get_default()
+ }
+
+ attr, _ := internal_DepthFirstSearch_Node(node, "initialValue")
+ type.t_initialValue.val = attr.val
+
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+
+ found := false
+ for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case ENUMERATION_LIST_TYPE: {
+        list := LoadEnumerationListType(n)
+        type.t_EnumerationList = list
+        found = true
+      }
+    }
+
+  for it := n.next; it != nil; it = it.right {
+   utils.push_stack(&stack, it)
+  }
+}
+
+ return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadEnumeratedArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> EnumeratedArgumentType {
+ type : EnumeratedArgumentType = {
+  base = LoadArgumentEnumeratedDataType( node )
+ }
+
  return type
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
 LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentTypeSetType {
- type : ArgumentTypeSetType = {}
+ type : ArgumentTypeSetType = {
+ }
 
- return type
+ stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+
+ for stack.push_count > 0 {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case AGGREGATE_ARGUMENT_TYPE : {
+        utils.TODO(AGGREGATE_ARGUMENT_TYPE)
+      }
+      case ARRAY_ARGUMENT_TYPE : {
+        utils.TODO(ARRAY_ARGUMENT_TYPE)
+      }
+      case ABSOLUTE_TIME_ARGUMENT_TYPE : {
+        utils.TODO(ABSOLUTE_TIME_ARGUMENT_TYPE)
+      }
+      case RELATIVE_TIME_ARGUMENT_TYPE : {
+        utils.TODO(RELATIVE_TIME_ARGUMENT_TYPE)
+      }
+      case BOOLEAN_ARGUMENT_TYPE : {
+        utils.TODO(BOOLEAN_ARGUMENT_TYPE)
+      }
+      case FLOAT_ARGUMENT_TYPE : {
+        utils.TODO(FLOAT_ARGUMENT_TYPE)
+      }
+      case BINARY_ARGUMENT_TYPE : {
+        utils.TODO(BINARY_ARGUMENT_TYPE)
+      }
+      case INTEGER_ARGUMENT_TYPE : {
+        //utils.TODO(INTEGER_ARGUMENT_TYPE)
+        t := LoadIntegerArgumentType(n)
+        append(&type.t_choice_0.t_IntegerArgumentType7, t)
+      }
+      case ENUMERATED_ARGUMENT_TYPE : {
+        t := LoadEnumeratedArgumentType(n)
+        append(&type.t_choice_0.t_EnumeratedArgumentType8, t)
+      }
+      case STRING_ARGUMENT_TYPE : {
+        utils.TODO(STRING_ARGUMENT_TYPE)
+      }
+    }
+
+  for it := n.next; it != nil; it = it.right {
+   utils.push_stack(&stack, it)
+  }
+}
+
+return type
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -2898,6 +3446,12 @@ LoadMetaCommandType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Ele
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+GetMetaCommandSetType :: proc( system : ^SpaceSystemType ) -> [dynamic]MetaCommandType {
+  return system.t_CommandMetaData.t_MetaCommandSet.t_choice_0.t_MetaCommandType2
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 LoadMetaCommandSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> MetaCommandSetType {
  type : MetaCommandSetType = {
  }
@@ -3025,6 +3579,7 @@ LoadValueEnumerationType :: proc( node : ^utils.node_tree(utils.tuple(string, xm
   stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
   utils.push_stack(&stack, node)
 
+
   for stack.push_count > 0 {
     n := utils.get_front_stack(&stack)
     utils.pop_stack(&stack)
@@ -3044,9 +3599,9 @@ LoadValueEnumerationType :: proc( node : ^utils.node_tree(utils.tuple(string, xm
       }
     }
 
-    for it := n.next; it != nil; it = it.right {
-      utils.push_stack(&stack, it)
-    }
+    //for it := n.next; it != nil; it = it.right {
+    //  utils.push_stack(&stack, it)
+    //}
   }
 
   return type
@@ -3067,12 +3622,8 @@ LoadEnumerationListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
 
     element := n.element.second
 
-    idx := 0
-    for at in element.attribs {
-      if at.key == "Enumeration" {
-        val := LoadValueEnumerationType( n )
-        append(&type.t_Enumeration, val)
-      }
+    if n.element.first == VALUE_ENUMERATION_TYPE {
+      append(&type.t_Enumeration, LoadValueEnumerationType(n))
     }
 
     for it := n.next; it != nil; it = it.right {

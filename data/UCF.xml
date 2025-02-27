@@ -381,7 +381,6 @@
 						<xtce:ParameterRefEntry parameterRef="CCSDS_Packet_Sequence_Count"/>
 						<xtce:ParameterRefEntry parameterRef="CCSDS_Packet_Length"/>
 					</xtce:EntryList>
-					<xtce:BaseContainer containerRef="CSP_Header_TM"/>
 				</xtce:SequenceContainer>
 
 				<xtce:SequenceContainer name="CCSDS_Full_Header_TM">
@@ -580,7 +579,6 @@
 
 			<xtce:MetaCommandSet>
 				<xtce:MetaCommand name="CCSDS_Primary_Header_TC">
-					<xtce:BaseMetaCommand metaCommandRef="CSP_Header_TC"/>
 					<xtce:ArgumentList>
 							<xtce:Argument argumentTypeRef="CCSDS_Packet_Version_Number_Type" 		  name="CCSDS_Packet_Version_Number"/>
 							<xtce:Argument argumentTypeRef="CCSDS_Packet_Type_Type" 				  name="CCSDS_Packet_Type"/>
@@ -728,98 +726,97 @@
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="HK_Structure_ID_Type">
-					<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
+					<xtce:IntegerDataEncoding sizeInBits="8" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="HK_PAY_1" value="0"/>
-						<xtce:Enumeration name="HK_PAY_2" value="1"/>
-						<xtce:Enumeration name="HK_EPS_System_Status" value="2"/>
-						<xtce:Enumeration name="HK_EPS_Configuration_Parameter" value="3"/>
-						<xtce:Enumeration name="HK_EPS_PDU" value="4"/>
-						<xtce:Enumeration name="HK_EPS_PBU" value="5"/>
-						<xtce:Enumeration name="HK_EPS_PIU" value="6"/>
-						<xtce:Enumeration name="HK_ADCS" value="7"/>
-						<xtce:Enumeration name="HK_OBC" value="8"/>
-						<xtce:Enumeration name="HK_Solar_Panels" value="9"/>
-						<xtce:Enumeration name="HK_System" value="10"/>
+						<xtce:Enumeration label="HK_PAY_1" value="0"/>
+						<xtce:Enumeration label="HK_PAY_2" value="1"/>
+						<xtce:Enumeration label="HK_EPS_System_Status" value="2"/>
+						<xtce:Enumeration label="HK_EPS_Configuration_Parameter" value="3"/>
+						<xtce:Enumeration label="HK_EPS_PDU" value="4"/>
+						<xtce:Enumeration label="HK_EPS_PBU" value="5"/>
+						<xtce:Enumeration label="HK_EPS_PIU" value="6"/>
+						<xtce:Enumeration label="HK_ADCS" value="7"/>
+						<xtce:Enumeration label="HK_OBC" value="8"/>
+						<xtce:Enumeration label="HK_Solar_Panels" value="9"/>
+						<xtce:Enumeration label="HK_System" value="10"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="HK_Param_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="PAY_1_Enabled"         value="0000"/>
-						<xtce:Enumeration name="PAY_1_S1_Z"            value="0001"/>
-						<xtce:Enumeration name="PAY_1_S2_X"            value="0002"/>
-						<xtce:Enumeration name="PAY_1_S2_Y"            value="0003"/>
-						<xtce:Enumeration name="PAY_1_Electric_Noise"  value="0004"/>
-						<xtce:Enumeration name="PAY_1_Stop"            value="0005"/>
-						<xtce:Enumeration name="PAY_1_Error"           value="0006"/>
-						<xtce:Enumeration name="PAY_1_Experiment_Time" value="0007"/>
+						<xtce:Enumeration label="PAY_1_Enabled"         value="0000"/>
+						<xtce:Enumeration label="PAY_1_S1_Z"            value="0001"/>
+						<xtce:Enumeration label="PAY_1_S2_X"            value="0002"/>
+						<xtce:Enumeration label="PAY_1_S2_Y"            value="0003"/>
+						<xtce:Enumeration label="PAY_1_Electric_Noise"  value="0004"/>
+						<xtce:Enumeration label="PAY_1_Stop"            value="0005"/>
+						<xtce:Enumeration label="PAY_1_Error"           value="0006"/>
+						<xtce:Enumeration label="PAY_1_Experiment_Time" value="0007"/>
 
-						<xtce:Enumeration name="PAY_2_Enabled"         value="1000"/>
-						<xtce:Enumeration name="PAY_2_S1_Z"            value="1001"/>
-						<xtce:Enumeration name="PAY_2_S2_X"            value="1002"/>
-						<xtce:Enumeration name="PAY_2_S2_Y"            value="1003"/>
-						<xtce:Enumeration name="PAY_2_Electric_Noise"  value="1004"/>
-						<xtce:Enumeration name="PAY_2_Stop"            value="1005"/>
-						<xtce:Enumeration name="PAY_2_Error"           value="1006"/>
-						<xtce:Enumeration name="PAY_2_Experiment_Time" value="1007"/>
+						<xtce:Enumeration label="PAY_2_Enabled"         value="1000"/>
+						<xtce:Enumeration label="PAY_2_S1_Z"            value="1001"/>
+						<xtce:Enumeration label="PAY_2_S2_X"            value="1002"/>
+						<xtce:Enumeration label="PAY_2_S2_Y"            value="1003"/>
+						<xtce:Enumeration label="PAY_2_Electric_Noise"  value="1004"/>
+						<xtce:Enumeration label="PAY_2_Stop"            value="1005"/>
+						<xtce:Enumeration label="PAY_2_Error"           value="1006"/>
+						<xtce:Enumeration label="PAY_2_Experiment_Time" value="1007"/>
 
-						<xtce:Enumeration name="EPS_System_Status"               value="2000"/>
-						<xtce:Enumeration name="EPS_PDU_HK_Eng"                  value="2001"/>
-						<xtce:Enumeration name="EPS_PBU_HK_Eng"                  value="2002"/>
-						<xtce:Enumeration name="EPS_Get_Configuration_Parameter" value="2003"/>
-						<xtce:Enumeration name="EPS_PIU_HK_Eng"  		         value="2004"/>
-						<xtce:Enumeration name="EPS_PIU_HK_Eng"  		         value="2004"/>
+						<xtce:Enumeration label="EPS_System_Status"               value="2000"/>
+						<xtce:Enumeration label="EPS_PDU_HK_Eng"                  value="2001"/>
+						<xtce:Enumeration label="EPS_PBU_HK_Eng"                  value="2002"/>
+						<xtce:Enumeration label="EPS_Get_Configuration_Parameter" value="2003"/>
+						<xtce:Enumeration label="EPS_PIU_HK_Eng"  		         value="2004"/>
 
-						<xtce:Enumeration name="ADCS_SUN_SENSOR_X+"  		value="3000"/>
-						<xtce:Enumeration name="ADCS_SUN_SENSOR_X-"  		value="3001"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_X-"  	value="3002"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_Y+"  	value="3003"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_Y-"  	value="3004"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_Z+"  	value="3005"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_OBC_X" value="3006"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_OBC_Y" value="3007"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_OBC_Z" value="3008"/>
+						<xtce:Enumeration label="ADCS_SUN_SENSOR_X+"  		value="3000"/>
+						<xtce:Enumeration label="ADCS_SUN_SENSOR_X-"  		value="3001"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_X-"  	value="3002"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_Y+"  	value="3003"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_Y-"  	value="3004"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_Z+"  	value="3005"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_OBC_X" value="3006"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_OBC_Y" value="3007"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_OBC_Z" value="3008"/>
 
-						<xtce:Enumeration name="OBC_FS_MOUNTED"  value="4000"/>
-						<xtce:Enumeration name="OBC_RAM_IMAGE"   value="4001"/>
-						<xtce:Enumeration name="OBC_TEMP_MCU"    value="4002"/>
-						<xtce:Enumeration name="OBC_TEMP_RAM"    value="4003"/>
-						<xtce:Enumeration name="OBC_I_GSSB1"     value="4004"/>
-						<xtce:Enumeration name="OBC_I_GSSB2"     value="4005"/>
-						<xtce:Enumeration name="OBC_I_FLASH"     value="4006"/>
-						<xtce:Enumeration name="OBC_I_PWM"       value="4007"/>
-						<xtce:Enumeration name="OBC_RESET_CAUSE" value="4008"/>
-						<xtce:Enumeration name="OBC_BOOT_CAUSE"  value="4009"/>
-						<xtce:Enumeration name="OBC_BOOT_COUNT"  value="4010"/>
-						<xtce:Enumeration name="OBC_CLOCK"       value="4011"/>
-						<xtce:Enumeration name="OBC_UPTIME"      value="4012"/>
+						<xtce:Enumeration label="OBC_FS_MOUNTED"  value="4000"/>
+						<xtce:Enumeration label="OBC_RAM_IMAGE"   value="4001"/>
+						<xtce:Enumeration label="OBC_TEMP_MCU"    value="4002"/>
+						<xtce:Enumeration label="OBC_TEMP_RAM"    value="4003"/>
+						<xtce:Enumeration label="OBC_I_GSSB1"     value="4004"/>
+						<xtce:Enumeration label="OBC_I_GSSB2"     value="4005"/>
+						<xtce:Enumeration label="OBC_I_FLASH"     value="4006"/>
+						<xtce:Enumeration label="OBC_I_PWM"       value="4007"/>
+						<xtce:Enumeration label="OBC_RESET_CAUSE" value="4008"/>
+						<xtce:Enumeration label="OBC_BOOT_CAUSE"  value="4009"/>
+						<xtce:Enumeration label="OBC_BOOT_COUNT"  value="4010"/>
+						<xtce:Enumeration label="OBC_CLOCK"       value="4011"/>
+						<xtce:Enumeration label="OBC_UPTIME"      value="4012"/>
 
-						<xtce:Enumeration name="EPS_M_SP_TEMP_X_+"  value="5000"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_X_-"  value="5001"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_Y_+"  value="5002"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_Y_-"  value="5003"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_Z_+"  value="5004"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_X_+"  value="5000"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_X_-"  value="5001"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_Y_+"  value="5002"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_Y_-"  value="5003"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_Z_+"  value="5004"/>
 
-						<xtce:Enumeration name="SYS_TEMP_BOARD"     value="6000"/>
-						<xtce:Enumeration name="SYS_TEMP_PA"        value="6001"/>
-						<xtce:Enumeration name="SYS_LAST_RSSI"      value="6002"/>
-						<xtce:Enumeration name="SYS_LAST_RFERR"     value="6003"/>
-						<xtce:Enumeration name="SYS_TX_COUNT"       value="6004"/>
-						<xtce:Enumeration name="SYS_RX_COUNT"       value="6005"/>
-						<xtce:Enumeration name="SYS_TX_BYTES"       value="6006"/>
-						<xtce:Enumeration name="SYS_RX_BYTES"       value="6007"/>
-						<xtce:Enumeration name="SYS_ACTIVE_CONF"    value="6008"/>
-						<xtce:Enumeration name="SYS_BOOT_COUNT"     value="6009"/>
-						<xtce:Enumeration name="SYS_BOOT_CAUSE"     value="6010"/>
-						<xtce:Enumeration name="SYS_LAST_CONTACT"   value="6011"/>
-						<xtce:Enumeration name="SYS_BGND_RSSI"      value="6012"/>
-						<xtce:Enumeration name="SYS_TX_DUTY"        value="6013"/>
-						<xtce:Enumeration name="SYS_TOTAL_TX_COUNT" value="6014"/>
-						<xtce:Enumeration name="SYS_TOTAL_RX_COUNT" value="6015"/>
-						<xtce:Enumeration name="SYS_TOTAL_TX_BYTES" value="6016"/>
-						<xtce:Enumeration name="SYS_TOTAL_RX_BYTES" value="6017"/>
+						<xtce:Enumeration label="SYS_TEMP_BOARD"     value="6000"/>
+						<xtce:Enumeration label="SYS_TEMP_PA"        value="6001"/>
+						<xtce:Enumeration label="SYS_LAST_RSSI"      value="6002"/>
+						<xtce:Enumeration label="SYS_LAST_RFERR"     value="6003"/>
+						<xtce:Enumeration label="SYS_TX_COUNT"       value="6004"/>
+						<xtce:Enumeration label="SYS_RX_COUNT"       value="6005"/>
+						<xtce:Enumeration label="SYS_TX_BYTES"       value="6006"/>
+						<xtce:Enumeration label="SYS_RX_BYTES"       value="6007"/>
+						<xtce:Enumeration label="SYS_ACTIVE_CONF"    value="6008"/>
+						<xtce:Enumeration label="SYS_BOOT_COUNT"     value="6009"/>
+						<xtce:Enumeration label="SYS_BOOT_CAUSE"     value="6010"/>
+						<xtce:Enumeration label="SYS_LAST_CONTACT"   value="6011"/>
+						<xtce:Enumeration label="SYS_BGND_RSSI"      value="6012"/>
+						<xtce:Enumeration label="SYS_TX_DUTY"        value="6013"/>
+						<xtce:Enumeration label="SYS_TOTAL_TX_COUNT" value="6014"/>
+						<xtce:Enumeration label="SYS_TOTAL_RX_COUNT" value="6015"/>
+						<xtce:Enumeration label="SYS_TOTAL_TX_BYTES" value="6016"/>
+						<xtce:Enumeration label="SYS_TOTAL_RX_BYTES" value="6017"/>
 
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
@@ -829,7 +826,7 @@
 				<xtce:AggregateParameterType name="TM_3_10_Type">
 					<xtce:MemberList>
 						<xtce:Member  name="HK_Param_Report_ID" typeRef="HK_Structure_ID_Type" sizeInBits="16" signed="false"/>
-						<xtce:Member  name="Collection_Interval" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
+						<xtce:Member  name="Collection_Interval" typeRef="/UCF/uint32_t" sizeInBits="32" signed="false"/>
 						<xtce:Member  name="HK_N1_Parameter_ID" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
 						<xtce:Member  name="HK_Param_Report_ID" typeRef="Parameter_ID_Array" signed="false"/>
 						<xtce:Member  name="NFA" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
@@ -841,7 +838,7 @@
 				<xtce:AggregateParameterType name="TM_3_12_Type">
 					<xtce:MemberList>
 						<xtce:Member  name="Diagnostic_Param_Report_ID" typeRef="HK_Structure_ID_Type" sizeInBits="16" signed="false"/>
-						<xtce:Member  name="Collection_Interval" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
+						<xtce:Member  name="Collection_Interval" typeRef="/UCF/uint32_t" sizeInBits="32" signed="false"/>
 						<xtce:Member  name="Diagnostic_N1_Parameter_ID" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
 						<xtce:Member  name="Diagnostic_Param_Report_ID" typeRef="Parameter_ID_Array" signed="false"/>
 						<xtce:Member  name="NFA" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
@@ -880,57 +877,57 @@
 				<xtce:EnumeratedParameterType name="Function_ID_PUS_8_Type">
 					<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="PAY_1_BOOT"                  value="0000"/>
-						<xtce:Enumeration name="PAY_1_X_AXIS_ENABLE"         value="0001"/>
-						<xtce:Enumeration name="PAY_1_Y_AXIS_ENABLE"         value="0002"/>
-						<xtce:Enumeration name="PAY_1_Z_AXIS_ENABLE"         value="0003"/>
-						<xtce:Enumeration name="PAY_1_ELECTRIC_NOISE_ENABLE" value="0004"/>
-						<xtce:Enumeration name="PAY_1_STOP_EXPERIMENT"       value="0005"/>
-						<xtce:Enumeration name="PAY_1_STOP_TIME"             value="0006"/>
-						<xtce:Enumeration name="PAY_1_DOWNLOAD_PACKET"       value="0007"/>
+						<xtce:Enumeration label="PAY_1_BOOT"                  value="0000"/>
+						<xtce:Enumeration label="PAY_1_X_AXIS_ENABLE"         value="0001"/>
+						<xtce:Enumeration label="PAY_1_Y_AXIS_ENABLE"         value="0002"/>
+						<xtce:Enumeration label="PAY_1_Z_AXIS_ENABLE"         value="0003"/>
+						<xtce:Enumeration label="PAY_1_ELECTRIC_NOISE_ENABLE" value="0004"/>
+						<xtce:Enumeration label="PAY_1_STOP_EXPERIMENT"       value="0005"/>
+						<xtce:Enumeration label="PAY_1_STOP_TIME"             value="0006"/>
+						<xtce:Enumeration label="PAY_1_DOWNLOAD_PACKET"       value="0007"/>
 
-						<xtce:Enumeration name="PAY_2_DOWNLOAD_PACKET"       value="1007"/>
-						<xtce:Enumeration name="PAY_2_STOP_TIME"             value="1006"/>
-						<xtce:Enumeration name="PAY_2_STOP_EXPERIMENT"       value="1005"/>
-						<xtce:Enumeration name="PAY_2_ELECTRIC_NOISE_ENABLE" value="1004"/>
-						<xtce:Enumeration name="PAY_2_Z_AXIS_ENABLE"         value="1003"/>
-						<xtce:Enumeration name="PAY_2_Y_AXIS_ENABLE"         value="1002"/>
-						<xtce:Enumeration name="PAY_2_X_AXIS_ENABLE"         value="1001"/>
-						<xtce:Enumeration name="PAY_2_BOOT"                  value="1000"/>
+						<xtce:Enumeration label="PAY_2_DOWNLOAD_PACKET"       value="1007"/>
+						<xtce:Enumeration label="PAY_2_STOP_TIME"             value="1006"/>
+						<xtce:Enumeration label="PAY_2_STOP_EXPERIMENT"       value="1005"/>
+						<xtce:Enumeration label="PAY_2_ELECTRIC_NOISE_ENABLE" value="1004"/>
+						<xtce:Enumeration label="PAY_2_Z_AXIS_ENABLE"         value="1003"/>
+						<xtce:Enumeration label="PAY_2_Y_AXIS_ENABLE"         value="1002"/>
+						<xtce:Enumeration label="PAY_2_X_AXIS_ENABLE"         value="1001"/>
+						<xtce:Enumeration label="PAY_2_BOOT"                  value="1000"/>
 
-						<xtce:Enumeration name="EPS_SYSTEM_RESET" value="2000"/>
-						<xtce:Enumeration name="EPS_NO_OPERATION" value="2001"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_GROUP_STATE" value="2002"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_CHANNEL_ON" value="2004"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_CHANNEL_OFF" value="2005"/>
-						<xtce:Enumeration name="EPS_SWITCH_TO_NOMINAL_MODE" value="2006"/>
-						<xtce:Enumeration name="EPS_SWITCH_TO_SAFETY_MODE" value="2007"/>
-						<xtce:Enumeration name="EPS_GET_SYSTEM_STATUS" value="2008"/>
-						<xtce:Enumeration name="EPS_GET_PDU_PIU_OVERCURRENT_FAULT_STATE" value="2009"/>
-						<xtce:Enumeration name="EPS_GET_PBU_ABF_PLACED_STATE" value="2010"/>
-						<xtce:Enumeration name="EPS_GET_PDU_HK_DATA_ENG" value="2011"/>
-						<xtce:Enumeration name="EPS_GET_PBU_HK_DATA_ENG" value="2012"/>
-						<xtce:Enumeration name="EPS_GET_PCU_HK_DATA_ENG" value="2013"/>
-						<xtce:Enumeration name="EPS_GET_CONFIGURATION_PARAMETER" value="2014"/>
-						<xtce:Enumeration name="EPS_SET_CONFIGURATION_PARAMETER" value="2015"/>
-						<xtce:Enumeration name="EPS_RESET_CONFIGURATION_PARAMETER" value="2016"/>
-						<xtce:Enumeration name="EPS_RESET_CONFIGURATION" value="2017"/>
-						<xtce:Enumeration name="EPS_LOAD_CONFIGURATION" value="2018"/>
-						<xtce:Enumeration name="EPS_SAVE_CONFIGURATION" value="2019"/>
-						<xtce:Enumeration name="EPS_GET_PIU_HK_DATA_ENG" value="2020"/>
-						<xtce:Enumeration name="EPS_CORRECT_TIME" value="2021"/>
-						<xtce:Enumeration name="EPS_ZERO_RESET_CAUSE_COUNTERS" value="2022"/>
+						<xtce:Enumeration label="EPS_SYSTEM_RESET" value="2000"/>
+						<xtce:Enumeration label="EPS_NO_OPERATION" value="2001"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_GROUP_STATE" value="2002"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_CHANNEL_ON" value="2004"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_CHANNEL_OFF" value="2005"/>
+						<xtce:Enumeration label="EPS_SWITCH_TO_NOMINAL_MODE" value="2006"/>
+						<xtce:Enumeration label="EPS_SWITCH_TO_SAFETY_MODE" value="2007"/>
+						<xtce:Enumeration label="EPS_GET_SYSTEM_STATUS" value="2008"/>
+						<xtce:Enumeration label="EPS_GET_PDU_PIU_OVERCURRENT_FAULT_STATE" value="2009"/>
+						<xtce:Enumeration label="EPS_GET_PBU_ABF_PLACED_STATE" value="2010"/>
+						<xtce:Enumeration label="EPS_GET_PDU_HK_DATA_ENG" value="2011"/>
+						<xtce:Enumeration label="EPS_GET_PBU_HK_DATA_ENG" value="2012"/>
+						<xtce:Enumeration label="EPS_GET_PCU_HK_DATA_ENG" value="2013"/>
+						<xtce:Enumeration label="EPS_GET_CONFIGURATION_PARAMETER" value="2014"/>
+						<xtce:Enumeration label="EPS_SET_CONFIGURATION_PARAMETER" value="2015"/>
+						<xtce:Enumeration label="EPS_RESET_CONFIGURATION_PARAMETER" value="2016"/>
+						<xtce:Enumeration label="EPS_RESET_CONFIGURATION" value="2017"/>
+						<xtce:Enumeration label="EPS_LOAD_CONFIGURATION" value="2018"/>
+						<xtce:Enumeration label="EPS_SAVE_CONFIGURATION" value="2019"/>
+						<xtce:Enumeration label="EPS_GET_PIU_HK_DATA_ENG" value="2020"/>
+						<xtce:Enumeration label="EPS_CORRECT_TIME" value="2021"/>
+						<xtce:Enumeration label="EPS_ZERO_RESET_CAUSE_COUNTERS" value="2022"/>
 
-						<xtce:Enumeration name="OBC_DUMP_RANGE" value="3000"/>
-						<xtce:Enumeration name="OBC_DUMP_PACKET" value="3001"/>
-						<xtce:Enumeration name="OBC_BOOT" value="3003"/>
+						<xtce:Enumeration label="OBC_DUMP_RANGE" value="3000"/>
+						<xtce:Enumeration label="OBC_DUMP_PACKET" value="3001"/>
+						<xtce:Enumeration label="OBC_BOOT" value="3003"/>
 
-						<xtce:Enumeration name="SYSTEM_SAFE_MODE_ENABLE" value="4000"/>
-						<xtce:Enumeration name="SYSTEM_OPERATIONAL_MODE_ENABLE" value="4001"/>
-						<xtce:Enumeration name="SYSTEM_NOMINAL_MODE_ENABLE" value="4002"/>
-						<xtce:Enumeration name="SYSTEM_GET_MODE_ENABLED" value="4003"/>
-						<xtce:Enumeration name="SYSTEM_CHANGE_BEACON_FREQUENCY" value="4004"/>
-						<xtce:Enumeration name="SYSTEM_CHANGE_BAUDRATE" value="4005"/>
+						<xtce:Enumeration label="SYSTEM_SAFE_MODE_ENABLE" value="4000"/>
+						<xtce:Enumeration label="SYSTEM_OPERATIONAL_MODE_ENABLE" value="4001"/>
+						<xtce:Enumeration label="SYSTEM_NOMINAL_MODE_ENABLE" value="4002"/>
+						<xtce:Enumeration label="SYSTEM_GET_MODE_ENABLED" value="4003"/>
+						<xtce:Enumeration label="SYSTEM_CHANGE_BEACON_FREQUENCY" value="4004"/>
+						<xtce:Enumeration label="SYSTEM_CHANGE_BAUDRATE" value="4005"/>
 
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
@@ -942,7 +939,7 @@
 				<xtce:EnumeratedParameterType name="Memory_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Default_Memory" value="1"/>
+						<xtce:Enumeration label="Default_Memory" value="1"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
@@ -997,70 +994,70 @@
 				<xtce:EnumeratedParameterType name="Event_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Empty" value="1"/>
+						<xtce:Enumeration label="Empty" value="1"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="PMON_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Empty" value="0"/>
+						<xtce:Enumeration label="Empty" value="0"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="PMON_Status_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Disabled" value="0"/>
-						<xtce:Enumeration name="Enabled" value="1"/>
+						<xtce:Enumeration label="Disabled" value="0"/>
+						<xtce:Enumeration label="Enabled" value="1"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="Check_Type_Type">
 					<xtce:IntegerDataEncoding sizeInBits="2" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Expected_Value_Checking" value="0"/>
-						<xtce:Enumeration name="Limit_Checking" value="1"/>
-						<xtce:Enumeration name="Delta_Checking" value="2"/>
+						<xtce:Enumeration label="Expected_Value_Checking" value="0"/>
+						<xtce:Enumeration label="Limit_Checking" value="1"/>
+						<xtce:Enumeration label="Delta_Checking" value="2"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="FMON_Status_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Disabled" value="0"/>
-						<xtce:Enumeration name="Enabled" value="1"/>
+						<xtce:Enumeration label="Disabled" value="0"/>
+						<xtce:Enumeration label="Enabled" value="1"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="FMON_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Empty" value="0"/>
+						<xtce:Enumeration label="Empty" value="0"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="FMON_Checking_Status_Type">
 					<xtce:IntegerDataEncoding sizeInBits="2" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Expected_Value_Checking" value="0"/>
-						<xtce:Enumeration name="Limit_Checking" value="1"/>
-						<xtce:Enumeration name="Delta_Checking" value="2"/>
+						<xtce:Enumeration label="Expected_Value_Checking" value="0"/>
+						<xtce:Enumeration label="Limit_Checking" value="1"/>
+						<xtce:Enumeration label="Delta_Checking" value="2"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="Limit_Crossed_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="False" value="0"/>
-						<xtce:Enumeration name="True" value="1"/>
+						<xtce:Enumeration label="False" value="0"/>
+						<xtce:Enumeration label="True" value="1"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="Packet_Store_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Empty" value="1"/>
+						<xtce:Enumeration label="Empty" value="1"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
@@ -1076,26 +1073,26 @@
 				<xtce:EnumeratedParameterType name="Addressing_Scheme_Type">
 					<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Absolute_Addressing_Scheme" value="0"/>
-						<xtce:Enumeration name="Base_Offset_Addressing_Scheme" value="1"/>
+						<xtce:Enumeration label="Absolute_Addressing_Scheme" value="0"/>
+						<xtce:Enumeration label="Base_Offset_Addressing_Scheme" value="1"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
 				<xtce:EnumeratedParameterType name="PTC_Type">
 					<xtce:IntegerDataEncoding sizeInBits="4" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="Boolean" value="1"/>
-						<xtce:Enumeration name="Enumerated" value="2"/>
-						<xtce:Enumeration name="Unsigned_Integer" value="3"/>
-						<xtce:Enumeration name="Signed_Integer" value="4"/>
-						<xtce:Enumeration name="Real" value="5"/>
-						<xtce:Enumeration name="Bit_String" value="6"/>
-						<xtce:Enumeration name="Octet_String" value="7"/>
-						<xtce:Enumeration name="Character_String" value="8"/>
-						<xtce:Enumeration name="Absolute_Time" value="9"/>
-						<xtce:Enumeration name="Relative_Time" value="10"/>
-						<xtce:Enumeration name="Deduced" value="11"/>
-						<xtce:Enumeration name="Packet" value="12"/>
+						<xtce:Enumeration label="Boolean" value="1"/>
+						<xtce:Enumeration label="Enumerated" value="2"/>
+						<xtce:Enumeration label="Unsigned_Integer" value="3"/>
+						<xtce:Enumeration label="Signed_Integer" value="4"/>
+						<xtce:Enumeration label="Real" value="5"/>
+						<xtce:Enumeration label="Bit_String" value="6"/>
+						<xtce:Enumeration label="Octet_String" value="7"/>
+						<xtce:Enumeration label="Character_String" value="8"/>
+						<xtce:Enumeration label="Absolute_Time" value="9"/>
+						<xtce:Enumeration label="Relative_Time" value="10"/>
+						<xtce:Enumeration label="Deduced" value="11"/>
+						<xtce:Enumeration label="Packet" value="12"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
@@ -1933,17 +1930,17 @@
 			<xtce:EnumeratedArgumentType name="HK_Structure_ID_Type">
 				<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
 				<xtce:EnumerationList>
-					<xtce:Enumeration name="HK_PAY_1" value="0"/>
-					<xtce:Enumeration name="HK_PAY_2" value="1"/>
-					<xtce:Enumeration name="HK_EPS_System_Status" value="2"/>
-					<xtce:Enumeration name="HK_EPS_Configuration_Parameter" value="3"/>
-					<xtce:Enumeration name="HK_EPS_PDU" value="4"/>
-					<xtce:Enumeration name="HK_EPS_PBU" value="5"/>
-					<xtce:Enumeration name="HK_EPS_PIU" value="6"/>
-					<xtce:Enumeration name="HK_ADCS" value="7"/>
-					<xtce:Enumeration name="HK_OBC" value="8"/>
-					<xtce:Enumeration name="HK_Solar_Panels" value="9"/>
-					<xtce:Enumeration name="HK_System" value="10"/>
+					<xtce:Enumeration label="HK_PAY_1" value="0"/>
+					<xtce:Enumeration label="HK_PAY_2" value="1"/>
+					<xtce:Enumeration label="HK_EPS_System_Status" value="2"/>
+					<xtce:Enumeration label="HK_EPS_Configuration_Parameter" value="3"/>
+					<xtce:Enumeration label="HK_EPS_PDU" value="4"/>
+					<xtce:Enumeration label="HK_EPS_PBU" value="5"/>
+					<xtce:Enumeration label="HK_EPS_PIU" value="6"/>
+					<xtce:Enumeration label="HK_ADCS" value="7"/>
+					<xtce:Enumeration label="HK_OBC" value="8"/>
+					<xtce:Enumeration label="HK_Solar_Panels" value="9"/>
+					<xtce:Enumeration label="HK_System" value="10"/>
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
@@ -1951,79 +1948,78 @@
 				<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
 				<xtce:EnumerationList>
 
-						<xtce:Enumeration name="PAY_1_Enabled"         value="0000"/>
-						<xtce:Enumeration name="PAY_1_S1_Z"            value="0001"/>
-						<xtce:Enumeration name="PAY_1_S2_X"            value="0002"/>
-						<xtce:Enumeration name="PAY_1_S2_Y"            value="0003"/>
-						<xtce:Enumeration name="PAY_1_Electric_Noise"  value="0004"/>
-						<xtce:Enumeration name="PAY_1_Stop"            value="0005"/>
-						<xtce:Enumeration name="PAY_1_Error"           value="0006"/>
-						<xtce:Enumeration name="PAY_1_Experiment_Time" value="0007"/>
+						<xtce:Enumeration label="PAY_1_Enabled"         value="0000"/>
+						<xtce:Enumeration label="PAY_1_S1_Z"            value="0001"/>
+						<xtce:Enumeration label="PAY_1_S2_X"            value="0002"/>
+						<xtce:Enumeration label="PAY_1_S2_Y"            value="0003"/>
+						<xtce:Enumeration label="PAY_1_Electric_Noise"  value="0004"/>
+						<xtce:Enumeration label="PAY_1_Stop"            value="0005"/>
+						<xtce:Enumeration label="PAY_1_Error"           value="0006"/>
+						<xtce:Enumeration label="PAY_1_Experiment_Time" value="0007"/>
 
-						<xtce:Enumeration name="PAY_2_Enabled"         value="1000"/>
-						<xtce:Enumeration name="PAY_2_S1_Z"            value="1001"/>
-						<xtce:Enumeration name="PAY_2_S2_X"            value="1002"/>
-						<xtce:Enumeration name="PAY_2_S2_Y"            value="1003"/>
-						<xtce:Enumeration name="PAY_2_Electric_Noise"  value="1004"/>
-						<xtce:Enumeration name="PAY_2_Stop"            value="1005"/>
-						<xtce:Enumeration name="PAY_2_Error"           value="1006"/>
-						<xtce:Enumeration name="PAY_2_Experiment_Time" value="1007"/>
+						<xtce:Enumeration label="PAY_2_Enabled"         value="1000"/>
+						<xtce:Enumeration label="PAY_2_S1_Z"            value="1001"/>
+						<xtce:Enumeration label="PAY_2_S2_X"            value="1002"/>
+						<xtce:Enumeration label="PAY_2_S2_Y"            value="1003"/>
+						<xtce:Enumeration label="PAY_2_Electric_Noise"  value="1004"/>
+						<xtce:Enumeration label="PAY_2_Stop"            value="1005"/>
+						<xtce:Enumeration label="PAY_2_Error"           value="1006"/>
+						<xtce:Enumeration label="PAY_2_Experiment_Time" value="1007"/>
 
-						<xtce:Enumeration name="EPS_System_Status"               value="2000"/>
-						<xtce:Enumeration name="EPS_PDU_HK_Eng"                  value="2001"/>
-						<xtce:Enumeration name="EPS_PBU_HK_Eng"                  value="2002"/>
-						<xtce:Enumeration name="EPS_Get_Configuration_Parameter" value="2003"/>
-						<xtce:Enumeration name="EPS_PIU_HK_Eng"  		         value="2004"/>
-						<xtce:Enumeration name="EPS_PIU_HK_Eng"  		         value="2004"/>
+						<xtce:Enumeration label="EPS_System_Status"               value="2000"/>
+						<xtce:Enumeration label="EPS_PDU_HK_Eng"                  value="2001"/>
+						<xtce:Enumeration label="EPS_PBU_HK_Eng"                  value="2002"/>
+						<xtce:Enumeration label="EPS_Get_Configuration_Parameter" value="2003"/>
+						<xtce:Enumeration label="EPS_PIU_HK_Eng"  		         value="2004"/>
 
-						<xtce:Enumeration name="ADCS_SUN_SENSOR_X+"  		value="3000"/>
-						<xtce:Enumeration name="ADCS_SUN_SENSOR_X-"  		value="3001"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_X-"  	value="3002"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_Y+"  	value="3003"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_Y-"  	value="3004"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_Z+"  	value="3005"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_OBC_X" value="3006"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_OBC_Y" value="3007"/>
-						<xtce:Enumeration name="ADCS_MAGNETIC_SENSOR_OBC_Z" value="3008"/>
+						<xtce:Enumeration label="ADCS_SUN_SENSOR_X+"  		value="3000"/>
+						<xtce:Enumeration label="ADCS_SUN_SENSOR_X-"  		value="3001"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_X-"  	value="3002"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_Y+"  	value="3003"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_Y-"  	value="3004"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_Z+"  	value="3005"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_OBC_X" value="3006"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_OBC_Y" value="3007"/>
+						<xtce:Enumeration label="ADCS_MAGNETIC_SENSOR_OBC_Z" value="3008"/>
 
-						<xtce:Enumeration name="OBC_FS_MOUNTED"  value="4000"/>
-						<xtce:Enumeration name="OBC_RAM_IMAGE"   value="4001"/>
-						<xtce:Enumeration name="OBC_TEMP_MCU"    value="4002"/>
-						<xtce:Enumeration name="OBC_TEMP_RAM"    value="4003"/>
-						<xtce:Enumeration name="OBC_I_GSSB1"     value="4004"/>
-						<xtce:Enumeration name="OBC_I_GSSB2"     value="4005"/>
-						<xtce:Enumeration name="OBC_I_FLASH"     value="4006"/>
-						<xtce:Enumeration name="OBC_I_PWM"       value="4007"/>
-						<xtce:Enumeration name="OBC_RESET_CAUSE" value="4008"/>
-						<xtce:Enumeration name="OBC_BOOT_CAUSE"  value="4009"/>
-						<xtce:Enumeration name="OBC_BOOT_COUNT"  value="4010"/>
-						<xtce:Enumeration name="OBC_CLOCK"       value="4011"/>
-						<xtce:Enumeration name="OBC_UPTIME"      value="4012"/>
+						<xtce:Enumeration label="OBC_FS_MOUNTED"  value="4000"/>
+						<xtce:Enumeration label="OBC_RAM_IMAGE"   value="4001"/>
+						<xtce:Enumeration label="OBC_TEMP_MCU"    value="4002"/>
+						<xtce:Enumeration label="OBC_TEMP_RAM"    value="4003"/>
+						<xtce:Enumeration label="OBC_I_GSSB1"     value="4004"/>
+						<xtce:Enumeration label="OBC_I_GSSB2"     value="4005"/>
+						<xtce:Enumeration label="OBC_I_FLASH"     value="4006"/>
+						<xtce:Enumeration label="OBC_I_PWM"       value="4007"/>
+						<xtce:Enumeration label="OBC_RESET_CAUSE" value="4008"/>
+						<xtce:Enumeration label="OBC_BOOT_CAUSE"  value="4009"/>
+						<xtce:Enumeration label="OBC_BOOT_COUNT"  value="4010"/>
+						<xtce:Enumeration label="OBC_CLOCK"       value="4011"/>
+						<xtce:Enumeration label="OBC_UPTIME"      value="4012"/>
 
-						<xtce:Enumeration name="EPS_M_SP_TEMP_X_+"  value="5000"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_X_-"  value="5001"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_Y_+"  value="5002"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_Y_-"  value="5003"/>
-						<xtce:Enumeration name="EPS_M_SP_TEMP_Z_+"  value="5004"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_X_+"  value="5000"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_X_-"  value="5001"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_Y_+"  value="5002"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_Y_-"  value="5003"/>
+						<xtce:Enumeration label="EPS_M_SP_TEMP_Z_+"  value="5004"/>
 
-						<xtce:Enumeration name="SYS_TEMP_BOARD"     value="6000"/>
-						<xtce:Enumeration name="SYS_TEMP_PA"        value="6001"/>
-						<xtce:Enumeration name="SYS_LAST_RSSI"      value="6002"/>
-						<xtce:Enumeration name="SYS_LAST_RFERR"     value="6003"/>
-						<xtce:Enumeration name="SYS_TX_COUNT"       value="6004"/>
-						<xtce:Enumeration name="SYS_RX_COUNT"       value="6005"/>
-						<xtce:Enumeration name="SYS_TX_BYTES"       value="6006"/>
-						<xtce:Enumeration name="SYS_RX_BYTES"       value="6007"/>
-						<xtce:Enumeration name="SYS_ACTIVE_CONF"    value="6008"/>
-						<xtce:Enumeration name="SYS_BOOT_COUNT"     value="6009"/>
-						<xtce:Enumeration name="SYS_BOOT_CAUSE"     value="6010"/>
-						<xtce:Enumeration name="SYS_LAST_CONTACT"   value="6011"/>
-						<xtce:Enumeration name="SYS_BGND_RSSI"      value="6012"/>
-						<xtce:Enumeration name="SYS_TX_DUTY"        value="6013"/>
-						<xtce:Enumeration name="SYS_TOTAL_TX_COUNT" value="6014"/>
-						<xtce:Enumeration name="SYS_TOTAL_RX_COUNT" value="6015"/>
-						<xtce:Enumeration name="SYS_TOTAL_TX_BYTES" value="6016"/>
-						<xtce:Enumeration name="SYS_TOTAL_RX_BYTES" value="6017"/>
+						<xtce:Enumeration label="SYS_TEMP_BOARD"     value="6000"/>
+						<xtce:Enumeration label="SYS_TEMP_PA"        value="6001"/>
+						<xtce:Enumeration label="SYS_LAST_RSSI"      value="6002"/>
+						<xtce:Enumeration label="SYS_LAST_RFERR"     value="6003"/>
+						<xtce:Enumeration label="SYS_TX_COUNT"       value="6004"/>
+						<xtce:Enumeration label="SYS_RX_COUNT"       value="6005"/>
+						<xtce:Enumeration label="SYS_TX_BYTES"       value="6006"/>
+						<xtce:Enumeration label="SYS_RX_BYTES"       value="6007"/>
+						<xtce:Enumeration label="SYS_ACTIVE_CONF"    value="6008"/>
+						<xtce:Enumeration label="SYS_BOOT_COUNT"     value="6009"/>
+						<xtce:Enumeration label="SYS_BOOT_CAUSE"     value="6010"/>
+						<xtce:Enumeration label="SYS_LAST_CONTACT"   value="6011"/>
+						<xtce:Enumeration label="SYS_BGND_RSSI"      value="6012"/>
+						<xtce:Enumeration label="SYS_TX_DUTY"        value="6013"/>
+						<xtce:Enumeration label="SYS_TOTAL_TX_COUNT" value="6014"/>
+						<xtce:Enumeration label="SYS_TOTAL_RX_COUNT" value="6015"/>
+						<xtce:Enumeration label="SYS_TOTAL_TX_BYTES" value="6016"/>
+						<xtce:Enumeration label="SYS_TOTAL_RX_BYTES" value="6017"/>
 
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
@@ -2031,57 +2027,57 @@
 			<xtce:EnumeratedArgumentType name="Function_ID_PUS_8_Type">
 					<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="PAY_1_BOOT"                  value="0000"/>
-						<xtce:Enumeration name="PAY_1_X_AXIS_ENABLE"         value="0001"/>
-						<xtce:Enumeration name="PAY_1_Y_AXIS_ENABLE"         value="0002"/>
-						<xtce:Enumeration name="PAY_1_Z_AXIS_ENABLE"         value="0003"/>
-						<xtce:Enumeration name="PAY_1_ELECTRIC_NOISE_ENABLE" value="0004"/>
-						<xtce:Enumeration name="PAY_1_STOP_EXPERIMENT"       value="0005"/>
-						<xtce:Enumeration name="PAY_1_STOP_TIME"             value="0006"/>
-						<xtce:Enumeration name="PAY_1_DOWNLOAD_PACKET"       value="0007"/>
+						<xtce:Enumeration label="PAY_1_BOOT"                  value="0000"/>
+						<xtce:Enumeration label="PAY_1_X_AXIS_ENABLE"         value="0001"/>
+						<xtce:Enumeration label="PAY_1_Y_AXIS_ENABLE"         value="0002"/>
+						<xtce:Enumeration label="PAY_1_Z_AXIS_ENABLE"         value="0003"/>
+						<xtce:Enumeration label="PAY_1_ELECTRIC_NOISE_ENABLE" value="0004"/>
+						<xtce:Enumeration label="PAY_1_STOP_EXPERIMENT"       value="0005"/>
+						<xtce:Enumeration label="PAY_1_STOP_TIME"             value="0006"/>
+						<xtce:Enumeration label="PAY_1_DOWNLOAD_PACKET"       value="0007"/>
 
-						<xtce:Enumeration name="PAY_2_DOWNLOAD_PACKET"       value="1007"/>
-						<xtce:Enumeration name="PAY_2_STOP_TIME"             value="1006"/>
-						<xtce:Enumeration name="PAY_2_STOP_EXPERIMENT"       value="1005"/>
-						<xtce:Enumeration name="PAY_2_ELECTRIC_NOISE_ENABLE" value="1004"/>
-						<xtce:Enumeration name="PAY_2_Z_AXIS_ENABLE"         value="1003"/>
-						<xtce:Enumeration name="PAY_2_Y_AXIS_ENABLE"         value="1002"/>
-						<xtce:Enumeration name="PAY_2_X_AXIS_ENABLE"         value="1001"/>
-						<xtce:Enumeration name="PAY_2_BOOT"                  value="1000"/>
+						<xtce:Enumeration label="PAY_2_DOWNLOAD_PACKET"       value="1007"/>
+						<xtce:Enumeration label="PAY_2_STOP_TIME"             value="1006"/>
+						<xtce:Enumeration label="PAY_2_STOP_EXPERIMENT"       value="1005"/>
+						<xtce:Enumeration label="PAY_2_ELECTRIC_NOISE_ENABLE" value="1004"/>
+						<xtce:Enumeration label="PAY_2_Z_AXIS_ENABLE"         value="1003"/>
+						<xtce:Enumeration label="PAY_2_Y_AXIS_ENABLE"         value="1002"/>
+						<xtce:Enumeration label="PAY_2_X_AXIS_ENABLE"         value="1001"/>
+						<xtce:Enumeration label="PAY_2_BOOT"                  value="1000"/>
 
-						<xtce:Enumeration name="EPS_SYSTEM_RESET" value="2000"/>
-						<xtce:Enumeration name="EPS_NO_OPERATION" value="2001"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_GROUP_STATE" value="2002"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_CHANNEL_ON" value="2004"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_CHANNEL_OFF" value="2005"/>
-						<xtce:Enumeration name="EPS_SWITCH_TO_NOMINAL_MODE" value="2006"/>
-						<xtce:Enumeration name="EPS_SWITCH_TO_SAFETY_MODE" value="2007"/>
-						<xtce:Enumeration name="EPS_GET_SYSTEM_STATUS" value="2008"/>
-						<xtce:Enumeration name="EPS_GET_PDU_PIU_OVERCURRENT_FAULT_STATE" value="2009"/>
-						<xtce:Enumeration name="EPS_GET_PBU_ABF_PLACED_STATE" value="2010"/>
-						<xtce:Enumeration name="EPS_GET_PDU_HK_DATA_ENG" value="2011"/>
-						<xtce:Enumeration name="EPS_GET_PBU_HK_DATA_ENG" value="2012"/>
-						<xtce:Enumeration name="EPS_GET_PCU_HK_DATA_ENG" value="2013"/>
-						<xtce:Enumeration name="EPS_GET_CONFIGURATION_PARAMETER" value="2014"/>
-						<xtce:Enumeration name="EPS_SET_CONFIGURATION_PARAMETER" value="2015"/>
-						<xtce:Enumeration name="EPS_RESET_CONFIGURATION_PARAMETER" value="2016"/>
-						<xtce:Enumeration name="EPS_RESET_CONFIGURATION" value="2017"/>
-						<xtce:Enumeration name="EPS_LOAD_CONFIGURATION" value="2018"/>
-						<xtce:Enumeration name="EPS_SAVE_CONFIGURATION" value="2019"/>
-						<xtce:Enumeration name="EPS_GET_PIU_HK_DATA_ENG" value="2020"/>
-						<xtce:Enumeration name="EPS_CORRECT_TIME" value="2021"/>
-						<xtce:Enumeration name="EPS_ZERO_RESET_CAUSE_COUNTERS" value="2022"/>
+						<xtce:Enumeration label="EPS_SYSTEM_RESET" value="2000"/>
+						<xtce:Enumeration label="EPS_NO_OPERATION" value="2001"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_GROUP_STATE" value="2002"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_CHANNEL_ON" value="2004"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_CHANNEL_OFF" value="2005"/>
+						<xtce:Enumeration label="EPS_SWITCH_TO_NOMINAL_MODE" value="2006"/>
+						<xtce:Enumeration label="EPS_SWITCH_TO_SAFETY_MODE" value="2007"/>
+						<xtce:Enumeration label="EPS_GET_SYSTEM_STATUS" value="2008"/>
+						<xtce:Enumeration label="EPS_GET_PDU_PIU_OVERCURRENT_FAULT_STATE" value="2009"/>
+						<xtce:Enumeration label="EPS_GET_PBU_ABF_PLACED_STATE" value="2010"/>
+						<xtce:Enumeration label="EPS_GET_PDU_HK_DATA_ENG" value="2011"/>
+						<xtce:Enumeration label="EPS_GET_PBU_HK_DATA_ENG" value="2012"/>
+						<xtce:Enumeration label="EPS_GET_PCU_HK_DATA_ENG" value="2013"/>
+						<xtce:Enumeration label="EPS_GET_CONFIGURATION_PARAMETER" value="2014"/>
+						<xtce:Enumeration label="EPS_SET_CONFIGURATION_PARAMETER" value="2015"/>
+						<xtce:Enumeration label="EPS_RESET_CONFIGURATION_PARAMETER" value="2016"/>
+						<xtce:Enumeration label="EPS_RESET_CONFIGURATION" value="2017"/>
+						<xtce:Enumeration label="EPS_LOAD_CONFIGURATION" value="2018"/>
+						<xtce:Enumeration label="EPS_SAVE_CONFIGURATION" value="2019"/>
+						<xtce:Enumeration label="EPS_GET_PIU_HK_DATA_ENG" value="2020"/>
+						<xtce:Enumeration label="EPS_CORRECT_TIME" value="2021"/>
+						<xtce:Enumeration label="EPS_ZERO_RESET_CAUSE_COUNTERS" value="2022"/>
 
-						<xtce:Enumeration name="OBC_DUMP_RANGE" value="3000"/>
-						<xtce:Enumeration name="OBC_DUMP_PACKET" value="3001"/>
-						<xtce:Enumeration name="OBC_BOOT" value="3003"/>
+						<xtce:Enumeration label="OBC_DUMP_RANGE" value="3000"/>
+						<xtce:Enumeration label="OBC_DUMP_PACKET" value="3001"/>
+						<xtce:Enumeration label="OBC_BOOT" value="3003"/>
 
-						<xtce:Enumeration name="SYSTEM_SAFE_MODE_ENABLE" value="4000"/>
-						<xtce:Enumeration name="SYSTEM_OPERATIONAL_MODE_ENABLE" value="4001"/>
-						<xtce:Enumeration name="SYSTEM_NOMINAL_MODE_ENABLE" value="4002"/>
-						<xtce:Enumeration name="SYSTEM_GET_MODE_ENABLED" value="4003"/>
-						<xtce:Enumeration name="SYSTEM_CHANGE_BEACON_FREQUENCY" value="4004"/>
-						<xtce:Enumeration name="SYSTEM_CHANGE_BAUDRATE" value="4005"/>
+						<xtce:Enumeration label="SYSTEM_SAFE_MODE_ENABLE" value="4000"/>
+						<xtce:Enumeration label="SYSTEM_OPERATIONAL_MODE_ENABLE" value="4001"/>
+						<xtce:Enumeration label="SYSTEM_NOMINAL_MODE_ENABLE" value="4002"/>
+						<xtce:Enumeration label="SYSTEM_GET_MODE_ENABLED" value="4003"/>
+						<xtce:Enumeration label="SYSTEM_CHANGE_BEACON_FREQUENCY" value="4004"/>
+						<xtce:Enumeration label="SYSTEM_CHANGE_BAUDRATE" value="4005"/>
 
 					</xtce:EnumerationList>
 				</xtce:EnumeratedArgumentType>
@@ -2089,27 +2085,27 @@
 				<xtce:EnumeratedArgumentType name="Function_ID_PUS_8_Argument_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
 					<xtce:EnumerationList>
-						<xtce:Enumeration name="PAY_1_STOP_TIME"             value="0006"/>
-						<xtce:Enumeration name="PAY_1_DOWNLOAD_PACKET"       value="0007"/>
+						<xtce:Enumeration label="PAY_1_STOP_TIME"             value="0006"/>
+						<xtce:Enumeration label="PAY_1_DOWNLOAD_PACKET"       value="0007"/>
 
-						<xtce:Enumeration name="PAY_2_STOP_TIME"             value="1006"/>
-						<xtce:Enumeration name="PAY_2_DOWNLOAD_PACKET"       value="1007"/>
+						<xtce:Enumeration label="PAY_2_STOP_TIME"             value="1006"/>
+						<xtce:Enumeration label="PAY_2_DOWNLOAD_PACKET"       value="1007"/>
 
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_GROUP_STATE"            value="2002"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_CHANNEL_ON"             value="2004"/>
-						<xtce:Enumeration name="EPS_OUTPUT_BUS_CHANNEL_OFF"            value="2005"/>
-						<xtce:Enumeration name="EPS_GET_CONFIGURATION_PARAMETER"       value="2014"/>
-						<xtce:Enumeration name="EPS_SET_CONFIGURATION_PARAMETER_ID"    value="2115"/>
-						<xtce:Enumeration name="EPS_SET_CONFIGURATION_PARAMETER_VALUE" value="2215"/>
-						<xtce:Enumeration name="EPS_RESET_CONFIGURATION_PARAMETER"     value="2016"/>
-						<xtce:Enumeration name="EPS_SAVE_CONFIGURATION"                value="2019"/>
-						<xtce:Enumeration name="EPS_CORRECT_TIME"                      value="2021"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_GROUP_STATE"            value="2002"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_CHANNEL_ON"             value="2004"/>
+						<xtce:Enumeration label="EPS_OUTPUT_BUS_CHANNEL_OFF"            value="2005"/>
+						<xtce:Enumeration label="EPS_GET_CONFIGURATION_PARAMETER"       value="2014"/>
+						<xtce:Enumeration label="EPS_SET_CONFIGURATION_PARAMETER_ID"    value="2115"/>
+						<xtce:Enumeration label="EPS_SET_CONFIGURATION_PARAMETER_VALUE" value="2215"/>
+						<xtce:Enumeration label="EPS_RESET_CONFIGURATION_PARAMETER"     value="2016"/>
+						<xtce:Enumeration label="EPS_SAVE_CONFIGURATION"                value="2019"/>
+						<xtce:Enumeration label="EPS_CORRECT_TIME"                      value="2021"/>
 
-						<xtce:Enumeration name="OBC_DUMP_RANGE" value="3000"/>
-						<xtce:Enumeration name="OBC_DUMP_PACKET" value="3001"/>
+						<xtce:Enumeration label="OBC_DUMP_RANGE" value="3000"/>
+						<xtce:Enumeration label="OBC_DUMP_PACKET" value="3001"/>
 
-						<xtce:Enumeration name="SYSTEM_CHANGE_BEACON_FREQUENCY" value="4004"/>
-						<xtce:Enumeration name="SYSTEM_CHANGE_BAUDRATE" value="4005"/>
+						<xtce:Enumeration label="SYSTEM_CHANGE_BEACON_FREQUENCY" value="4004"/>
+						<xtce:Enumeration label="SYSTEM_CHANGE_BAUDRATE" value="4005"/>
 
 					</xtce:EnumerationList>
 				</xtce:EnumeratedArgumentType>
@@ -2142,7 +2138,7 @@
 			<xtce:EnumeratedArgumentType name="Memory_ID_Type">
 				<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 				<xtce:EnumerationList>
-					<xtce:Enumeration name="Default_Memory" value="1"/>
+					<xtce:Enumeration label="Default_Memory" value="1"/>
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
@@ -2197,7 +2193,7 @@
 			<xtce:EnumeratedArgumentType name="Event_ID_Type">
 				<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 				<xtce:EnumerationList>
-					<xtce:Enumeration name="Empty" value="1"/>
+					<xtce:Enumeration label="Empty" value="1"/>
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
@@ -2206,30 +2202,30 @@
 			<xtce:EnumeratedArgumentType name="Packet_Store_ID_Type">
 				<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 				<xtce:EnumerationList>
-					<xtce:Enumeration name="Empty" value="1"/>
+					<xtce:Enumeration label="Empty" value="1"/>
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
 			<xtce:EnumeratedArgumentType name="Check_Type_Type">
 				<xtce:IntegerDataEncoding sizeInBits="2" signed="false"/>
 				<xtce:EnumerationList>
-					<xtce:Enumeration name="Expected_Value_Checking" value="0"/>
-					<xtce:Enumeration name="Limit_Checking" value="1"/>
-					<xtce:Enumeration name="Delta_Checking" value="2"/>
+					<xtce:Enumeration label="Expected_Value_Checking" value="0"/>
+					<xtce:Enumeration label="Limit_Checking" value="1"/>
+					<xtce:Enumeration label="Delta_Checking" value="2"/>
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
 			<xtce:EnumeratedArgumentType name="PMON_ID_Type">
 				<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 				<xtce:EnumerationList>
-					<xtce:Enumeration name="Empty" value="0"/>
+					<xtce:Enumeration label="Empty" value="0"/>
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
 			<xtce:EnumeratedArgumentType name="FMON_ID_Type">
 				<xtce:IntegerDataEncoding sizeInBits="1" signed="false"/>
 				<xtce:EnumerationList>
-					<xtce:Enumeration name="Empty" value="0"/>
+					<xtce:Enumeration label="Empty" value="0"/>
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
@@ -2255,7 +2251,7 @@
 					</xtce:BaseMetaCommand>
 					<xtce:ArgumentList>
 						<xtce:Argument name="HK_Structure_ID" argumentTypeRef="HK_Structure_ID_Type"/>
-						<xtce:Argument name="Collection_Interval" argumentTypeRef="/UCF/uint16_t"/>
+						<xtce:Argument name="Collection_Interval" argumentTypeRef="/UCF/uint32_t"/>
 						<xtce:Argument name="N1" argumentTypeRef="/UCF/uint16_t"/>
 						<xtce:Argument name="Parameter_ID_Array" argumentTypeRef="Parameter_ID_Array_Type"/>
 						<xtce:Argument name="NFA" argumentTypeRef="/UCF/uint16_t"/>
@@ -2283,7 +2279,7 @@
 					</xtce:BaseMetaCommand>
 					<xtce:ArgumentList>
 						<xtce:Argument name="Diagnostic_Structure_ID" argumentTypeRef="HK_Structure_ID_Type"/>
-						<xtce:Argument name="Collection_Interval" argumentTypeRef="/UCF/uint16_t"/>
+						<xtce:Argument name="Collection_Interval" argumentTypeRef="/UCF/uint32_t"/>
 						<xtce:Argument name="N1" argumentTypeRef="/UCF/uint16_t"/>
 						<xtce:Argument name="Parameter_ID_Array" argumentTypeRef="Parameter_ID_Array_Type"/>
 						<xtce:Argument name="NFA" argumentTypeRef="/UCF/uint16_t"/>

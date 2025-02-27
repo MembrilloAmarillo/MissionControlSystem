@@ -503,9 +503,11 @@ begin_next_layout_scrollable_section :: proc(max_rows: u32 = 0, box_size : glsl.
 	}
 	if layout.at.y > layout.position.y {
   layout.at.y = layout.position.y
+  layout.parent_box.scroll.y = 0
 	}
 	if layout.at.x > layout.position.x {
 	 layout.at.x = layout.position.x
+	 layout.parent_box.scroll.x = 0
 	}
 
 	row_start_it := 0
@@ -994,7 +996,7 @@ make_box_no_key :: proc(
 	box.tail   = &UI_NilBox
 	box.next   = &UI_NilBox
 	box.prev   = &UI_NilBox
-
+ box.zindex = 0
 	box.title_string = text //strings.clone(text, ui_context.per_frame_arena_allocator)
 	box.key_text     = text
 
@@ -1044,19 +1046,14 @@ make_box_no_key :: proc(
 
 		if (box_root.first == &UI_NilBox) {
 			box_root.first = box
-			//box.zindex     = box_root.zindex + 1
 		} else {
 			b := box_root.tail
-			//for ; b != box_root.tail && b != &UI_NilBox; b = b.next {
-			//	if b == box {
-			//		fmt.println("Box already in the tree, which makes no sense whatsoever", box.title_string)
-			//	}
-			//}
 			b.next = box
 			box.prev = b
 		}
 
   box.zindex    = box_root.zindex
+  //ui_context.last_zindex += 1
 		box_root.tail = box
 		box.parent    = box_root
 		fixed_size := false
@@ -1085,6 +1082,10 @@ make_box_no_key :: proc(
 		}
 
 		layout: ^Layout = get_layout_stack()
+
+		if .DRAW_STRING in box_flags && layout != nil {
+				box.text_position = box.rect.top_left + layout.string_padding
+			}
 
 		// NOTE: If fixed is true, layout not updated!!
 		if layout != nil && fixed_size == false {
@@ -1172,6 +1173,12 @@ make_box_no_key :: proc(
 		} else {
 			box.style = ui_context.theme.background_panel
 		}
+	}
+
+	if box.rect.top_left.y + box.rect.size.y > ui_context.render_root.rect.size.y {
+		extract_size := (box.rect.top_left.y + box.rect.size.y) - ui_context.render_root.rect.size.y 
+
+		box.rect.size.y -= extract_size
 	}
 
 	box.flags += box_flags
@@ -2286,7 +2293,7 @@ ui_build :: proc() {
 	ui_context.root_stack.push_count   = 0
 	ui_context.option_stack.push_count = 0
 	ui_context.style.push_count        = 0
-	//ui_context.last_zindex             = 0
+ ui_context.last_zindex             = 0
 
 	clear(&ui_context.vulkan_iface.va_OsInput)
 	// [s.p] Free per frame ui memory

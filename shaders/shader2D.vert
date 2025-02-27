@@ -107,16 +107,10 @@ main()
 
  if( tex_top_left[0] == -2 ) //rectangle
  {
-  // Update the z position to not overlap with the text
-  // This happens as I did enable depth testing on the pipeline
-  //
-  //gl_Position.z = 0.01;
-
   fragTexCoord = vec2(-2, -2);
  }
  else if ( tex_top_left[0] == -3 )
  {
-  //gl_Position.z = 0.02;
   fragTexCoord = vec2(-3, -3);
  }
 

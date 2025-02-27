@@ -377,7 +377,7 @@ traverse_complex_type_choice_selection :: proc(
 
 // -----------------------------------------------------------------------------
 
-hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> schema_type_def { 
+hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> schema_type_def {
 
   schema_root_el: schema_type_def
 
@@ -448,7 +448,7 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
             type_name := content.nested_type_name
             if content.nested_content != nil {
               type_def := schema_type_def {
-                type_name = type_name, 
+                type_name = type_name,
                 type_val  = "complexType",
                 base      = content.extension,
                 content   = content.nested_content^
@@ -460,9 +460,9 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
               append(&content.attr, xml.Attribute{key = "type", val = strings.concatenate({"xtce:",type_name})})
             }
           }
-        }        
+        }
         my_hash.insert_table(&schema.xsd_hash, current_type_def.type_name, current_type_def)
-       
+
         // Restart values to default
         //
         current_type_def = schema_type_def{}
@@ -470,7 +470,7 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
         nested_complex_complex_type = false
       }
     }
-    
+
     // This means we found a nested type definition
     //
     if (element.ident == "complexType") &&
@@ -497,7 +497,7 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
       utils.push_stack(&tmp_stack, element)
       for tmp_stack.push_count > 0 {
         el_it := utils.get_front_stack(&tmp_stack)
-        utils.pop_stack(&tmp_stack) 
+        utils.pop_stack(&tmp_stack)
 
         if el_it.ident == "element" {
           append(&content.nested_content.sequence, el_it)
@@ -508,7 +508,7 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
           append_elems(&(content.nested_content.attr), ..el_it.attribs[:])
         }
 
-        values := el_it.value 
+        values := el_it.value
         for v in values {
           #partial switch c in v {
             case xml.Element_ID : {
@@ -626,6 +626,10 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
       current_type_def.key.field = element.attribs[0].val
     } else if element.ident == "selector" && current_type_def.is_key {
       current_type_def.key.xpath = element.attribs[0].val
+    } else if element.ident == "union" {
+      content := &current_type_def.content.(restriction_type)
+      append(&content.enumeration, "union")
+      append(&content.enumeration, ..strings.split(element.attribs[0].val, " "))
     }
 
     values := element.value[:]
@@ -650,7 +654,7 @@ hash_schema :: proc(schema: ^xsd_schema, allocator := context.allocator) -> sche
     my_hash.insert_table(&schema.xsd_hash, current_type_def.type_name, current_type_def)
   }
 
-  fmt.println("Number of slots used on hash table:", schema.xsd_hash.count)
+  fmt.println("Number of slots used on hash table:", schema.xsd_hash.slots_filled)
 
   return schema_root_el
 }
