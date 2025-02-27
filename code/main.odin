@@ -704,7 +704,128 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
     label("Source#_source_%p", cast(^byte)clicked_tab)
     }
    }
-   case "TC Commands"  : {}
+   case "TC Commands"  : {
+    layout := get_layout_stack()
+    limit_on_screen := false 
+
+    set_layout_next_row_col(n_rows, 7)
+    set_box_preferred_size({rect.size.x / 7, 30})
+    set_layout_next_padding(15, 0)
+    set_layout_string_padding(10, 0)
+
+    l_it := 1
+    row  := 1
+    set_layout_next_row( auto_cast row)
+    set_layout_next_column(0)
+
+    row_start := begin_next_layout_scrollable_section(n_rows)
+    {
+     for system := &xml_handler.system; system != nil; system = auto_cast system.right {
+      for command in xtce.GetMetaCommandSetType(system.element) {
+
+        if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
+          limit_on_screen = true
+        }
+
+        if l_it >= row_start && !limit_on_screen {
+          set_layout_next_column(0)
+
+          if math.mod(cast(f32)l_it, 2) == 0 {
+            style := ui_context.theme.background_panel
+            style.color_rect00 *= 0.95
+            style.color_rect01 *= 0.95
+            style.color_rect10 *= 0.95
+            style.color_rect11 *= 0.95
+            style.corner_radius = 6
+            set_next_layout_style(style)
+            make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
+            defer ui_pop_style()
+          }
+
+          name_concat : = [?]string {
+            command.base.t_name.t_restriction.val,
+            "#_container_",
+            command.base.t_name.t_restriction.val,
+            "%d",
+          }
+
+          field_type := [?]string {
+            "-",
+            "#_field_",
+            "%d",
+          }
+
+          field_name := [?]string {
+            "-",
+            "#_field_name",
+            "%d",
+          }
+
+          encoding_concat := [?]string {
+            "-",
+            "#_encoding_",
+            "%d",
+          }
+
+          size_bits := [?]string {
+            "-",
+            "#_size_bits_",
+            "%d",
+          }
+
+          value_concat := [?]string {
+            "-",
+            "#_valu_concat_",
+            "%d",
+          }
+
+          default_value_concat := [?]string {
+            "-",
+            "#_default_value_",
+            "%d",
+          }
+
+          set_layout_next_column(0)
+          label(strings.concatenate(name_concat[:]), cast(^byte)&l_it)
+          set_layout_next_column(1)
+          label(strings.concatenate(field_type[:]),cast(^byte)&l_it)
+          set_layout_next_column(2)
+          label(strings.concatenate(field_name[:]), cast(^byte)&l_it)
+          set_layout_next_column(3)
+          label(strings.concatenate(encoding_concat[:]), cast(^byte)&l_it)
+          set_layout_next_column(4)
+          label(strings.concatenate(size_bits[:]), cast(^byte)&l_it)
+          set_layout_next_column(5)
+          label(strings.concatenate(value_concat[:]), cast(^byte)&l_it)
+          set_layout_next_column(6)
+          label(strings.concatenate(default_value_concat[:]), cast(^byte)&l_it)
+
+          row += 1
+          set_layout_next_row(auto_cast row)
+        }
+        l_it += 1
+      }
+     } 
+    }
+    end_next_layout_scrollable_section(n_rows)
+    {
+      set_layout_next_row(0)
+      set_layout_next_column(0)
+      label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(1)
+      label("Field Type#_field_type_%p",cast(^byte)clicked_tab)
+      set_layout_next_column(2)
+      label("Field Name#_field_name_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(3)
+      label("Encoding#_vaule_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(4)
+      label("Size#_size_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(5)
+      label("Value#_value_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(6)
+      label("Default Value#_default_value_%p", cast(^byte)clicked_tab)
+    }
+   }
    }
   }
   else if !ok {
