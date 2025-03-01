@@ -33,7 +33,7 @@ MAX_ROOT_STACK      :: #config(UI_ROOT_SIZE      , 256 )
 MAX_TABLE_HASH_SIZE :: #config(UI_TABLE_HASH_SIZE, 4096)
 MAX_RENDER_STACK    :: #config(UI_RENDER_BOX_SIZE, 125 << 10)
 
-DEFAULT_SCROLL_DELTA: f32 = 3
+DEFAULT_SCROLL_DELTA: f32 = 6
 
 id :: distinct u64
 
@@ -350,7 +350,7 @@ get_default_ui_light_style :: proc() -> UI_Style {
 
 	style: UI_Style
 
-	black      := rgba_to_norm(hex_rgba_to_vec4(0x101e19FF))
+	black      := rgba_to_norm(hex_rgba_to_vec4(0x0D101cFF))
 	dark_blue  := rgba_to_norm(hex_rgba_to_vec4(0x496FC2FF))
 	blue       := rgba_to_norm(hex_rgba_to_vec4(0x447EF2FF))
 	gray       := rgba_to_norm(hex_rgba_to_vec4(0xeee8d5FF))
@@ -1353,7 +1353,7 @@ menu_begin :: proc(
 
 		for entrie, idx in entries {
 			set_layout_next_column(cast(u32)idx)
-			if button(entrie).left_click {
+			if button(entrie, key_pointer).left_click {
     			clicked_box = get_layout_stack().parent_box.tail
     			ok = true
 			}

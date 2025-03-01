@@ -116,7 +116,7 @@ orbitmcs_state :: struct {
  udp_server  : net_state,
  menu_db     : db_menu_items,
  shutdown    : bool,
- hovering_boxes : utils.queue(box_constructor, 256) // IMPORTANT!!: If you put a bigger value (for example 4096) odin compiler (llvm function) will crash
+ hovering_boxes : utils.queue(box_constructor, 216) // IMPORTANT!!: If you put a bigger value (for example 4096) odin compiler (llvm function) will crash
 }
 
 // --------------------------------------------------------------- //
@@ -349,15 +349,15 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
        "%d"
       }
 
-      label(strings.concatenate(StringConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+      label(strings.concatenate(StringConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
       set_layout_next_column(1)
-      label(strings.concatenate(StringTypeConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+      label(strings.concatenate(StringTypeConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
       set_layout_next_column(2)
-      label(strings.concatenate(StringReadOnlyConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+      label(strings.concatenate(StringReadOnlyConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
       set_layout_next_column(3)
-      label(strings.concatenate(StringInitialValueConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+      label(strings.concatenate(StringInitialValueConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
       set_layout_next_column(4)
-      label(strings.concatenate(StringPersistenceConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+      label(strings.concatenate(StringPersistenceConcat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
 
       row += 1
       set_layout_next_row(auto_cast row)
@@ -690,37 +690,38 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
       }
     }
     end_next_layout_scrollable_section(n_rows)
-   {
-    set_layout_next_row(0)
-    set_layout_next_column(0)
-    label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
-    set_layout_next_column(1)
-    label("Base Container#_base_container_%p",cast(^byte)clicked_tab)
-    set_layout_next_column(2)
-    label("Read Only#_read_only_%p", cast(^byte)clicked_tab)
-    set_layout_next_column(3)
-    label("Initial Value#_vaule_%p", cast(^byte)clicked_tab)
-    set_layout_next_column(4)
-    label("Source#_source_%p", cast(^byte)clicked_tab)
+    {
+      set_layout_next_row(0)
+      set_layout_next_column(0)
+      label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(1)
+      label("Base Container#_base_container_%p",cast(^byte)clicked_tab)
+      set_layout_next_column(2)
+      label("Read Only#_read_only_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(3)
+      label("Initial Value#_vaule_%p", cast(^byte)clicked_tab)
+      set_layout_next_column(4)
+      label("Source#_source_%p", cast(^byte)clicked_tab)
     }
    }
    case "TC Commands"  : {
+    set_layout_ui_parent_seed(clicked_tab)
     layout := get_layout_stack()
     limit_on_screen := false 
 
-    set_layout_next_row_col(n_rows, 7)
+    set_layout_next_row_col(0, 7)
     set_box_preferred_size({rect.size.x / 7, 30})
     set_layout_next_padding(15, 0)
     set_layout_string_padding(10, 0)
+
+    row_start := begin_next_layout_scrollable_section(n_rows)
 
     l_it := 1
     row  := 1
     set_layout_next_row( auto_cast row)
     set_layout_next_column(0)
 
-    row_start := begin_next_layout_scrollable_section(n_rows)
-    {
-     for system := &xml_handler.system; system != nil; system = auto_cast system.right {
+    for system := &xml_handler.system; system != nil && !limit_on_screen; system = auto_cast system.next {
       for command in xtce.GetMetaCommandSetType(system.element) {
 
         if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
@@ -738,7 +739,7 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
             style.color_rect11 *= 0.95
             style.corner_radius = 6
             set_next_layout_style(style)
-            make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
+            make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&l_it)
             defer ui_pop_style()
           }
 
@@ -786,27 +787,34 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
           }
 
           set_layout_next_column(0)
-          label(strings.concatenate(name_concat[:]), cast(^byte)&l_it)
+          label(strings.concatenate(name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
           set_layout_next_column(1)
-          label(strings.concatenate(field_type[:]),cast(^byte)&l_it)
+          label(strings.concatenate(field_type[:], ui_context.per_frame_arena_allocator),cast(^byte)&l_it)
           set_layout_next_column(2)
-          label(strings.concatenate(field_name[:]), cast(^byte)&l_it)
+          label(strings.concatenate(field_name[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
           set_layout_next_column(3)
-          label(strings.concatenate(encoding_concat[:]), cast(^byte)&l_it)
+          label(strings.concatenate(encoding_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
           set_layout_next_column(4)
-          label(strings.concatenate(size_bits[:]), cast(^byte)&l_it)
+          label(strings.concatenate(size_bits[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
           set_layout_next_column(5)
-          label(strings.concatenate(value_concat[:]), cast(^byte)&l_it)
+          label(strings.concatenate(value_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
           set_layout_next_column(6)
-          label(strings.concatenate(default_value_concat[:]), cast(^byte)&l_it)
+          label(strings.concatenate(default_value_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+
+          // Check
+          //
+          /*
+          for arg in command.t_CommandContainer.t_EntryList {
+
+          }
+          */
 
           row += 1
           set_layout_next_row(auto_cast row)
         }
         l_it += 1
       }
-     } 
-    }
+    } 
     end_next_layout_scrollable_section(n_rows)
     {
       set_layout_next_row(0)

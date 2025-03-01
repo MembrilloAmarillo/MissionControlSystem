@@ -1,0 +1,711 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"Space",
+				"SpaceSystemType"
+			],
+			[
+				"t_",
+				"t_ParameterInstanceRef"
+			],
+			[
+				"xs_doub",
+				"xs_double_get_default() "
+			],
+			[
+				"Discre",
+				"DiscreteLookupListType"
+			],
+			[
+				"DiscreteLo",
+				"DiscreteLookupListType"
+			],
+			[
+				"Dis",
+				"DiscreteLookupListType"
+			],
+			[
+				"xs_long",
+				"xs_long_get_default() "
+			],
+			[
+				"DIS",
+				"DISCRETE_LOOKUP_LIST_TYPE"
+			],
+			[
+				"CONT",
+				"CONTAINER_REF_TYPE"
+			],
+			[
+				"ARRAY_PARAM",
+				"ARRAY_PARAMETER_REF_ENTRY_TYPE"
+			],
+			[
+				"RateIn",
+				"RateInStreamSetType"
+			],
+			[
+				"BinaryData",
+				"BinaryDataEncodingType"
+			],
+			[
+				"RateIns",
+				"RateInStreamSetType"
+			],
+			[
+				"CL",
+				"CLAMP_TO_EDGE"
+			],
+			[
+				"set_layout_",
+				"set_layout_string_padding(x_padd: f32 = 0, y_padd: f32 = 0)"
+			],
+			[
+				"set_next",
+				"set_layout_next_padding(x_padd: f32 = 0, y_padd: f32 = 0)"
+			],
+			[
+				"NO",
+				"NO_HOVER"
+			],
+			[
+				"set_l",
+				"set_layout_reset_row()"
+			],
+			[
+				"popst",
+				"ui_pop_style()"
+			],
+			[
+				"style",
+				"get_default_ui_dark_style() "
+			],
+			[
+				"set_nex",
+				"set_next_layout_style(st: StyleParam)"
+			],
+			[
+				"make_box",
+				"make_box_no_key(text: string, top_left: glsl.vec2 = {-1, -1}, width_height: glsl.vec2 = {-1, -1}, box_flags: UI_Options = {.DRAW_RECT}) "
+			],
+			[
+				"co",
+				"color_rect00"
+			],
+			[
+				"Get",
+				"get_default_ui_dark_style() "
+			],
+			[
+				"w_w",
+				"w_window"
+			],
+			[
+				"ga",
+				"gaussian_blur"
+			],
+			[
+				"tex",
+				"text_position"
+			],
+			[
+				"te",
+				"text_position"
+			],
+			[
+				"Input",
+				"InputSetType"
+			],
+			[
+				"Contex",
+				"ContextMatchType"
+			],
+			[
+				"Conte",
+				"ContextMatchType"
+			],
+			[
+				"EnumerationCon",
+				"EnumerationContextAlarmListType"
+			],
+			[
+				"xs_string",
+				"xs_string_get_default() "
+			],
+			[
+				"xs_lon",
+				"xs_long_get_default() "
+			],
+			[
+				"Enumera",
+				"EnumeratedDataType"
+			],
+			[
+				"call",
+				"caller_location"
+			],
+			[
+				"inte",
+				"internal_DepthFirstSearch_Node"
+			],
+			[
+				"t_min",
+				"t_minInclusive"
+			],
+			[
+				"t_W",
+				"t_WatchRange"
+			],
+			[
+				"x",
+				"x_off"
+			],
+			[
+				"by",
+				"byte_offset"
+			],
+			[
+				"byt",
+				"byte_offset"
+			],
+			[
+				"bitma",
+				"BitmapArray"
+			],
+			[
+				"off",
+				"offset_of"
+			],
+			[
+				"Bt",
+				"BitmapWidth"
+			],
+			[
+				"Byt",
+				"byte_offset"
+			],
+			[
+				"bit",
+				"BitmapWidth"
+			],
+			[
+				"DRAW",
+				"DRAW_STRING"
+			],
+			[
+				"Y_",
+				"Y_CENTERED_STRING"
+			],
+			[
+				"arena_tem",
+				"arena_temp_begin(arena: ^Arena, loc := #caller_location) "
+			],
+			[
+				"arena_te",
+				"arena_temp_begin(arena: ^Arena, loc := #caller_location) "
+			],
+			[
+				"init",
+				"arena_init_growing(arena: ^Arena, reserved: uint = DEFAULT_ARENA_GROWING_MINIMUM_BLOCK_SIZE) "
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "code/main.odin",
+			"settings":
+			{
+				"buffer_size": 50869,
+				"line_ending": "Windows"
+			},
+			"undo_stack":
+			[
+			]
+		},
+		{
+			"file": "code/xtce_parser/validator.odin",
+			"settings":
+			{
+				"buffer_size": 128946,
+				"encoding": "UTF-8",
+				"line_ending": "Windows"
+			},
+			"undo_stack":
+			[
+			]
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"project",
+				"Project: Add Folder"
+			],
+			[
+				"proje",
+				"Project: Add Folder"
+			],
+			[
+				"schem",
+				"UI: Select Color Scheme"
+			],
+			[
+				"theme",
+				"UI: Select Theme"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				":w",
+				":w - Save"
+			],
+			[
+				":W",
+				":w - Save"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"lsp",
+				"LSP: Enable Language Server Globally"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: insta",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: instal",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: isntal",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 334.0,
+		"history":
+		[
+			"dir",
+			"build.bat"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/C/devel/MissionControlSystem"
+	],
+	"file_history":
+	[
+		"/C/Users/sasch/AppData/Roaming/Sublime Text 3/Packages/User/MCS_Build",
+		"/C/devel/MissionControlSystem/subl.sublime-project",
+		"/C/devel/Odin/vendor/wgpu/examples/glfw/main.odin",
+		"/C/devel/MissionControlSystem/project",
+		"/C/devel/_testing_ground/odin_llvm_crash/main.odin",
+		"/C/devel/_testing_ground/odin_llvm_crash/build.bat",
+		"/C/devel/_testing_ground/odin_llvm_crash/code/main.odin",
+		"/C/devel/_testing_ground/odin_llvm_crash/code/utils/utils.odin",
+		"/C/devel/_testing_ground/odin_llvm_crash/code/ui.odin",
+		"/C/devel/MissionControlSystem/code/ui.odin",
+		"/C/devel/_testing_ground/odin_llvm_crash/utils.odin",
+		"/C/devel/MissionControlSystem/code/main.odin",
+		"/C/devel/OrbitMCS/code/xtce_parser/xml_types.odin",
+		"/C/devel/OrbitMCS/code/render/font_cache.odin",
+		"/C/devel/OrbitMCS/code/xtce_parser/xtce_type.odin",
+		"/C/devel/OrbitMCS/code/xtce_parser/validator.odin",
+		"/C/devel/OrbitMCS/code/render/vulkan.odin",
+		"/C/devel/OrbitMCS/code/main.odin",
+		"/C/devel/Odin/vendor/stb/truetype/stb_truetype.odin",
+		"/C/devel/OrbitMCS/code/ui.odin",
+		"/C/devel/OrbitMCS/data/SpaceSystem.xsd",
+		"/C/devel/OrbitMCS/code/utils/utils.odin",
+		"/C/devel/OrbitMCS/shaders/shader2D.frag",
+		"/C/devel/OrbitMCS/code/simple_hash/simple_hash.odin",
+		"/C/devel/root_basic/code/ui/ui_core.c",
+		"/C/devel/OrbitMCS/shaders/shader2D.vert",
+		"/C/devel/OrbitMCS/shaders/compute.comp",
+		"/C/devel/OrbitMCS/build.bat",
+		"/C/devel/OrbitMCS/xtce_metagen/xtce_type.odin",
+		"/C/devel/ols/src/main.odin",
+		"/C/devel/OrbitMCS/code/xtce_parser/parser.odin",
+		"/C/Users/sasch/Downloads/kanata.kbd",
+		"/C/devel/OrbitMCS/Bibliography/ObsidianNotes/Notes/.obsidian/plugins/better-pdf-plugin/main.js",
+		"/C/devel/root_basic/build.bat",
+		"/C/devel/OrbitMCS/xtce_metagen/parser.odin",
+		"/C/Users/sasch/AppData/Roaming/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
+		"/C/Users/sasch/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings"
+	],
+	"find":
+	{
+		"height": 31.0
+	},
+	"find_in_files":
+	{
+		"height": 134.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"scrollbar_highlights": true,
+		"show_context": true,
+		"use_buffer2": true,
+		"use_gitignore": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "code/main.odin",
+					"selected": true,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 50869,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								16698,
+								16698
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": "<",
+									"selector": "text.html, text.xml"
+								},
+								{
+									"rhs_empty": true,
+									"selector": "punctuation.accessor"
+								},
+								{
+									"characters": ".>#\"/:",
+									"selector": "meta.tag, source - comment - string.quoted.double.block - string.quoted.single.block - string.unquoted.heredoc",
+									"server": "odin"
+								}
+							],
+							"lsp_active": true,
+							"lsp_uri": "file:///C:/devel/MissionControlSystem/code/main.odin",
+							"show_definitions": false,
+							"syntax": "Packages/Odin/Odin.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 10171.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"stack_multiselect": false,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"sheets":
+			[
+				{
+					"buffer": 1,
+					"file": "code/xtce_parser/validator.odin",
+					"selected": true,
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 128946,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								527,
+								527
+							]
+						],
+						"settings":
+						{
+							"auto_complete_triggers":
+							[
+								{
+									"characters": "<",
+									"selector": "text.html, text.xml"
+								},
+								{
+									"rhs_empty": true,
+									"selector": "punctuation.accessor"
+								},
+								{
+									"characters": ".>#\"/:",
+									"selector": "meta.tag, source - comment - string.quoted.double.block - string.quoted.single.block - string.unquoted.heredoc",
+									"server": "odin"
+								}
+							],
+							"lsp_active": true,
+							"lsp_uri": "file:///C:/devel/MissionControlSystem/code/xtce_parser/validator.odin",
+							"show_definitions": false,
+							"syntax": "Packages/Odin/Odin.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"stack_multiselect": false,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 31.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.5,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.LSP Log Panel":
+	{
+		"height": 0.0
+	},
+	"output.diagnostics":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "subl.sublime-project",
+	"replace":
+	{
+		"height": 58.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"valida",
+				"code\\xtce_parser\\validator.odin"
+			],
+			[
+				"main.",
+				"code\\main.odin"
+			],
+			[
+				"main.odin",
+				"vendor\\wgpu\\examples\\glfw\\main.odin"
+			],
+			[
+				"main",
+				"code\\main.odin"
+			],
+			[
+				"bu",
+				"build.bat"
+			],
+			[
+				"vulka",
+				"code\\render\\vulkan.odin"
+			],
+			[
+				"font",
+				"code\\render\\font_cache.odin"
+			],
+			[
+				"xtce",
+				"code\\xtce_parser\\xtce_type.odin"
+			],
+			[
+				"ui.",
+				"code\\ui.odin"
+			],
+			[
+				"shader",
+				"shaders\\shader2D.vert"
+			],
+			[
+				"hash",
+				"code\\simple_hash\\simple_hash.odin"
+			],
+			[
+				"vu",
+				"code\\render\\vulkan.odin"
+			],
+			[
+				"ui",
+				"code\\ui.odin"
+			],
+			[
+				"compu",
+				"shaders\\compute.comp"
+			],
+			[
+				"ui.odin",
+				"code\\ui.odin"
+			],
+			[
+				"shade",
+				"shaders\\shader2D.frag"
+			],
+			[
+				"util",
+				"code\\utils\\utils.odin"
+			],
+			[
+				"xtce_type",
+				"xtce_metagen\\xtce_type.odin"
+			],
+			[
+				"ui.o",
+				"code\\ui.odin"
+			],
+			[
+				"vali",
+				"code\\xtce_parser\\validator.odin"
+			],
+			[
+				"main.d",
+				"ols\\src\\main.odin"
+			],
+			[
+				"parse",
+				"xtce_metagen\\parser.odin"
+			],
+			[
+				"bui",
+				"build.bat"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+		"lsp_show_inlay_hints": false
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": false,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

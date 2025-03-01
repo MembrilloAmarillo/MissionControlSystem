@@ -2684,16 +2684,28 @@ LoadEntryListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Eleme
  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
  utils.push_stack(&stack, node)
 
+ small_buffer : [64]u8
+
  for stack.push_count > 0 {
    n := utils.get_front_stack(&stack)
    utils.pop_stack(&stack)
 
    switch n.element.first {
-    case ARRAY_PARAMETER_REF_ENTRY_TYPE: {}
-    case INDIRECT_PARAMETER_REF_ENTRY_TYPE : {}
-    case STREAM_SEGMENT_ENTRY_TYPE: {}
-    case CONTAINER_SEGMENT_REF_ENTRY_TYPE : {}
-    case PARAMETER_SEGMENT_REF_ENTRY_TYPE: {}
+    case ARRAY_PARAMETER_REF_ENTRY_TYPE: {
+      utils.TODO(ARRAY_PARAMETER_REF_ENTRY_TYPE, strconv.itoa(small_buffer[:], #line))
+    }
+    case INDIRECT_PARAMETER_REF_ENTRY_TYPE : {
+      utils.TODO(INDIRECT_PARAMETER_REF_ENTRY_TYPE, strconv.itoa(small_buffer[:], #line))
+    }
+    case STREAM_SEGMENT_ENTRY_TYPE: {
+      utils.TODO(STREAM_SEGMENT_ENTRY_TYPE, strconv.itoa(small_buffer[:], #line))
+    }
+    case CONTAINER_SEGMENT_REF_ENTRY_TYPE : {
+      utils.TODO(CONTAINER_SEGMENT_REF_ENTRY_TYPE, strconv.itoa(small_buffer[:], #line))
+    }
+    case PARAMETER_SEGMENT_REF_ENTRY_TYPE: {
+      utils.TODO(PARAMETER_SEGMENT_REF_ENTRY_TYPE, strconv.itoa(small_buffer[:], #line))
+    }
     case PARAMETER_REF_ENTRY_TYPE: {
      append(&type.t_choice_0.t_ParameterRefEntryType6, LoadParameterRefEntryType(n))
     }
