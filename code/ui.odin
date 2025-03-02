@@ -496,6 +496,8 @@ set_layout_next_column :: proc(column: u32) {
 // when using scrollable sections. I think is preferable to use this default box size
 // rather than crashing or not creating the scrollable section at all
 //
+// NOTE: Further improve layout scrollable sections, barely usable as of now
+//
 begin_next_layout_scrollable_section :: proc(max_rows: u32 = 0, box_size : glsl.vec2 = {300, 30}) -> int {
 	layout := get_layout_stack()
 	if layout != nil && layout.parent_box != &UI_NilBox {
@@ -929,6 +931,7 @@ make_box_no_key :: proc(
 			if v != nil {
 				if v.id == string_hash {
 					box = v
+					break
 				}
 			}
 		}
@@ -941,6 +944,7 @@ make_box_no_key :: proc(
 	 		if v != nil {
 	 			if v.id == string_hash {
 	 				box = v
+	 				break
 	 			}
 	 		}
 	 	}
@@ -959,6 +963,7 @@ make_box_no_key :: proc(
 	  	if v != nil {
 	  		if v.id == string_hash {
 	  			box = v
+	  			break
 	  		}
 	  	}
 	  }
@@ -1350,7 +1355,6 @@ menu_begin :: proc(
 	set_next_layout_style(tab_stile)
 
 	if window_begin(title_tab, pointer = key_pointer) {
-
 		for entrie, idx in entries {
 			set_layout_next_column(cast(u32)idx)
 			if button(entrie, key_pointer).left_click {

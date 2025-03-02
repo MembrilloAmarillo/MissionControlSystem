@@ -2410,7 +2410,7 @@ init_vulkan :: proc( v_interface : ^VulkanIface ) {
 	v_interface.va_FontCache[0] = f_BuildFont(20 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(bitmap), "./data/font/RobotoMonoBold.ttf" );
 	v_interface.va_FontCache[0].BitmapOffset = {0, 0}
 
-	v_interface.va_FontCache[1] = f_BuildFont(17 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
+	v_interface.va_FontCache[1] = f_BuildFont(16 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
 	v_interface.va_FontCache[1].BitmapOffset = {0, 126}
 
 	// --------------------------------------------------------------

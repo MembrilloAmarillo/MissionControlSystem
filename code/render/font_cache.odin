@@ -55,7 +55,7 @@ f_BuildFont :: proc(FontSize: f32, width: u32, height: u32, BitmapArray: ^u8, fo
 
 	data : []u8
 	if len(font_path) == 0 {
-		data, _ =  os.read_entire_file("./data/font/RobotoMono.ttf", context.temp_allocator);
+		data, _ =  os.read_entire_file("./data/font/LiterationMono.ttf", context.temp_allocator);
 	} else {
 		data, _ = os.read_entire_file(font_path, context.temp_allocator)
 	}

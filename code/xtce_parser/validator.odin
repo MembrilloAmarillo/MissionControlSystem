@@ -1277,7 +1277,7 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
         // (s.p) store the base
         //
         LoadIntegerDataType(node_it_dst, &int_type.base)
-        append(&system_node.element.t_TelemetryMetaData.t_ParameterTypeSet.t_choice_0.t_IntegerParameterType7, int_type)
+        append(&system_node.element.t_TelemetryMetaData.t_ParameterTypeSet.t_choice_0, int_type)
        }
        case ENUMERATED_PARAMETER_TYPE: {
         enum_type : EnumeratedParameterType
@@ -2275,8 +2275,19 @@ LoadParameterTypes :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Elem
 // TODO: Check for minOccurs
 //
 LoadParameterSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), data : ^ParameterSetType ) {
- data.t_choice_0.t_ParameterRefType0 = LoadParameterRefTypes( node )
- data.t_choice_0.t_ParameterType1    = LoadParameterTypes( node )
+
+ ref_types := LoadParameterRefTypes(node)
+ types     := LoadParameterTypes(node)
+ if len(ref_types) > 0 {
+  for el in ref_types {
+    append(&data.t_choice_0, el)
+  }
+ }
+ if len(types) > 0 {
+  for el in types {
+    append(&data.t_choice_0, el)
+  }
+ }
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -2707,7 +2718,7 @@ LoadEntryListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Eleme
       utils.TODO(PARAMETER_SEGMENT_REF_ENTRY_TYPE, strconv.itoa(small_buffer[:], #line))
     }
     case PARAMETER_REF_ENTRY_TYPE: {
-     append(&type.t_choice_0.t_ParameterRefEntryType6, LoadParameterRefEntryType(n))
+     append(&type.t_choice_0, LoadParameterRefEntryType(n))
     }
     case: {}
    }
@@ -2874,8 +2885,8 @@ LoadSequenceContainerType :: proc( node : ^utils.node_tree(utils.tuple(string, x
 }
 
 
-LoadSequenceContainerTypes :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> [dynamic]SequenceContainerType {
- types : [dynamic]SequenceContainerType
+LoadSequenceContainerTypes :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> [dynamic]t_ContainerSetType0 {
+ types : [dynamic]t_ContainerSetType0
 
  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
  utils.push_stack(&stack, node)
@@ -2899,15 +2910,15 @@ LoadSequenceContainerTypes :: proc( node : ^utils.node_tree(utils.tuple(string, 
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
-GetSequenceContainer :: proc( space_system : ^SpaceSystemType ) -> [dynamic]SequenceContainerType {
-  return space_system.t_TelemetryMetaData.t_ContainerSet.t_choice_0.t_SequenceContainerType0
+GetSequenceContainer :: proc( space_system : ^SpaceSystemType ) -> [dynamic]t_ContainerSetType0 {
+  return space_system.t_TelemetryMetaData.t_ContainerSet.t_choice_0
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
 // TODO: Check for minOccurs
 //
 LoadContainerSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), data : ^ContainerSetType ) {
- data.t_choice_0.t_SequenceContainerType0 = LoadSequenceContainerTypes( node )
+ data.t_choice_0 = LoadSequenceContainerTypes( node )
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -2918,6 +2929,24 @@ LoadParameterTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xm
 
  return type
 }
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadIntegerEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> IntegerEncodingType {
+  type : IntegerEncodingType = {
+    t_restriction = xs_string_get_default(),
+  }
+
+  attr, n := internal_DepthFirstSearch_Node(node, name)
+
+  type.t_restriction.val = attr.val
+
+  if !slice.contains(t_IntegerEncodingType_Enumeration[:], attr.val) {
+    type.t_restriction.val = ""
+  }
+
+  return type
+} 
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
@@ -2943,7 +2972,7 @@ LoadIntegerDataEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string,
       utils.TODO(CONTEXT_CALIBRATOR_TYPE)
     }
     case INTEGER_ENCODING_TYPE : {
-      utils.TODO(INTEGER_ENCODING_TYPE)
+      type.t_encoding = LoadIntegerEncodingType(n, "encoding")
     }
     case POSITIVE_LONG_TYPE : {
       type.t_sizeInBits = LoadPositiveLongType(n)
@@ -3067,8 +3096,8 @@ LoadIntegerArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
-GetArgumentTypeSet :: proc( system : ^SpaceSystemType ) -> ArgumentTypeSetType {
-  return system.t_CommandMetaData.t_ArgumentTypeSet
+GetArgumentTypeSet :: proc( system : ^SpaceSystemType ) -> [dynamic]t_ArgumentTypeSetType0 {
+  return system.t_CommandMetaData.t_ArgumentTypeSet.t_choice_0
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -3156,11 +3185,11 @@ LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
       case INTEGER_ARGUMENT_TYPE : {
         //utils.TODO(INTEGER_ARGUMENT_TYPE)
         t := LoadIntegerArgumentType(n)
-        append(&type.t_choice_0.t_IntegerArgumentType7, t)
+        append(&type.t_choice_0, t)
       }
       case ENUMERATED_ARGUMENT_TYPE : {
         t := LoadEnumeratedArgumentType(n)
-        append(&type.t_choice_0.t_EnumeratedArgumentType8, t)
+        append(&type.t_choice_0, t)
       }
       case STRING_ARGUMENT_TYPE : {
         utils.TODO(STRING_ARGUMENT_TYPE)
@@ -3383,13 +3412,13 @@ LoadCommandContainerEntryListType :: proc( node : ^utils.node_tree(utils.tuple(s
 
    switch n.element.first {
     case "ArgumentFixedValueEntryType" : {
-     append(&type.t_choice_0.t_ArgumentFixedValueEntryType0, LoadArgumentFixedValueEntryType(node))
+     append(&type.t_choice_0, LoadArgumentFixedValueEntryType(node))
     }
    	case "ArgumentArrayArgumentRefEntryType" : {
      utils.TODO("ArgumentArrayArgumentRefEntryType")
    	}
    	case "ArgumentArgumentRefEntryType" : {
-     append(&type.t_choice_0.t_ArgumentArgumentRefEntryType2, LoadArgumentArgumentRefEntryType(node))
+     append(&type.t_choice_0, LoadArgumentArgumentRefEntryType(node))
    	}
    	case "ArgumentArrayParameterRefEntryType" : {
      utils.TODO("ArgumentArrayParameterRefEntryType")
@@ -3404,13 +3433,13 @@ LoadCommandContainerEntryListType :: proc( node : ^utils.node_tree(utils.tuple(s
    	 utils.TODO("ArgumentContainerSegmentRefEntryType")
    	}
    	case "ArgumentContainerRefEntryType" : {
-     append(&type.t_choice_0.t_ArgumentContainerRefEntryType7, LoadArgumentContainerRefEntryType(node))
+     append(&type.t_choice_0, LoadArgumentContainerRefEntryType(node))
    	}
    	case "ArgumentParameterSegmentRefEntryType" : {
    	 utils.TODO("ArgumentParameterSegmentRefEntryType")
    	}
    	case "ArgumentParameterRefEntryType" : {
-     append(&type.t_choice_0.t_ArgumentParameterRefEntryType9, LoadArgumentParameterRefEntryType(node))
+     append(&type.t_choice_0, LoadArgumentParameterRefEntryType(node))
    	}
    }
 
@@ -3458,8 +3487,8 @@ LoadMetaCommandType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Ele
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
-GetMetaCommandSetType :: proc( system : ^SpaceSystemType ) -> [dynamic]MetaCommandType {
-  return system.t_CommandMetaData.t_MetaCommandSet.t_choice_0.t_MetaCommandType2
+GetMetaCommandSetType :: proc( system : ^SpaceSystemType ) -> [dynamic]t_MetaCommandSetType0 {
+  return system.t_CommandMetaData.t_MetaCommandSet.t_choice_0
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -3480,10 +3509,10 @@ LoadMetaCommandSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.
      utils.TODO(BLOCK_META_COMMAND_TYPE)
     }
     case NAME_REFERENCE_TYPE     : {
-     append(&type.t_choice_0.t_NameReferenceType1, LoadNameReferenceType(n, "MetaCommandRef"))
+     append(&type.t_choice_0, LoadNameReferenceType(n, "MetaCommandRef"))
     }
     case META_COMMAND_TYPE       : {
-     append(&type.t_choice_0.t_MetaCommandType2, LoadMetaCommandType(n))
+     append(&type.t_choice_0, LoadMetaCommandType(n))
     }
    }
 
@@ -3844,14 +3873,8 @@ LoadEnumerationContextAlarmListType :: proc( node : ^utils.node_tree(utils.tuple
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
-GetSpaceSystemParameterSetTypes :: proc( system : ^SpaceSystemType ) -> [dynamic]ParameterType {
- return system.t_TelemetryMetaData.t_ParameterSet.t_choice_0.t_ParameterType1
-}
-
-// ----------------------------------------------------------------------------------------------------------------- //
-
-GetSpaceSystemParameterSetRefTypes :: proc( system : ^SpaceSystemType ) -> [dynamic]ParameterRefType {
- return system.t_TelemetryMetaData.t_ParameterSet.t_choice_0.t_ParameterRefType0
+GetSpaceSystemParameterSetTypes :: proc( system : ^SpaceSystemType ) -> [dynamic]t_ParameterSetType0 {
+ return system.t_TelemetryMetaData.t_ParameterSet.t_choice_0
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -3887,6 +3910,68 @@ GetSpaceSystemDate :: proc( system : ^SpaceSystemType ) -> string {
 GetSpaceSystemVersion :: proc( system : ^SpaceSystemType ) -> string {
  return system.t_Header.t_version.val
 }
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> IntegerArgumentType {
+
+  type : IntegerArgumentType = {}
+
+  sys := system
+
+  n_depth := strings.count(ref, "/")
+  path := strings.split_n(ref, "/", n_depth, context.temp_allocator)
+  defer delete(path, context.temp_allocator)
+  if len(path) == 0 {
+    delete(path, context.temp_allocator)
+    path = make([]string, 1, context.temp_allocator)
+    path[0] = ref
+  }
+
+  if strings.contains(ref, "/") {
+    for ; sys.parent != nil; sys = auto_cast sys.parent {}
+  }
+
+  {
+    tmp_stack : utils.Stack(^space_system, 256)
+    utils.push_stack(&tmp_stack, auto_cast sys)
+
+    depth_path := 0
+    found := false
+    for tmp_stack.push_count > 0 && !found {
+      ss := utils.get_front_stack(&tmp_stack)
+      utils.pop_stack(&tmp_stack)
+
+      // we have readched to the system we needed to
+      // e.x. /UCF/EPS/eps_arg_1
+      //
+      if depth_path == len(path) - 1 {
+        argument := path[depth_path]
+        for ArgType in GetArgumentTypeSet(ss.element) {
+          #partial switch arg in ArgType {
+            case IntegerArgumentType : {
+              // this is outstandingly awful, but it is what it is with xml schemas
+              //
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg
+                found = true
+              }
+            }
+          }
+        } 
+      }
+
+      if ss.element.base.t_name.t_restriction.val == path[depth_path] {
+        depth_path += 1
+        for it := ss.next; it != nil; it = it.right {
+          utils.push_stack(&tmp_stack, auto_cast it)
+        }
+      }
+    }
+  }
+
+  return type
+} 
 
 // ----------------------------------------------------------------------------------------------------------------- //
 

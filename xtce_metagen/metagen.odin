@@ -50,8 +50,6 @@ choice_tree_to_string :: proc( root_choice : ^choice, choice_type_name : string,
     n_choices += 1
   }
 
-  // FIX: This has to be width first order using a queue
-  //
   first_width_order : utils.queue(^choice, 128)
 
   utils.PushQueue(&first_width_order, root_choice)
@@ -77,12 +75,14 @@ choice_tree_to_string :: proc( root_choice : ^choice, choice_type_name : string,
 
       for el, idx in ch.element {
         if el.key == "minOccurs" || el.key == "maxOccurs" {
-          if el.val != "1" || el.val != "0" {
+          if el.val != "1" && el.val != "0" {
             max_bound_gt_one = true
           }
         }
       }
-      if max_bound_gt_one {
+      // NOTE: DISABLED THIS BECAUSE NOW WE DO IT AS ARRAY OF UNIONS
+      // THAT IS MORE REALISTIC FOR XML REPRESENTATION
+      if max_bound_gt_one && false {
         strings.write_string(&text_buffer, ":: struct {\n")
         for attr in ch.element {
           strings.write_rune(&text_buffer, '\t')
@@ -97,6 +97,7 @@ choice_tree_to_string :: proc( root_choice : ^choice, choice_type_name : string,
     }
 
     node_idx_it := 0
+    repeated_type : [dynamic]string
     for b := ch.next; b != nil; b = b.right {
       defer node_idx_it += 1
 
@@ -105,17 +106,24 @@ choice_tree_to_string :: proc( root_choice : ^choice, choice_type_name : string,
           // TODO(s.p): check for minOccurss
           //strings.write_string(&text_buffer, b.element[0].val )
           //strings.write_string(&text_buffer, " : ")
-          strings.write_rune(&text_buffer, '\t')
           xs_element := strings.concatenate({"xs_", b.element[1].val}, allocator)
           el_name := has_namespace( "xtce", b.element[1].val) ? b.element[1].val[len("xtce:"):] : xs_element
 
-          if max_bound_gt_one {
-            buff : [64]u8
-            strings.write_string(&text_buffer, "t_")
-            strings.write_string(&text_buffer, el_name)
-            strings.write_string(&text_buffer, strconv.itoa(buff[:], node_idx_it))
-            strings.write_string(&text_buffer, " : [dynamic]")
+          if slice.contains(repeated_type[:], el_name) {
+            continue
           }
+          else {
+            append(&repeated_type, el_name)
+          }
+
+          strings.write_rune(&text_buffer, '\t')
+          //if max_bound_gt_one {
+          //  buff : [64]u8
+          //  strings.write_string(&text_buffer, "t_")
+          //  strings.write_string(&text_buffer, el_name)
+          //  strings.write_string(&text_buffer, strconv.itoa(buff[:], node_idx_it))
+          //  strings.write_string(&text_buffer, " : [dynamic]")
+          //}
 
           if b.element[1].val == "embedded" {
             // next to embedded is base definition
@@ -318,6 +326,19 @@ gen_complex_content :: proc( file: os.Handle, type: schema_type_def, content : ^
         strings.write_string(&text_buffer, (cast(string)"\tt_choice_"))
         strings.write_string(&text_buffer, strconv.itoa(buf[:], it_choice_idx))
         strings.write_string(&text_buffer, (cast(string)" : "))
+        for el, idx in it_c.element {
+          if el.key == "minOccurs" || el.key == "maxOccurs" {
+            if el.val != "1" && el.val != "0" {
+              strings.write_string(&text_buffer, (cast(string)"["))
+              if el.val == "unbounded" {
+                strings.write_string(&text_buffer, (cast(string)"dynamic"))
+              } else {
+                strings.write_string(&text_buffer, el.val)
+              }
+              strings.write_string(&text_buffer, (cast(string)"]"))
+            }
+          }
+        }
         strings.write_string(&text_buffer, type_struct_concat)
         strings.write_string(&text_buffer, strconv.itoa(buf[:], it_choice_idx))
         strings.write_string(&text_buffer, (cast(string)",\n"))
@@ -491,6 +512,19 @@ gen_type_into_file :: proc(file: os.Handle, type: schema_type_def ) {
             os.write(file, transmute([]u8)(cast(string)"\tt_choice_"))
             os.write(file, transmute([]u8)strconv.itoa(buf[:], it_choice_idx))
             os.write(file, transmute([]u8)(cast(string)" : "))
+            for el, idx in it_c.element {
+              if el.key == "minOccurs" || el.key == "maxOccurs" {
+                if el.val != "1" && el.val != "0" {
+                  os.write(file, transmute([]u8)(cast(string)"["))
+                  if el.val == "unbounded" {
+                    os.write(file, transmute([]u8)(cast(string)"dynamic"))
+                  } else {
+                    os.write(file, transmute([]u8)el.val)
+                  }
+                  os.write(file, transmute([]u8)(cast(string)"]"))
+                }
+              }
+            }
             os.write(file, transmute([]u8)type_struct_concat)
             os.write(file, transmute([]u8)strconv.itoa(buf[:], it_choice_idx))
             os.write(file, transmute([]u8)(cast(string)",\n"))
