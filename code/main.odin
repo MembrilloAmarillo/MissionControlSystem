@@ -787,7 +787,7 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
           }
 
           set_layout_next_column(0)
-          label(strings.concatenate(name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+          container_box := label(strings.concatenate(name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
           set_layout_next_column(1)
           label(strings.concatenate(field_type[:], ui_context.per_frame_arena_allocator),cast(^byte)&l_it)
           set_layout_next_column(2)
@@ -803,11 +803,51 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 
           // Check
           //
-          /*
-          for arg in command.t_CommandContainer.t_EntryList {
-
+          {
+            set_layout_ui_parent_seed(container_box)
+            for arg in command.t_ArgumentList.t_Argument {
+              l_it += 1
+              row += 1
+              set_layout_next_row(auto_cast row)
+              container_name := strings.concatenate(name_concat[:], ui_context.per_frame_arena_allocator)
+              field_name := [?]string {
+                arg.base.t_name.t_restriction.val,
+                "#_arg_name",
+                arg.base.t_name.t_restriction.val,
+                "_%d"
+              }
+              field_type := [?]string {
+                arg.t_argumentTypeRef.t_restriction.val,
+                "#_arg_type_",
+                arg.t_argumentTypeRef.t_restriction.val,
+                "_%d"
+              }
+              default    := [?]string {
+                arg.t_initialValue.val,
+                "#_arg_init_value",
+                arg.t_initialValue.val,
+                "_%d"
+              }
+              // TODO: For encoding size and value we shall search for the type it 
+              // references and return it here
+              // argument_ref := SearchForArgument(system), NOTE: Can be any system
+              //
+              set_layout_next_column(0)
+              label(container_name, cast(^byte)&row)
+              set_layout_next_column(1)
+              label(strings.concatenate(field_name[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+              set_layout_next_column(2)
+              label(strings.concatenate(field_type[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+              set_layout_next_column(3)
+              //label(strings.concatenate(field_name, ui_context.per_frame_arena_allocator), container_box)
+              set_layout_next_column(4)
+              //label(strings.concatenate(field_name, ui_context.per_frame_arena_allocator), container_box)
+              set_layout_next_column(5)
+              //label(strings.concatenate(field_name, ui_context.per_frame_arena_allocator), container_box)
+              set_layout_next_column(6)
+              label(strings.concatenate(default[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+            }
           }
-          */
 
           row += 1
           set_layout_next_row(auto_cast row)
