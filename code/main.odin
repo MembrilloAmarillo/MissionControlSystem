@@ -225,7 +225,7 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
   ui_vspacer(15.)
   system := &handler.system
   row := begin_next_layout_scrollable_section(0, get_layout_stack().box_preferred_size)
-  defer end_next_layout_scrollable_section()
+  
   for ; system != nil; system = auto_cast system.next {
     for CommandType in xtce.GetMetaCommandSetType(system.element) {
       #partial switch Command in CommandType {
@@ -235,28 +235,29 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
           {
             set_next_layout_style(ui_context.theme.button)
             defer utils.pop_stack(&ui_context.style)
-            app_state.menu_tc.current_tc = make_box(
+            box := make_box(
                             NameConcat,
                             {-1, -1},
                             {-1, -1},
                             UI_Options{.DRAW_STRING, .DRAW_RECT, .DRAW_BORDER, .HOVER_ANIMATION},
                             cast(^byte)system,
                           )
-            set_next_hover_cursor(app_state.menu_tc.current_tc, glfw.HAND_CURSOR)
-            input := consume_box_event(app_state.menu_tc.current_tc)
+            set_next_hover_cursor(box, glfw.HAND_CURSOR)
+            input := consume_box_event(box)
 
             event: EventResults
 
             if .LEFT_CLICK == input {
               event.left_click = true
               event.left_click_hold = true
+              app_state.menu_tc.current_tc = box
             }
             if .LEFT_CLICK_RELEASE == input {
               event.left_click = false
               event.left_click_hold = true
             }
 
-            if app_state.menu_tc.current_tc == ui_context.hover_target {
+            if box == ui_context.hover_target {
               event.left_click_hold = true
             }
 
@@ -269,9 +270,24 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
       }
     }
   }
+  end_next_layout_scrollable_section()
 
   {
     set_layout_ui_parent_seed(app_state.menu_tc.current_tc)
+    {
+      layout := get_layout_stack()
+      style := ui_context.theme.background_panel
+      style.color_rect00 *= 0.96
+      style.color_rect01 *= 0.96
+      style.color_rect10 *= 0.96
+      style.color_rect11 *= 0.96
+      style.border_thickness = 0
+      set_next_layout_style(style)
+      defer pop_layout_style()
+      make_box("#_background_%p", rect.top_left + {rect.size.x * 0.4, layout.position.y - rect.top_left.y}, {rect.size.x * 0.6, rect.size.y - layout.position.y}, {.DRAW_RECT, .DRAW_BORDER, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)app_state.menu_tc.current_tc)
+    }
+
+    ui_hspacer(25.);
     row_it : u32 = 0
     set_layout_reset_row()
     set_layout_next_column(1)
@@ -285,8 +301,10 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
                     arg.base.t_name.t_restriction.val,
                     "_%d"
                   }
+      ui_vspacer(2.); 
       label(strings.concatenate(field_name[:], ui_context.per_frame_arena_allocator), cast(^byte)&row_it)
       row_it += 1
+      ui_vspacer(2.);
       set_layout_next_row(row_it)
       input_field("Set Input#_input_field_%d", cast(^byte)&row_it)
       row_it += 1
@@ -501,7 +519,11 @@ case "TC Arguments": {
     ArgTypeSet := xtce.GetArgumentTypeSet(system.element)
     for arg_type in ArgTypeSet {
 
-      # partial switch argument in arg_type {
+      if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
+        limit_on_screen = true
+      }
+
+      #partial switch argument in arg_type {
 
         case xtce.IntegerArgumentType : {
           if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
@@ -580,82 +602,173 @@ case "TC Arguments": {
             }
             l_it += 1
           }
-          case xtce.EnumeratedArgumentType : {
-            if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
-              limit_on_screen = true
+        case xtce.EnumeratedArgumentType : {
+          if l_it >= row_start_it && !limit_on_screen {
+            set_layout_next_column(0)
+            if math.mod(cast(f32)l_it, 2.) == 0 {
+              style := ui_context.theme.background_panel
+              style.color_rect00 *= 0.95
+              style.color_rect01 *= 0.95
+              style.color_rect10 *= 0.95
+              style.color_rect11 *= 0.95
+              style.corner_radius = 6
+              set_next_layout_style(style)
+              make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
+              ui_pop_style()
             }
 
-            if l_it >= row_start_it && !limit_on_screen {
-              set_layout_next_column(0)
-
-              if math.mod(cast(f32)l_it, 2.) == 0 {
-                style := ui_context.theme.background_panel
-                style.color_rect00 *= 0.95
-                style.color_rect01 *= 0.95
-                style.color_rect10 *= 0.95
-                style.color_rect11 *= 0.95
-                style.corner_radius = 6
-                set_next_layout_style(style)
-                make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
-                ui_pop_style()
-              }
-
-              arg_name_concat := [?]string {
-                argument.base.base.base.t_name.t_restriction.val,
-                "#_BaseName_",
-                argument.base.base.base.t_name.t_restriction.val,
-                "_%d"
-              }
+            arg_name_concat := [?]string {
+              argument.base.base.base.t_name.t_restriction.val,
+              "#_BaseName_",
+              argument.base.base.base.t_name.t_restriction.val,
+              "_%d"
+            }
 
 
-              arg_type_concat := [?]string {
-                "Enumerated",
-                "#_type_Integer",
-                "_%d"
-              }
+            arg_type_concat := [?]string {
+              "Enumerated",
+              "#_type_Integer",
+              "_%d"
+            }
 
-              arg_initial_value_concat := [?]string {
-                argument.base.t_initialValue.val,//len(argument.base.t_initialValue) > 0 ? argument.base.t_initialValue : "-",
-                "#_InitialValue_",
-                argument.base.t_initialValue.val,
-                "_%d"
-              }
+            arg_initial_value_concat := [?]string {
+              argument.base.t_initialValue.val,//len(argument.base.t_initialValue) > 0 ? argument.base.t_initialValue : "-",
+              "#_InitialValue_",
+              argument.base.t_initialValue.val,
+              "_%d"
+            }
 
-              set_layout_next_column(0)
-              label(strings.concatenate(arg_name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
-              set_layout_next_column(1)
-              enum_box := make_box_from_key(text = strings.concatenate(arg_type_concat[:], ui_context.per_frame_arena_allocator), box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER} ,key = cast(^byte)&l_it)
-              set_layout_next_column(2)
-              label(strings.concatenate(arg_initial_value_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
-              //set_layout_next_column(3)
-              //label(strings.concatenate(arg_min_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
-              //set_layout_next_column(4)
-              //label(strings.concatenate(arg_max_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
-              consume_box_event( enum_box )
-              if enum_box == ui_context.hover_target {
-               n_enum := len(argument.base.t_EnumerationList.t_Enumeration)
-               box_size : glsl.vec2 = {400, 30}
-               top_left := enum_box.rect.top_left
-               top_left += enum_box.rect.size
-               //set_next_box_layout({.NONE})
-               //set_next_layout(top_left, box_size, cast(u32)n_enum, 0, LayoutType.FIXED)
-               //set_box_preferred_size({300, 30})
-               //set_layout_string_padding(20, 0)
-               style := ui_context.theme.background_panel
-               style.color_rect00 *= 0.4
-               style.color_rect01 *= 0.4
-               style.color_rect10 *= 0.4
-               style.color_rect11 *= 0.4
-               style.color_text   *= 1.6
-               style.corner_radius = 6
-               push_hovering_boxes_for_rendering({top_left, box_size}, "Enumeration List", style, cast(^byte)enum_box, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
-               //set_next_layout_style(style)
-               //defer ui_pop_style()
-               //box := make_box_from_key("EnumerationList#_hover_enum_show_list_%p", top_left, box_size, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)enum_box)
-               for it in argument.base.t_EnumerationList.t_Enumeration {
+            set_layout_next_column(0)
+            label(strings.concatenate(arg_name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            set_layout_next_column(1)
+            enum_box := make_box_from_key(text = strings.concatenate(arg_type_concat[:], ui_context.per_frame_arena_allocator), box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER} ,key = cast(^byte)&l_it)
+            set_layout_next_column(2)
+            label(strings.concatenate(arg_initial_value_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            //set_layout_next_column(3)
+            //label(strings.concatenate(arg_min_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            //set_layout_next_column(4)
+            //label(strings.concatenate(arg_max_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            consume_box_event( enum_box )
+            if enum_box == ui_context.hover_target {
+              n_enum := len(argument.base.t_EnumerationList.t_Enumeration)
+              box_size : glsl.vec2 = {400, 30}
+              top_left := enum_box.rect.top_left
+              top_left += enum_box.rect.size
+              //set_next_box_layout({.NONE})
+              //set_next_layout(top_left, box_size, cast(u32)n_enum, 0, LayoutType.FIXED)
+              //set_box_preferred_size({300, 30})
+              //set_layout_string_padding(20, 0)
+              style := ui_context.theme.background_panel
+              style.color_rect00 *= 0.4
+              style.color_rect01 *= 0.4
+              style.color_rect10 *= 0.4
+              style.color_rect11 *= 0.4
+              style.color_text   *= 1.6
+              style.corner_radius = 6
+              push_hovering_boxes_for_rendering({top_left, box_size}, "Enumeration List", style, cast(^byte)enum_box, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
+              //set_next_layout_style(style)
+              //defer ui_pop_style()
+              //box := make_box_from_key("EnumerationList#_hover_enum_show_list_%p", top_left, box_size, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)enum_box)
+              for it in argument.base.t_EnumerationList.t_Enumeration {
                 top_left.y += 30.
                 //make_box_from_key(it.t_label.val, top_left, box_size, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, box)
                 push_hovering_boxes_for_rendering({top_left, box_size}, it.t_label.val, style, cast(^byte)enum_box, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
+              }
+            }
+            row += 1
+            set_layout_next_row(auto_cast row)
+          }
+          l_it += 1
+        }
+        case xtce.ArrayArgumentType : {
+          if l_it >= row_start_it && !limit_on_screen {
+            set_layout_next_column(0)
+            if math.mod(cast(f32)l_it, 2.) == 0 {
+              style := ui_context.theme.background_panel
+              style.color_rect00 *= 0.95
+              style.color_rect01 *= 0.95
+              style.color_rect10 *= 0.95
+              style.color_rect11 *= 0.95
+              style.corner_radius = 6
+              set_next_layout_style(style)
+              make_box_from_key("#box_%d", layout.at + {4, 0}, {layout.parent_box.rect.size.x - 8, layout.box_preferred_size.y}, {.DRAW_RECT, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)&row)
+              ui_pop_style()
+            }
+
+            arg_name_concat := [?]string {
+              argument.base.base.t_name.t_restriction.val,
+              "#_BaseName_",
+              argument.base.base.t_name.t_restriction.val,
+              "_%d"
+            }
+
+
+            arg_type_concat := [?]string {
+              "ArrayArgument",
+              "#_type_Array",
+              "_%d"
+            }
+
+            arg_initial_value_concat := [?]string {
+              "-",
+              "#_InitialValue_",
+              "-",
+              "_%d"
+            }
+
+            set_layout_next_column(0)
+            label(strings.concatenate(arg_name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            set_layout_next_column(1)
+            enum_box := make_box_from_key(text = strings.concatenate(arg_type_concat[:], ui_context.per_frame_arena_allocator), box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER} ,key = cast(^byte)&l_it)
+            set_layout_next_column(2)
+            label(strings.concatenate(arg_initial_value_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            //set_layout_next_column(3)
+            //label(strings.concatenate(arg_min_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            //set_layout_next_column(4)
+            //label(strings.concatenate(arg_max_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&l_it)
+            consume_box_event( enum_box )
+            if enum_box == ui_context.hover_target {
+              n_enum := len(argument.t_DimensionList.t_Dimension)
+              box_size : glsl.vec2 = {400, 30}
+              top_left := enum_box.rect.top_left
+              top_left += enum_box.rect.size
+              //set_next_box_layout({.NONE})
+              //set_next_layout(top_left, box_size, cast(u32)n_enum, 0, LayoutType.FIXED)
+              //set_box_preferred_size({300, 30})
+              //set_layout_string_padding(20, 0)
+              style := ui_context.theme.background_panel
+              style.color_rect00 *= 0.4
+              style.color_rect01 *= 0.4
+              style.color_rect10 *= 0.4
+              style.color_rect11 *= 0.4
+              style.color_text   *= 1.6
+              style.corner_radius = 6
+              push_hovering_boxes_for_rendering({top_left, box_size}, "Dimension List", style, cast(^byte)enum_box, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
+              //set_next_layout_style(style)
+              //defer ui_pop_style()
+              //box := make_box_from_key("EnumerationList#_hover_enum_show_list_%p", top_left, box_size, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, cast(^byte)enum_box)
+              for it in argument.t_DimensionList.t_Dimension {
+                top_left.y += 30.
+                //make_box_from_key(it.t_label.val, top_left, box_size, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER}, box)
+                start_index_concat : [dynamic]string = make([dynamic]string, ui_context.per_frame_arena_allocator)
+                append(&start_index_concat, "Start Index: ")
+                buffer : [64]u8
+                #partial switch tt in it.t_StartingIndex.t_choice_0 {
+                  case xtce.xs_long : {
+                    append(&start_index_concat, strconv.itoa(buffer[:], cast(int)tt.integer))
+                  }
+                  case xtce.ArgumentDiscreteLookupListType : {
+                    for it2 in tt.t_DiscreteLookup {
+                      append(&start_index_concat, strconv.itoa(buffer[:], cast(int)it2.t_value.integer))
+                    }
+                  }
+                  case xtce.ArgumentDynamicValueType : {
+                    utils.TODO("Sill have to do xtce.ArgumentDynamicValueType", strconv.itoa(buffer[:], #line))
+                  }
+                }
+                
+                start_index := strings.concatenate(start_index_concat[:], ui_context.per_frame_arena_allocator)
+                push_hovering_boxes_for_rendering({top_left, box_size}, start_index, style, cast(^byte)enum_box, UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
               }
             }
             row += 1
@@ -1487,9 +1600,9 @@ ui_begin()
    }
    case APP_SHOW_FLAGS.SHOW_TC:
    {
-    set_next_box_layout({.Y_CENTERED_STRING, .X_CENTERED})
+    set_next_box_layout({.Y_CENTERED_STRING, .X_CENTERED, .SCROLLABLE})
     set_next_layout( p.rect.top_left, p.rect.size, 0, 2, LayoutType.FIXED )
-    set_layout_next_padding( 40, 0 )
+    set_layout_next_padding( 20, 0 )
     set_box_preferred_size({0.4 * p.rect.size.x, 30})
     if begin( "TC Center#tc_center%p", pointer = cast(^byte)p )
     {
@@ -1605,8 +1718,8 @@ if app_state.enable_debug {
     text_ms := strings.concatenate(text[:], ui_context.per_frame_arena_allocator)
     label(text_ms, cast(^u8)&render.Global_VulkanDebug)
     str := "none"
-    if ui_context.press_target != &UI_NilBox {
-      str = ui_context.press_target.title_string
+    if ui_context.target_box != &UI_NilBox {
+      str = ui_context.target_box.title_string
     }
     test := [?]string{"Box Target: ", str, "#target_%p"}
     label( strings.concatenate(test[:], ui_context.per_frame_arena_allocator), cast(^byte)&app_state )

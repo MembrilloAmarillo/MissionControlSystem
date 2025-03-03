@@ -58,6 +58,7 @@ UI_Opt :: enum int {
 	NO_HOVER,
 	CHECKBOX,
 	HOVER_ANIMATION,
+	SCROLLABLE,
 }
 
 UI_Options :: distinct bit_set[UI_Opt;int]
@@ -365,19 +366,19 @@ get_default_ui_light_style :: proc() -> UI_Style {
 		color_rect11     = white,
 		color_text       = black,
 		border_thickness = 0,
-		corner_radius    = 3,
+		corner_radius    = 2,
 		edge_softness    = 0,
 	}
 
 	style.button = {
-		color_border     = light_blue,
+		color_border     = dark_blue,
 		color_rect00     = light_blue,
 		color_rect01     = light_blue,
 		color_rect10     = light_blue,
 		color_rect11     = light_blue,
 		color_text       = black,
 		border_thickness = 0,
-		corner_radius    = 6,
+		corner_radius    = 3,
 		edge_softness    = 0,
 	}
 
@@ -740,91 +741,94 @@ consume_box_event :: proc(box: ^Box) -> render.os_input_type {
 
 	if point_intersect({cast(f32)x, cast(f32)y}, box.rect)
 	{
-  // FIX if there are two windows overlaping it will take the last one to render
-  // as the scroll target (or both simultaneusly)
-  //
-  ui_context.scroll_target = box
-  if ui_context.hover_target == &UI_NilBox || box.zindex > ui_context.hover_target.zindex {
-  	buf: [32]u8
-  	cursor := hash.lookup_table(
-  		&ui_context.cursor_image_per_box,
-  		strconv.itoa(buf[:], auto_cast box.id),
-  		)
-  	if cursor != nil {
-  		glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
-  	} else {
-  		cursor = glfw.CreateStandardCursor(glfw.ARROW_CURSOR)
-  		glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
-  	}
-  	ui_context.hover_target  = box
-  	box.is_animating = true
-  }
-}
+	  // FIX if there are two windows overlaping it will take the last one to render
+	  // as the scroll target (or both simultaneusly)
+	  //
+	  if .SCROLLABLE in box.flags {
+	  	ui_context.scroll_target = box
+	  }
+	  if ui_context.hover_target == &UI_NilBox || box.zindex > ui_context.hover_target.zindex {
+	  	buf: [32]u8
+	  	cursor := hash.lookup_table(
+	  		&ui_context.cursor_image_per_box,
+	  		strconv.itoa(buf[:], auto_cast box.id),
+	  		)
+	  	if cursor != nil {
+	  		glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
+	  	} else {
+	  		cursor = glfw.CreateStandardCursor(glfw.ARROW_CURSOR)
+	  		glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
+	  	}
+	  	ui_context.hover_target  = box
+	  	box.is_animating = true
+	  }
+	}
 
-for input, idx in ui_context.vulkan_iface.va_OsInput {
-	if .LEFT_CLICK in input.type && !(.NO_CLICKABLE in box.flags) {
-		click := input.mouse_click
-		if point_intersect(click, box.rect) && (ui_context.press_target == &UI_NilBox || (box.zindex >= ui_context.press_target.zindex))
-		{
-			if box.zindex == 0 && box.lay_type != .FIXED {
-				ui_context.last_zindex += 1
-				box.zindex = ui_context.last_zindex
+	for input, idx in ui_context.vulkan_iface.va_OsInput {
+		if .LEFT_CLICK in input.type && !(.NO_CLICKABLE in box.flags) {
+			click := input.mouse_click
+			if point_intersect(click, box.rect) && (ui_context.press_target == &UI_NilBox || (box.zindex >= ui_context.press_target.zindex))
+			{
+				if box.zindex == 0 && box.lay_type != .FIXED {
+					ui_context.last_zindex += 1
+					box.zindex = ui_context.last_zindex
+				}
+				if !(.NO_CLICKABLE in box.flags) {
+					ui_context.press_target = box
+					ui_context.target_box = box
+					if .SCROLLABLE in box.flags {
+						ui_context.scroll_target = box
+					}
+				}
+
+				ui_context.drag_data = click
+
+				return .LEFT_CLICK
 			}
-			if !(.NO_CLICKABLE in box.flags) {
-				ui_context.press_target = box
-				ui_context.target_box = box
-				ui_context.scroll_target = box
+		}
+		else if .LEFT_CLICK_RELEASE in input.type {
+			ui_context.press_target = &UI_NilBox
+			ui_context.resizing = false
+			ui_context.drag_delta = {0, 0}
+			return .LEFT_CLICK_RELEASE
+		}
+		else if .RIGHT_CLICK in input.type {
+			ui_context.hover_target =
+			ui_context.hover_target != &UI_NilBox ? ui_context.hover_target : box
+			return .RIGHT_CLICK
+		}
+		else if .ARROW_DOWN in input.type {
+			if ui_context.scroll_target != &UI_NilBox {
+				if input.scroll_off.y == 0 {
+					ui_context.scroll_target.scroll.y -= DEFAULT_SCROLL_DELTA * 0.2
+				} else {
+					ui_context.scroll_target.scroll.y += input.scroll_off.y * 0.2
+				}
 			}
-
-			ui_context.drag_data = click
-
-			return .LEFT_CLICK
+			return .ARROW_DOWN
+		}
+		else if .ARROW_UP in input.type {
+			if ui_context.scroll_target != &UI_NilBox {
+				if input.scroll_off.y == 0 {
+					ui_context.scroll_target.scroll.y += DEFAULT_SCROLL_DELTA * 0.2
+				} else {
+					ui_context.scroll_target.scroll.y += input.scroll_off.y * 0.2
+				}
+			}
+			return .ARROW_UP
+		}
+		else if .CHARACHTER in input.type {
+			strings.write_rune(&ui_context.text_input, input.codepoint)
+			unordered_remove(&ui_context.vulkan_iface.va_OsInput, idx)
+			return .CHARACHTER
+		}
+		else if .BACKSPACE in input.type {
+			if box == ui_context.target_box && .INPUT_TEXT in ui_context.target_box.flags {
+				strings.pop_rune(&ui_context.target_box.text_input)
+			}
 		}
 	}
-	else if .LEFT_CLICK_RELEASE in input.type {
-   //ui_context.hover_target = nil
-   ui_context.press_target = &UI_NilBox
-   ui_context.resizing = false
-   ui_context.drag_delta = {0, 0}
-   return .LEFT_CLICK_RELEASE
-}
-else if .RIGHT_CLICK in input.type {
-	ui_context.hover_target =
-	ui_context.hover_target != &UI_NilBox ? ui_context.hover_target : box
-	return .RIGHT_CLICK
-}
-else if .ARROW_DOWN in input.type {
-	if ui_context.scroll_target != &UI_NilBox {
-		if input.scroll_off.y == 0 {
-			ui_context.scroll_target.scroll.y -= DEFAULT_SCROLL_DELTA * 0.2
-		} else {
-			ui_context.scroll_target.scroll.y += input.scroll_off.y * 0.2
-		}
-	}
-	return .ARROW_DOWN
-}
-else if .ARROW_UP in input.type {
-	if ui_context.scroll_target != &UI_NilBox {
-		if input.scroll_off.y == 0 {
-			ui_context.scroll_target.scroll.y += DEFAULT_SCROLL_DELTA * 0.2
-		} else {
-			ui_context.scroll_target.scroll.y += input.scroll_off.y * 0.2
-		}
-	}
-	return .ARROW_UP
-}
-else if .CHARACHTER in input.type {
-	strings.write_rune(&ui_context.text_input, input.codepoint)
-	unordered_remove(&ui_context.vulkan_iface.va_OsInput, idx)
-	return .CHARACHTER
-}
-else if .BACKSPACE in input.type {
-	if box == ui_context.target_box && .INPUT_TEXT in ui_context.target_box.flags {
-		strings.pop_rune(&ui_context.target_box.text_input)
-	}
-}
-}
-return {}
+	return {}
 }
 
 // ------------------------------------------------------------------- //
@@ -1378,7 +1382,7 @@ menu_begin :: proc(
 		end(true)
 	}
 
-	set_next_box_layout({.SET_WIDTH_TO_TEXT, .DISABLE_TITLE_BAR})
+	set_next_box_layout({.SET_WIDTH_TO_TEXT, .DISABLE_TITLE_BAR, .SCROLLABLE})
 	// NOTE: We hardcode 60 as height, but it should be the line height + something
 	set_next_layout(top_left + {0, ui_context.vulkan_iface.va_FontCache[1].line_height + 6}, w_h - {0, ui_context.vulkan_iface.va_FontCache[1].line_height - 12}, 0, 0, LayoutType.FIXED)
 	//set_box_preferred_size({200, 30})
@@ -1488,19 +1492,6 @@ end :: proc(open: bool = false) {
 				}
 			}
 		}
-	}
-	// We have more items than the current window height
-	//
-	if root_box.content_rect.y > root_box.rect.top_left.y + root_box.rect.size.y {
-		event := consume_box_event(root_box)
-		if event == .ARROW_UP {
-			//root_box.scroll += {0, DEFAULT_SCROLL_DELTA}
-		}
-		if event == .ARROW_DOWN {
-			//root_box.scroll -= {0, DEFAULT_SCROLL_DELTA}
-		}
-	} else {
-		//root_box.scroll = {0, 0}
 	}
 
 	utils.pop_stack(&ui_context.root_stack)
@@ -1625,6 +1616,9 @@ label :: proc(label: string, id: ^byte = nil) -> ^Box {
 // ------------------------------------------------------------------- //
 
 input_field :: proc(label: string, id: ^byte = nil) {
+	set_next_box_layout({.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .INPUT_TEXT, .NO_HOVER})
+	defer pop_box_layout()
+
 	set_next_layout_style(ui_context.theme.input_field)
 	defer utils.pop_stack(&ui_context.style)
 	box: ^Box
@@ -2130,149 +2124,149 @@ ui_build :: proc() {
    	}
 
    	if .DRAW_RECT in box.flags || ui_context.hover_target == box && !(.NO_HOVER in box.flags) {
-					// I want it to have some kind of frame for the window, so the easiest way is just to check if it is a window, and if it is,
-					// change the frame of the title
-					//
-					style_frame := style
-					style.color_rect00.a *= anim_rate
-					style.color_rect01.a *= anim_rate
-					style.color_rect10.a *= anim_rate
-					style.color_rect11.a *= anim_rate
-					style.color_border.a *= anim_rate
+			// I want it to have some kind of frame for the window, so the easiest way is just to check if it is a window, and if it is,
+			// change the frame of the title
+			//
+			style_frame := style
+			style.color_rect00.a *= anim_rate
+			style.color_rect01.a *= anim_rate
+			style.color_rect10.a *= anim_rate
+			style.color_rect11.a *= anim_rate
+			style.color_border.a *= anim_rate
 
-					style_frame.border_thickness = 0
+			style_frame.border_thickness = 0
 
-					// NOTE: This may be not the best place to place it
-					// What I want to do here is to create some sort of shadow
-					// so that it differenciates well from other boxes. I only
-					// set it when layout_type is relative because is the only
-					// way the boxes can overlap
-					//
-					if box.parent == root_box && box.lay_type == .RELATIVE {
-						background_style := style_frame
-						background_style.color_rect00 -= 0.8 * background_style.color_rect00
-						background_style.color_rect01 -= 0.8 * background_style.color_rect01
-						background_style.color_rect10 -= 0.8 * background_style.color_rect10
-						background_style.color_rect11 -= 0.8 * background_style.color_rect11
-						add_rect(
-							box.rect.top_left + {10, 10},
-							box.rect.size,
-							ui_context.vulkan_iface,
-							background_style,
-							)
-					}
+			// NOTE: This may be not the best place to place it
+			// What I want to do here is to create some sort of shadow
+			// so that it differenciates well from other boxes. I only
+			// set it when layout_type is relative because is the only
+			// way the boxes can overlap
+			//
+			if box.parent == root_box && box.lay_type == .RELATIVE {
+				background_style := style_frame
+				background_style.color_rect00 -= 0.8 * background_style.color_rect00
+				background_style.color_rect01 -= 0.8 * background_style.color_rect01
+				background_style.color_rect10 -= 0.8 * background_style.color_rect10
+				background_style.color_rect11 -= 0.8 * background_style.color_rect11
+				add_rect(
+					box.rect.top_left + {10, 10},
+					box.rect.size,
+					ui_context.vulkan_iface,
+					background_style,
+					)
+			}
 
-					add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
+			add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
 
-					if box.parent == root_box && !(.DISABLE_TITLE_BAR in box.flags) {
-						style_frame = style
-						style_frame.color_rect00 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-						style_frame.color_rect11 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-						style_frame.color_rect01 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-						style_frame.color_rect10 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-						//style_frame.corner_radius = 0
-						//style_frame.edge_softness = 0
+			if box.parent == root_box && !(.DISABLE_TITLE_BAR in box.flags) {
+				style_frame = style
+				style_frame.color_rect00 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+				style_frame.color_rect11 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+				style_frame.color_rect01 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+				style_frame.color_rect10 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+				//style_frame.corner_radius = 0
+				//style_frame.edge_softness = 0
 
-						line_height := cast(f32)current_font_cache.line_height + 6
-						add_rect(
-							box.rect.top_left,
-							{box.rect.size.x, line_height},
-							ui_context.vulkan_iface,
-							style_frame,
-							)
-					}
+				line_height := cast(f32)current_font_cache.line_height + 6
+				add_rect(
+					box.rect.top_left,
+					{box.rect.size.x, line_height},
+					ui_context.vulkan_iface,
+					style_frame,
+					)
+			}
+		}
+
+		if .DRAW_BORDER in box.flags {
+			style.border_thickness = 1.//ui_context.theme.front_panel.border_thickness
+			add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
+			// This has to be done as setting up border thickness before calling draw_rect
+			// it will create a hollow rect
+			//
+		}
+
+		if .CHECKBOX in box.flags {
+			style.border_thickness = ui_context.theme.front_panel.border_thickness
+			add_rect(box.rect.top_left + 5, {box.rect.size.y - 10, box.rect.size.y - 10}, ui_context.vulkan_iface, style)
+		}
+
+			// NOTE: the arena allocator keeps accumulating a little bit of memory
+			// even after telling it to free, maybe it has to accumulate a bigger chunk
+			// of memory (maybe a page size) to free the whole chunk
+			//
+			if ui_context.target_box == box {
+				if .INPUT_TEXT in box.flags && len(strings.to_string(ui_context.text_input)) > 0 {
+					strings.write_string(&box.text_input, strings.to_string(ui_context.text_input))
 				}
-
-				if .DRAW_BORDER in box.flags {
-					style.border_thickness = 1.//ui_context.theme.front_panel.border_thickness
-					add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
-					// This has to be done as setting up border thickness before calling draw_rect
-					// it will create a hollow rect
-					//
-				}
-
-				if .CHECKBOX in box.flags {
-					style.border_thickness = ui_context.theme.front_panel.border_thickness
-					add_rect(box.rect.top_left + 5, {box.rect.size.y - 10, box.rect.size.y - 10}, ui_context.vulkan_iface, style)
-				}
-
-				// NOTE: the arena allocator keeps accumulating a little bit of memory
-				// even after telling it to free, maybe it has to accumulate a bigger chunk
-				// of memory (maybe a page size) to free the whole chunk
+			}
+			if .DRAW_STRING in box.flags && !(box.parent == root_box && (.DISABLE_TITLE_BAR in box.flags)) {
+				// Check for string centering
 				//
-				if ui_context.target_box == box {
-					if .INPUT_TEXT in box.flags && len(strings.to_string(ui_context.text_input)) > 0 {
-						strings.write_string(&box.text_input, strings.to_string(ui_context.text_input))
-					}
-				}
-				if .DRAW_STRING in box.flags && !(box.parent == root_box && (.DISABLE_TITLE_BAR in box.flags)) {
-					// Check for string centering
-					//
-					text_size: glsl.vec2
-					{
-						options := box.flags
-						str_render := box.title_string
-						if .INPUT_TEXT in box.flags && strings.builder_len(box.text_input) > 0 {
-							str_render = strings.to_string(box.text_input)
-						}
-						text_size = calc_text_size(str_render, current_font_cache)
-						//box.text_position = box.rect.top_left
-						if .X_CENTERED_STRING in options || box.parent == root_box {
-							line_height: f32 = cast(f32)current_font_cache.line_height
-							box.text_position.x = math.floor(
-								box.rect.top_left.x + (box.rect.size.x / 2 - text_size.x / 2),
-								)
-							box.text_position.y = math.floor(box.rect.top_left.y) // - (line_height - 6) / 2);
-						} else {
-							//box.text_position.x += 16 // Hardcoded padding. NOTE: Update it and make it cofigurable
-							box.text_position.x = math.floor(box.text_position.x)
-						}
-						box.text_position.y = math.floor(box.text_position.y)
-
-						box.rect.size.y = math.max(box.rect.size.y, text_size.y)
-
-						if .Y_CENTERED_STRING in options && box.parent != root_box {
-							box.text_position.y += 0// math.floor((box.rect.size.y / 2) - cast(f32)current_font_cache.line_height / 2)
-						}
-
-					}
+				text_size: glsl.vec2
+				{
+					options := box.flags
 					str_render := box.title_string
 					if .INPUT_TEXT in box.flags && strings.builder_len(box.text_input) > 0 {
 						str_render = strings.to_string(box.text_input)
 					}
+					text_size = calc_text_size(str_render, current_font_cache)
+					//box.text_position = box.rect.top_left
+					if .X_CENTERED_STRING in options || box.parent == root_box {
+						line_height: f32 = cast(f32)current_font_cache.line_height
+						box.text_position.x = math.floor(
+							box.rect.top_left.x + (box.rect.size.x / 2 - text_size.x / 2),
+							)
+						box.text_position.y = math.floor(box.rect.top_left.y) // - (line_height - 6) / 2);
+					} else {
+						//box.text_position.x += 16 // Hardcoded padding. NOTE: Update it and make it cofigurable
+						box.text_position.x = math.floor(box.text_position.x)
+					}
+					box.text_position.y = math.floor(box.text_position.y)
 
-					if box.parent == root_box {
-						style.color_text = style.color_text
+					box.rect.size.y = math.max(box.rect.size.y, text_size.y)
+
+					if .Y_CENTERED_STRING in options && box.parent != root_box {
+						box.text_position.y += 0// math.floor((box.rect.size.y / 2) - cast(f32)current_font_cache.line_height / 2)
 					}
 
-					if .CHECKBOX in box.flags {
-						box.text_position.x += box.rect.size.y + 10
-					}
+				}
+				str_render := box.title_string
+				if .INPUT_TEXT in box.flags && strings.builder_len(box.text_input) > 0 {
+					str_render = strings.to_string(box.text_input)
+				}
 
-					add_text(
-						str_render,
-						box.text_position,
-						box.rect.size,
+				if box.parent == root_box {
+					style.color_text = style.color_text
+				}
+
+				if .CHECKBOX in box.flags {
+					box.text_position.x += box.rect.size.y + 10
+				}
+
+				add_text(
+					str_render,
+					box.text_position,
+					box.rect.size,
+					ui_context.vulkan_iface,
+					style,
+					current_font_cache,
+					)
+
+				if box == ui_context.target_box && .INPUT_TEXT in box.flags {
+					style.border_thickness = 1
+					style.corner_radius    = 1
+					style.color_border = rgba_to_norm({10, 10, 10, 255})
+					ui_context.cursor_position = box.text_position
+					ui_context.cursor_position.x += text_size.x
+					ui_context.cursor_position.y += box.rect.size.y * 0.25
+					add_rect(
+						ui_context.cursor_position,
+						{8, math.floor(box.rect.size.y - box.rect.size.y / 2)},
 						ui_context.vulkan_iface,
 						style,
-						current_font_cache,
 						)
-
-					if box == ui_context.target_box && .INPUT_TEXT in box.flags {
-						style.border_thickness = 1
-						style.corner_radius = 1
-						style.color_border = rgba_to_norm({60, 100, 100, 255})
-						ui_context.cursor_position = box.text_position
-						ui_context.cursor_position.x += text_size.x
-						ui_context.cursor_position.y += box.rect.size.y * 0.25
-						add_rect(
-							ui_context.cursor_position,
-							{2, box.rect.size.y - box.text_position.y * 0.5},
-							ui_context.vulkan_iface,
-							style,
-							)
-					}
 				}
+			}
 			}
 		}
 	}

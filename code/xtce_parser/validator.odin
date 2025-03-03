@@ -1157,13 +1157,16 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
          utils.pop_stack(&t)
          //fmt.println(n.element.second)
          switch( n.element.first ) {
-          case ARRAY_DATA_TYPE_TYPE: {}
-          case DIMENSION_LIST_TYPE: {}
+          //case ARRAY_DATA_TYPE_TYPE: {}
+          case DIMENSION_LIST_TYPE: {
+            array_type.t_DimensionList = LoadDimensionListType(n, "DimensionList" )
+          }
          }
          for b := n.next; b != nil; b = b.right {
           utils.push_stack(&t, b)
          }
         }
+        array_type.base = LoadArrayDataType( node_it_dst )
        }
        case ABSOLUTE_TIME_PARAMETER_TYPE: {
         absolute_time_type : AbsoluteTimeParameterType
@@ -2910,6 +2913,52 @@ LoadSequenceContainerTypes :: proc( node : ^utils.node_tree(utils.tuple(string, 
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+LoadDimensionType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> DimensionType {
+  type : DimensionType = {}
+
+  type.t_StartingIndex = LoadIntegerValueType(node, "StartingIndex")
+  type.t_EndingIndex = LoadIntegerValueType(node, "EndingIndex")
+
+  return type
+}
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadDimensionListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> DimensionListType {
+  type : DimensionListType
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+ for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   if n.element.first == DIMENSION_TYPE {
+    member := LoadDimensionType(n, "Dimension")
+    append(&type.t_Dimension, member)
+   }
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArrayDataType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArrayDataTypeType {
+  type : ArrayDataTypeType = {
+    base = LoadNameDescriptionType( node )
+  }
+  type.t_arrayTypeRef = LoadNameReferenceType(node, "arrayTypeRef")
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 GetSequenceContainer :: proc( space_system : ^SpaceSystemType ) -> [dynamic]t_ContainerSetType0 {
   return space_system.t_TelemetryMetaData.t_ContainerSet.t_choice_0
 }
@@ -3148,6 +3197,220 @@ LoadEnumeratedArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, 
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+LoadArgumentInstanceRefType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ArgumentInstanceRefType {
+  type : ArgumentInstanceRefType = {}
+
+  type.t_argumentRef = LoadNameType(node)
+  type.t_useCalibratedValue = xs_boolean_get_default()
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "t_useCalibratedValue")
+
+  type.t_useCalibratedValue.val = attr.val == "true" ? true : false
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDynamicValueType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ArgumentDynamicValueType {
+  type : ArgumentDynamicValueType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    if n.element.second.ident == "LinearAdjustment" {
+      switch n.element.first {
+        case LINEAR_ADJUSTMENT_TYPE: {
+          t := LoadLinearAdjustmentType(n)
+          type.t_LinearAdjustment = t
+        }
+      }
+    }
+    switch n.element.first {
+      case PARAMETER_INSTANCE_REF_TYPE : {
+        t := LoadParameterInstanceRefType(n)
+        type.t_choice_0 = t
+      }
+      case ARGUMENT_INSTANCE_REF_TYPE : {
+        t := LoadArgumentInstanceRefType(n)
+        type.t_choice_0 = t
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDiscreteLookupListType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ArgumentDiscreteLookupListType {
+  type : ArgumentDiscreteLookupListType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case ARGUMENT_DISCRETE_LOOKUP_TYPE: {
+        t : ArgumentDiscreteLookupType = {
+          base = LoadArgumentMatchCriteriaType(n),
+          t_value = xs_long_get_default()
+        }
+        attr, _ := internal_DepthFirstSearch_Node(n, "value")
+        t.t_value.integer = auto_cast strconv.atoi(attr.val)
+        append(&type.t_DiscreteLookup, t)
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentIntegerValueType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string) -> ArgumentIntegerValueType {
+  type : ArgumentIntegerValueType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    if n.element.second.ident == name {
+      switch n.element.first {
+        case ARGUMENT_DISCRETE_LOOKUP_LIST_TYPE: {
+          t := LoadArgumentDiscreteLookupListType(n)
+          type.t_choice_0 = t
+        }
+        case ARGUMENT_DYNAMIC_VALUE_TYPE: {
+          t := LoadArgumentDynamicValueType(n)
+          type.t_choice_0 = t
+        }
+        case "xs_long" : {
+          long_type := xs_long_get_default()
+          long_type.integer = auto_cast strconv.atoi(n.element.second.attribs[0].val)
+          type.t_choice_0 = long_type
+        }
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDimensionType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> ArgumentDimensionType {
+  type : ArgumentDimensionType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case DIMENSION_TYPE: {
+        type.t_StartingIndex = LoadArgumentIntegerValueType(n, "StartingIndex")
+        type.t_EndingIndex   = LoadArgumentIntegerValueType(n, "EndingIndex")
+        found = true
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDimensionListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentDimensionListType {
+  type : ArgumentDimensionListType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  for stack.push_count > 0 {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case ARGUMENT_DIMENSION_TYPE: {
+        list := LoadArgumentDimensionType(n, "Dimension")
+        append(&type.t_Dimension, list)
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArrayArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArrayArgumentType {
+  type : ArrayArgumentType = {
+    base = LoadArrayDataType(node)
+  }
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+      n := utils.get_front_stack(&stack)
+      utils.pop_stack(&stack)
+
+      switch n.element.first {
+        case ARGUMENT_DIMENSION_LIST_TYPE: {
+          list := LoadArgumentDimensionListType(n)
+          type.t_DimensionList = list
+          found = true
+        }
+      }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type 
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentTypeSetType {
  type : ArgumentTypeSetType = {
  }
@@ -3165,7 +3428,8 @@ LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
         utils.TODO(AGGREGATE_ARGUMENT_TYPE)
       }
       case ARRAY_ARGUMENT_TYPE : {
-        utils.TODO(ARRAY_ARGUMENT_TYPE)
+        t := LoadArrayArgumentType(node)
+        append(&type.t_choice_0, t)
       }
       case ABSOLUTE_TIME_ARGUMENT_TYPE : {
         utils.TODO(ABSOLUTE_TIME_ARGUMENT_TYPE)
