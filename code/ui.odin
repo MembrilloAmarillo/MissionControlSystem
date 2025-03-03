@@ -936,40 +936,38 @@ make_box_no_key :: proc(
 			}
 		}
 	} else {
-	 parent_seed := layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0 // if it is not set is 0
-	 if layout.parent_box == nil {
-	 	string_hash := hash.get_hash_from_key( text )
-	 	bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed)
-	 	for &v in bucket {
-	 		if v != nil {
-	 			if v.id == string_hash {
-	 				box = v
-	 				break
-	 			}
-	 		}
-	 	}
-	 }
-	 else {
-	 	string_hash : u64
-	 	if parent_seed > 0 {
-	 		string_hash = hash.get_hash_from_key( text, parent_seed )
-	 	} else {
-	 		string_hash = hash.get_hash_from_key( text, layout.parent_box.id )
-	 	}
-	  // if there is a parent seed set, it has higher priority than it default set parent box
-	  //
-	  bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed > 0 ? parent_seed : layout.parent_box.id)
-	  for &v in bucket {
-	  	if v != nil {
-	  		if v.id == string_hash {
-	  			box = v
-	  			break
-	  		}
-	  	}
-	  }
-	}
-
-		//box = hash.lookup_table(&ui_context.hash_boxes, text, layout.parent_box.id)
+		parent_seed := layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0 // if it is not set is 0
+		if layout.parent_box == nil {
+			string_hash := hash.get_hash_from_key( text, parent_seed )
+			bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed)
+			for &v in bucket {
+				if v != nil {
+					if v.id == string_hash {
+						box = v
+						break
+					}
+				}
+			}
+		}
+		else {
+			string_hash : u64
+			if parent_seed > 0 {
+				string_hash = hash.get_hash_from_key( text, parent_seed )
+			} else {
+				string_hash = hash.get_hash_from_key( text, layout.parent_box.id )
+			}
+			// if there is a parent seed set, it has higher priority than it default set parent box
+			//
+			bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed > 0 ? parent_seed : layout.parent_box.id)
+			for &v in bucket {
+				if v != nil {
+					if v.id == string_hash {
+						box = v
+						break
+					}
+				}
+			}
+		}
 	}
 
 	if (box == nil) {

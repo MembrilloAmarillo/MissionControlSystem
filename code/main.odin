@@ -87,6 +87,14 @@ db_menu_items :: struct {
 
 // --------------------------------------------------------------- //
 
+TC_menu_items :: struct {
+ // This is to have stored the current tab we are in
+ //
+ current_tc : ^Box,
+}
+
+// --------------------------------------------------------------- //
+
 net_state :: struct {
   ip : string,
   port : int,
@@ -115,6 +123,7 @@ orbitmcs_state :: struct {
  tcp_server  : net_state,
  udp_server  : net_state,
  menu_db     : db_menu_items,
+ menu_tc     : TC_menu_items,
  shutdown    : bool,
  hovering_boxes : utils.queue(box_constructor, 216) // IMPORTANT!!: If you put a bigger value (for example 4096) odin compiler (llvm function) will crash
 }
@@ -206,7 +215,86 @@ consume_app_state_events :: proc(state: ^orbitmcs_state) {
 
 // --------------------------------------------------- OrbitMCS ui function -------------------------------------------- //
 
-orbit_show_home :: proc() {}
+orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
+  /*
+    An Idea: I can have two columns, one to select the command, and the other one 
+    to show all the fields, that would make it really easy to navigate and far more
+    efficient to use
+  */
+  @static command_to_show : xtce.MetaCommandType
+  ui_vspacer(15.)
+  system := &handler.system
+  row := begin_next_layout_scrollable_section(0, get_layout_stack().box_preferred_size)
+  defer end_next_layout_scrollable_section()
+  for ; system != nil; system = auto_cast system.next {
+    for CommandType in xtce.GetMetaCommandSetType(system.element) {
+      #partial switch Command in CommandType {
+        case xtce.MetaCommandType : {
+          CommandName := Command.base.t_name.t_restriction.val
+          NameConcat := strings.concatenate({CommandName, "#_command_", CommandName, "_%p"}, ui_context.per_frame_arena_allocator)
+          {
+            set_next_layout_style(ui_context.theme.button)
+            defer utils.pop_stack(&ui_context.style)
+            app_state.menu_tc.current_tc = make_box(
+                            NameConcat,
+                            {-1, -1},
+                            {-1, -1},
+                            UI_Options{.DRAW_STRING, .DRAW_RECT, .DRAW_BORDER, .HOVER_ANIMATION},
+                            cast(^byte)system,
+                          )
+            set_next_hover_cursor(app_state.menu_tc.current_tc, glfw.HAND_CURSOR)
+            input := consume_box_event(app_state.menu_tc.current_tc)
+
+            event: EventResults
+
+            if .LEFT_CLICK == input {
+              event.left_click = true
+              event.left_click_hold = true
+            }
+            if .LEFT_CLICK_RELEASE == input {
+              event.left_click = false
+              event.left_click_hold = true
+            }
+
+            if app_state.menu_tc.current_tc == ui_context.hover_target {
+              event.left_click_hold = true
+            }
+
+            if event.left_click {
+              command_to_show = Command
+            }
+          }
+          ui_vspacer(2.)
+        }
+      }
+    }
+  }
+
+  {
+    set_layout_ui_parent_seed(app_state.menu_tc.current_tc)
+    row_it : u32 = 0
+    set_layout_reset_row()
+    set_layout_next_column(1)
+    label("-- Arguments --#_arg_fill_column_%d", cast(^byte)&row_it)
+    row_it += 1
+    set_layout_next_row(row_it)
+    for arg in command_to_show.t_ArgumentList.t_Argument {
+      field_name := [?]string {
+                    arg.base.t_name.t_restriction.val,
+                    "#_arg_name",
+                    arg.base.t_name.t_restriction.val,
+                    "_%d"
+                  }
+      label(strings.concatenate(field_name[:], ui_context.per_frame_arena_allocator), cast(^byte)&row_it)
+      row_it += 1
+      set_layout_next_row(row_it)
+      input_field("Set Input#_input_field_%d", cast(^byte)&row_it)
+      row_it += 1
+      set_layout_next_row(row_it)
+    }
+    unset_layout_ui_parent_seed()
+  }
+}
 
 
 // ---------------------------------------------------------------------------------------------------------------------- //
@@ -1400,31 +1488,12 @@ ui_begin()
    case APP_SHOW_FLAGS.SHOW_TC:
    {
     set_next_box_layout({.Y_CENTERED_STRING, .X_CENTERED})
-    set_next_layout( p.rect.top_left, p.rect.size, 0, 1, LayoutType.FIXED )
+    set_next_layout( p.rect.top_left, p.rect.size, 0, 2, LayoutType.FIXED )
     set_layout_next_padding( 40, 0 )
-    set_box_preferred_size({0.5 * p.rect.size.x, 30})
+    set_box_preferred_size({0.4 * p.rect.size.x, 30})
     if begin( "TC Center#tc_center%p", pointer = cast(^byte)p )
     {
-      /*
-        An Idea: I can have two columns, one to select the command, and the other one 
-        to show all the fields, that would make it really easy to navigate and far more
-        efficient to use
-      */
-      ui_vspacer(15.)
-      system := &xtce_state_arg.system.system
-      row := begin_next_layout_scrollable_section(0, get_layout_stack().box_preferred_size)
-      defer end_next_layout_scrollable_section()
-      for ; system != nil; system = auto_cast system.next {
-        for CommandType in xtce.GetMetaCommandSetType(system.element) {
-          #partial switch Command in CommandType {
-            case xtce.MetaCommandType : {
-              CommandName := Command.base.t_name.t_restriction.val
-              button(strings.concatenate({CommandName, "#_command_", CommandName, "_%p"}, ui_context.per_frame_arena_allocator), cast(^byte)system)
-              ui_vspacer(2.)
-            }
-          }
-        }
-      }
+      orbit_show_tc_center(p.rect, xtce_state_arg.system)
     }
   }
   case APP_SHOW_FLAGS.SHOW_TM:
