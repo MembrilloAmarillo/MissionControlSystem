@@ -293,10 +293,10 @@ os_input_type :: enum i32
 	BACKSPACE   = 5,
 	CHARACHTER  = 6,
 	LEFT_CLICK_RELEASE = 7,
- ARROW_DOWN  = 8,
- ARROW_UP    = 9,
- F1          = 10,
- CTRL_F      = 11
+	ARROW_DOWN  = 8,
+	ARROW_UP    = 9,
+	F1          = 10,
+	CTRL_F      = 11
 };
 
 os_input_types :: distinct bit_set[os_input_type; i32];
@@ -2410,7 +2410,7 @@ init_vulkan :: proc( v_interface : ^VulkanIface ) {
 	v_interface.va_FontCache[0] = f_BuildFont(20 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(bitmap), "./data/font/RobotoMonoBold.ttf" );
 	v_interface.va_FontCache[0].BitmapOffset = {0, 0}
 
-	v_interface.va_FontCache[1] = f_BuildFont(16 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
+	v_interface.va_FontCache[1] = f_BuildFont(15 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
 	v_interface.va_FontCache[1].BitmapOffset = {0, 126}
 
 	// --------------------------------------------------------------

@@ -9,6 +9,7 @@ import "core:math/linalg/glsl"
 import "core:mem"
 import vmem "core:mem/virtual"
 import "core:net"
+import "core:slice"
 import "core:strconv"
 import "core:strings"
 import "core:sync"
@@ -91,6 +92,11 @@ TC_menu_items :: struct {
  // This is to have stored the current tab we are in
  //
  current_tc : ^Box,
+
+ // Hash table containing the value (on string) of the arguments used for 
+ // each metacommand in order to send them later when the user requires
+ //
+ arg_value_map : hash.Table(string, string),
 }
 
 // --------------------------------------------------------------- //
@@ -99,6 +105,7 @@ net_state :: struct {
   ip : string,
   port : int,
   socket_type : net.Any_Socket,
+  buffer : []u8
 }
 
 //tcp_net_state :: net_state{ ip = "", port = 8080, socket_type = net.TCP_Socket{} }
@@ -159,35 +166,65 @@ handle_msg_tcp :: proc(t : net.TCP_Socket) {
 net_start_server :: proc( t : thread.Task ) {
   net_state := cast(^net_state)t.data
   addr, ok := net.parse_ip4_address(net_state.ip)
-  app_state.tcp_server = net_state^
-  if !ok {
-    fmt.println("[ERROR] Wrong ip address", net_state.ip)
-    return
-  }
+  net_state.buffer = make([]u8, 2048)
 
-  endpoint := net.Endpoint{
-    address = addr,
-    port    = net_state.port
-  }
+  switch net_server in net_state.socket_type {
+    case net.UDP_Socket : {
+      endpoint := net.Endpoint{
+        address = addr,
+        port    = net_state.port
+      }
+      err : net.Network_Error
+      net_state.socket_type, err = net.make_bound_udp_socket(addr, net_state.port)
+      if err != nil {
+        fmt.println("[ERROR] Failed listening on udp")
+      }
+      fmt.printfln("Listening on UDP: %s", net.endpoint_to_string(endpoint))
+      for !app_state.shutdown {
+        buff : [2048]u8
+        bytes_read, endpoint, err_accept := net.recv_udp(net_state.socket_type.(net.UDP_Socket), buff[:])
+        if err_accept != nil {
+          //fmt.println("[ERROR] Failed to accept TCP connection")
+        }
+        else {
+          fmt.println("[INFO] Accepting connection, bytes read", bytes_read)
+        }
+        //thread.create_and_start_with_poly_data(cli, handle_msg_tcp)
+        //AddProcToPool(&app_state.threading, handle_msg_tcp, rawptr(&cli))
+      }
+      fmt.println("Closed socket")
+    }
+    case net.TCP_Socket : {
+      app_state.tcp_server = net_state^
+      if !ok {
+        fmt.println("[ERROR] Wrong ip address", net_state.ip)
+        return
+      }
+      endpoint := net.Endpoint{
+        address = addr,
+        port    = net_state.port
+      }
 
-  sock, err := net.listen_tcp(endpoint)
-  if err != nil {
-    fmt.println("[ERROR] Failed listening on TCP")
+      sock, err := net.listen_tcp(endpoint)
+      if err != nil {
+        fmt.println("[ERROR] Failed listening on TCP")
+      }
+      fmt.printfln("Listening on TCP: %s", net.endpoint_to_string(endpoint))
+      for !app_state.shutdown {
+        cli, _, err_accept := net.accept_tcp(sock)
+        if err_accept != nil {
+          //fmt.println("[ERROR] Failed to accept TCP connection")
+        }
+        else {
+        fmt.println("[INFO] Accepting connection", cli)
+        }
+        //thread.create_and_start_with_poly_data(cli, handle_msg_tcp)
+        //AddProcToPool(&app_state.threading, handle_msg_tcp, rawptr(&cli))
+      }
+      fmt.println("Closed socket")
+      net.close(sock)
+    }
   }
-  fmt.printfln("Listening on TCP: %s", net.endpoint_to_string(endpoint))
-  for !app_state.shutdown {
-   cli, _, err_accept := net.accept_tcp(sock)
-   if err_accept != nil {
-    fmt.println("[ERROR] Failed to accept TCP connection")
-  }
-  else {
-   fmt.println("[INFO] Accepting connection", cli)
- }
-		//thread.create_and_start_with_poly_data(cli, handle_msg_tcp)
-  //AddProcToPool(&app_state.threading, handle_msg_tcp, rawptr(&cli))
-}
-fmt.println("Closed socket")
-net.close(sock)
 }
 
 // --------------------------------------------------- Helper functions -------------------------------------------- //
@@ -222,11 +259,20 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
     efficient to use
   */
   @static command_to_show : xtce.MetaCommandType
+  @static system_name : ^xtce.space_system
   ui_vspacer(15.)
-  system := &handler.system
   row := begin_next_layout_scrollable_section(0, get_layout_stack().box_preferred_size)
-  
-  for ; system != nil; system = auto_cast system.next {
+
+  tmp_stack : utils.Stack(^xtce.space_system, 256)
+  utils.push_stack(&tmp_stack, &handler.system)
+
+  for tmp_stack.push_count > 0 {
+    system := utils.get_front_stack(&tmp_stack)
+    utils.pop_stack(&tmp_stack)
+
+    for it := system.next; it != nil; it = it.right {
+      utils.push_stack(&tmp_stack, auto_cast it)
+    }
     for CommandType in xtce.GetMetaCommandSetType(system.element) {
       #partial switch Command in CommandType {
         case xtce.MetaCommandType : {
@@ -251,6 +297,7 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
               event.left_click = true
               event.left_click_hold = true
               app_state.menu_tc.current_tc = box
+              system_name = system
             }
             if .LEFT_CLICK_RELEASE == input {
               event.left_click = false
@@ -270,6 +317,7 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
       }
     }
   }
+
   end_next_layout_scrollable_section()
 
   {
@@ -294,23 +342,129 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
     label("-- Arguments --#_arg_fill_column_%d", cast(^byte)&row_it)
     row_it += 1
     set_layout_next_row(row_it)
-    for arg in command_to_show.t_ArgumentList.t_Argument {
-      field_name := [?]string {
-                    arg.base.t_name.t_restriction.val,
-                    "#_arg_name",
-                    arg.base.t_name.t_restriction.val,
-                    "_%d"
-                  }
-      ui_vspacer(2.); 
-      label(strings.concatenate(field_name[:], ui_context.per_frame_arena_allocator), cast(^byte)&row_it)
-      row_it += 1
-      ui_vspacer(2.);
-      set_layout_next_row(row_it)
-      input_field("Set Input#_input_field_%d", cast(^byte)&row_it)
-      row_it += 1
-      set_layout_next_row(row_it)
+
+    base_command := command_to_show.t_BaseMetaCommand
+    base_command_list : [dynamic]xtce.MetaCommandType = make([dynamic]xtce.MetaCommandType, ui_context.per_frame_arena_allocator)
+    append(&base_command_list, command_to_show)
+    defer delete(base_command_list)
+
+    base_command_type := xtce.GetBaseMetaCommand(system_name, command_to_show.t_BaseMetaCommand.t_metaCommandRef.t_restriction.val)
+    if len(base_command_type.base.t_name.t_restriction.val) > 0 {
+      append(&base_command_list, base_command_type)
+      for len(base_command_type.base.t_name.t_restriction.val) > 0 {
+        base_command_type = xtce.GetBaseMetaCommand(system_name, base_command_type.t_BaseMetaCommand.t_metaCommandRef.t_restriction.val)
+        if len(base_command_type.base.t_name.t_restriction.val) > 0 {
+          append(&base_command_list, base_command_type)
+        }
+      }
+    }
+    slice.reverse(base_command_list[:])
+    for command in base_command_list {
+      for &arg in command.t_ArgumentList.t_Argument {
+        field_name := [?]string {
+                      arg.base.t_name.t_restriction.val,
+                      "#_arg_name",
+                      arg.base.t_name.t_restriction.val,
+                      "_%d"
+                    }
+        ui_vspacer(2.); 
+        label(strings.concatenate(field_name[:], ui_context.per_frame_arena_allocator), cast(^byte)&row_it)
+        row_it += 1
+        ui_vspacer(2.);
+        set_layout_next_row(row_it)
+        style := ui_context.theme.input_field
+        style.color_border *= 0.2
+        style.color_rect00 *= 0.90
+        style.color_rect01 *= 0.90
+        style.color_rect10 *= 0.90
+        style.color_rect11 *= 0.90
+        style.color_text   *= 0.5
+        set_next_layout_style(style)
+        box := make_box_from_key(text = "Set Input#_input_field_%d", box_flags = UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .INPUT_TEXT, .NO_HOVER}, key = cast(^byte)&row_it)
+        {
+          set_next_hover_cursor(box, glfw.IBEAM_CURSOR)
+          event := consume_box_event(box)
+          if box == ui_context.target_box {
+            event = .LEFT_CLICK
+          }
+        }
+        {
+          value : string
+          pointer := uintptr(&arg)
+          buffer : [1024]u8
+          pointer_string := strconv.itoa(buffer[:], cast(int)pointer)
+          val_bucket := hash.lookup_table_bucket(&app_state.menu_tc.arg_value_map, pointer_string)
+          for v in val_bucket {
+            if len(v) > 0 {
+              value = v
+            }
+          }
+          if len(value) == 0 {
+            hash.insert_table(&app_state.menu_tc.arg_value_map, pointer_string, strings.to_string(box.text_input))
+          }
+          else {
+            value = strings.to_string(box.text_input)
+            hash.delete_key_value_table(&app_state.menu_tc.arg_value_map, pointer_string, value)
+            hash.insert_table(&app_state.menu_tc.arg_value_map, pointer_string, strings.to_string(box.text_input))
+          }
+        }
+        ui_pop_style()
+        row_it += 1
+        set_layout_next_row(row_it)
+      }
     }
     unset_layout_ui_parent_seed()
+  }
+
+  // ============ Send Button ============== //
+  {
+    send_button_rect := rect 
+    send_button_rect.top_left += rect.size - {450, 50}
+    send_button_rect.size = {400, 30}
+    {
+      style := ui_context.theme.button
+      style.color_rect00 = rgba_to_norm(hex_rgba_to_vec4(0xEF6024FF))
+      style.color_rect01 = rgba_to_norm(hex_rgba_to_vec4(0xEF6024FF))
+      style.color_rect10 = rgba_to_norm(hex_rgba_to_vec4(0xEF6024FF))
+      style.color_rect11 = rgba_to_norm(hex_rgba_to_vec4(0xEF6024FF))
+
+      set_next_layout_style(style)
+      defer pop_layout_style()
+      box := make_box_no_key("SEND", send_button_rect.top_left, send_button_rect.size, {.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .HOVER_ANIMATION})
+      set_next_hover_cursor(box, glfw.HAND_CURSOR)
+      input := consume_box_event(box)
+
+      event: EventResults
+
+      if .LEFT_CLICK == input {
+        event.left_click = true
+        event.left_click_hold = true
+      }
+      if .LEFT_CLICK_RELEASE == input {
+        event.left_click = false
+        event.left_click_hold = true
+      }
+
+      if box == ui_context.hover_target {
+        event.left_click_hold = true
+      }
+
+      if event.left_click {
+        for &arg in command_to_show.t_ArgumentList.t_Argument {
+          value : string
+          pointer := uintptr(&arg)
+          buffer : [1024]u8
+          pointer_string := strconv.itoa(buffer[:], cast(int)pointer)
+          val_bucket := hash.lookup_table_bucket(&app_state.menu_tc.arg_value_map, pointer_string)
+          for v in val_bucket {
+            if len(v) > 0 {
+              value = v
+            }
+          }
+          app_state.udp_server.buffer[]
+        }
+      }
+    }
   }
 }
 
@@ -791,22 +945,22 @@ case "TC Arguments": {
     defer unset_layout_ui_parent_seed()
     box = make_box_no_key(box_conf.text, box_conf.rect.top_left, box_conf.rect.size, box_conf.flags)
   }
-}
+  }
 
-end_next_layout_scrollable_section(n_rows)
-{
-  set_layout_next_row(0)
-  set_layout_next_column(0)
-  label("Argument Name#_container_name_%p", cast(^byte)clicked_tab)
-  set_layout_next_column(1)
-  label("Type#_type_%p", cast(^byte)clicked_tab)
-  set_layout_next_column(2)
-  label("Initial Value#_vaule_%p", cast(^byte)clicked_tab)
-  set_layout_next_column(3)
-  label("Min Range#_min_range_%p",cast(^byte)clicked_tab)
-  set_layout_next_column(4)
-  label("Max Range#_max_range_%p", cast(^byte)clicked_tab)
-} 
+  end_next_layout_scrollable_section(n_rows)
+  {
+    set_layout_next_row(0)
+    set_layout_next_column(0)
+    label("Argument Name#_container_name_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(1)
+    label("Type#_type_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(2)
+    label("Initial Value#_vaule_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(3)
+    label("Min Range#_min_range_%p",cast(^byte)clicked_tab)
+    set_layout_next_column(4)
+    label("Max Range#_max_range_%p", cast(^byte)clicked_tab)
+  } 
 }
 case "TM Containers" : {
   set_layout_ui_parent_seed(clicked_tab)
@@ -908,32 +1062,32 @@ case "TM Containers" : {
    }
  } 
  l_it += 1
-}
-}
-end_next_layout_scrollable_section(n_rows)
-{
-  set_layout_next_row(0)
-  set_layout_next_column(0)
-  label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
-  set_layout_next_column(1)
-  label("Base Container#_base_container_%p",cast(^byte)clicked_tab)
-  set_layout_next_column(2)
-  label("Read Only#_read_only_%p", cast(^byte)clicked_tab)
-  set_layout_next_column(3)
-  label("Initial Value#_vaule_%p", cast(^byte)clicked_tab)
-  set_layout_next_column(4)
-  label("Source#_source_%p", cast(^byte)clicked_tab)
-}
+  }
+  }
+  end_next_layout_scrollable_section(n_rows)
+  {
+    set_layout_next_row(0)
+    set_layout_next_column(0)
+    label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(1)
+    label("Base Container#_base_container_%p",cast(^byte)clicked_tab)
+    set_layout_next_column(2)
+    label("Read Only#_read_only_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(3)
+    label("Initial Value#_vaule_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(4)
+    label("Source#_source_%p", cast(^byte)clicked_tab)
+  }
 }
 case "TC Commands"  : {
   set_layout_ui_parent_seed(clicked_tab)
   layout := get_layout_stack()
   limit_on_screen := false 
 
-  set_layout_next_row_col(0, 7)
+  set_layout_next_row_col(n_rows, 7)
   set_box_preferred_size({rect.size.x / 7, 30})
-  set_layout_next_padding(15, 0)
-  set_layout_string_padding(10, 0)
+  set_layout_next_padding(0, 0)
+  set_layout_string_padding(15, 0)
 
   row_start := begin_next_layout_scrollable_section(n_rows)
 
@@ -942,13 +1096,24 @@ case "TC Commands"  : {
   set_layout_next_row( auto_cast row)
   set_layout_next_column(0)
 
-  for system := &xml_handler.system; system != nil && !limit_on_screen; system = auto_cast system.next {
+  tmp_stack : utils.Stack(^xtce.space_system, 256)
+  utils.push_stack(&tmp_stack, &xml_handler.system)
+
+  for tmp_stack.push_count > 0 {
+    system := utils.get_front_stack(&tmp_stack)
+    utils.pop_stack(&tmp_stack)
+
+    for it := system.next; it != nil; it = it.right {
+      utils.push_stack(&tmp_stack, auto_cast it)
+    }
+
     for CommandType in xtce.GetMetaCommandSetType(system.element) {
       if layout.at.y + layout.box_preferred_size.y > (rect.top_left.y + rect.size.y) {
         limit_on_screen = true
-      }
+      }      
       #partial switch command in CommandType {
         case xtce.MetaCommandType : {
+          defer l_it += 1
           if l_it >= row_start && !limit_on_screen {
             set_layout_next_column(0)
             ui_vspacer(2.)
@@ -1025,60 +1190,212 @@ case "TC Commands"  : {
             //
             {
               set_layout_ui_parent_seed(container_box)
-              for arg in command.t_ArgumentList.t_Argument {
-                l_it += 1
-                row += 1
-                set_layout_next_row(auto_cast row)
-                // TODO: For encoding size and value we shall search for the type it 
-                // references and return it here
-                // argument_ref := SearchForArgument(system), NOTE: Can be any system
-                //
-                ref_arg_decl := xtce.GetIntegerArgumentDecl(system, arg.t_argumentTypeRef.t_restriction.val)
-                container_name := strings.concatenate(name_concat[:], ui_context.per_frame_arena_allocator)
-                field_name := [?]string {
-                  arg.base.t_name.t_restriction.val,
-                  "#_arg_name",
-                  arg.base.t_name.t_restriction.val,
-                  "_%d"
+              base_command := command.t_BaseMetaCommand
+              base_command_list : [dynamic]xtce.MetaCommandType = make([dynamic]xtce.MetaCommandType, ui_context.per_frame_arena_allocator)
+              append(&base_command_list, command)
+              defer delete(base_command_list)
+
+              base_command_type := xtce.GetBaseMetaCommand(system, command.t_BaseMetaCommand.t_metaCommandRef.t_restriction.val)
+              if len(base_command_type.base.t_name.t_restriction.val) > 0 {
+                append(&base_command_list, base_command_type)
+                for len(base_command_type.base.t_name.t_restriction.val) > 0 {
+                  base_command_type = xtce.GetBaseMetaCommand(system, base_command_type.t_BaseMetaCommand.t_metaCommandRef.t_restriction.val)
+                  if len(base_command_type.base.t_name.t_restriction.val) > 0 {
+                    append(&base_command_list, base_command_type)
+                  }
                 }
-                field_type := [?]string {
-                  arg.t_argumentTypeRef.t_restriction.val,
-                  "#_arg_type_",
-                  
-                  arg.t_argumentTypeRef.t_restriction.val,
-                  "_%d"
+              }
+              slice.reverse(base_command_list[:])
+              for CommandType in base_command_list {
+                for arg in CommandType.t_ArgumentList.t_Argument {
+                  //l_it += 1
+                  row += 1
+                  set_layout_next_row(auto_cast row)
+                  // TODO: For encoding size and value we shall search for the type it 
+                  // references and return it here
+                  // argument_ref := SearchForArgument(system), NOTE: Can be any system
+                  //
+                  ref_arg_decl, ref_par_decl := xtce.GetArgumentDecl(system, arg.t_argumentTypeRef.t_restriction.val)
+                  container_name := strings.concatenate(name_concat[:], ui_context.per_frame_arena_allocator)
+
+                  field_name   : string = arg.base.t_name.t_restriction.val
+                  field_type   : string = arg.t_argumentTypeRef.t_restriction.val
+                  default_name : string = arg.t_initialValue.val
+                  size_in_bits : string = "-"    
+                  encoding     : string = "-"
+
+                  buff : [64]u8
+                  #partial switch arg_t in ref_arg_decl {
+                    case xtce.IntegerArgumentType: {
+                      size_in_bits = strconv.itoa(buff[:], cast(int)arg_t.base.t_sizeInBits.t_restriction.integer)
+                      field_type = arg_t.base.base.base.t_name.t_restriction.val
+                      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+                        case xtce.IntegerDataEncodingType : {
+                          encoding = encod_t.t_encoding.t_restriction.val
+                        }
+                      }
+                    }
+                    case xtce.FloatArgumentType: {
+                      field_type = arg_t.base.base.base.t_name.t_restriction.val
+                      size_in_bits = strconv.itoa(buff[:], cast(int)arg_t.base.t_sizeInBits.t_restriction.t_restriction.integer)
+                      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+                        case xtce.FloatDataEncodingType : {
+                          encoding = encod_t.t_encoding.t_restriction.val
+                        }
+                      }
+                    }
+                    case xtce.EnumeratedArgumentType : {
+                      field_type = arg_t.base.base.base.t_name.t_restriction.val
+                      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+                        case xtce.IntegerDataEncodingType : {
+                          encoding = encod_t.t_encoding.t_restriction.val
+                          size_in_bits = strconv.itoa(buff[:], cast(int)encod_t.t_sizeInBits.t_restriction.integer)
+                        }
+                      }
+                    }
+                    case xtce.ArrayArgumentType : {
+                      field_type = arg_t.base.base.t_name.t_restriction.val
+                      type_ref := arg_t.base.t_arrayTypeRef.t_restriction.val 
+                      array_ref, par_ref := xtce.GetArgumentDecl(system, type_ref)
+                      #partial switch ref_t in array_ref {
+                        case xtce.IntegerArgumentType: {
+                          size_in_bits = strconv.itoa(buff[:], cast(int)ref_t.base.t_sizeInBits.t_restriction.integer)
+                          #partial switch encod_t in ref_t.base.base.t_choice_0 {
+                            case xtce.IntegerDataEncodingType : {
+                              encoding = encod_t.t_encoding.t_restriction.val
+                            }
+                          }
+                        }
+                        case xtce.EnumeratedArgumentType : {
+                          size_bits = "EnumeratedVal"
+                          #partial switch encod_t in ref_t.base.base.t_choice_0 {
+                            case xtce.IntegerDataEncodingType : {
+                              encoding = encod_t.t_encoding.t_restriction.val
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  #partial switch arg_t in ref_par_decl {
+                    case xtce.IntegerParameterType: {
+                      size_in_bits = strconv.itoa(buff[:], cast(int)arg_t.base.t_sizeInBits.t_restriction.integer)
+                      field_type = arg_t.base.base.base.t_name.t_restriction.val
+                      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+                        case xtce.IntegerDataEncodingType : {
+                          encoding = encod_t.t_encoding.t_restriction.val
+                        }
+                      }
+                    }
+                    case xtce.FloatParameterType: {
+                      field_type = arg_t.base.base.base.t_name.t_restriction.val
+                      size_in_bits = strconv.itoa(buff[:], cast(int)arg_t.base.t_sizeInBits.t_restriction.t_restriction.integer)
+                      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+                        case xtce.FloatDataEncodingType : {
+                          encoding = encod_t.t_encoding.t_restriction.val
+                        }
+                      }
+                    }
+                    case xtce.EnumeratedParameterType : {
+                      field_type = arg_t.base.base.base.t_name.t_restriction.val
+                      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+                        case xtce.IntegerDataEncodingType : {
+                          encoding = encod_t.t_encoding.t_restriction.val
+                          size_in_bits = strconv.itoa(buff[:], cast(int)encod_t.t_sizeInBits.t_restriction.integer)
+                        }
+                      }
+                    }
+                    case xtce.ArrayParameterType : {
+                      field_type = arg_t.base.base.t_name.t_restriction.val
+                      type_ref := arg_t.base.t_arrayTypeRef.t_restriction.val 
+                      array_ref, par_ref := xtce.GetArgumentDecl(system, type_ref)
+                      #partial switch ref_t in array_ref {
+                        case xtce.IntegerArgumentType: {
+                          size_in_bits = strconv.itoa(buff[:], cast(int)ref_t.base.t_sizeInBits.t_restriction.integer)
+                          #partial switch encod_t in ref_t.base.base.t_choice_0 {
+                            case xtce.IntegerDataEncodingType : {
+                              encoding = encod_t.t_encoding.t_restriction.val
+                            }
+                          }
+                        }
+                        case xtce.EnumeratedArgumentType : {
+                          size_bits = "EnumeratedVal"
+                          #partial switch encod_t in ref_t.base.base.t_choice_0 {
+                            case xtce.IntegerDataEncodingType : {
+                              encoding = encod_t.t_encoding.t_restriction.val
+                            }
+                          }
+                        }
+                      }
+                      #partial switch ref_t in par_ref {
+                        case xtce.IntegerParameterType: {
+                          size_in_bits = strconv.itoa(buff[:], cast(int)ref_t.base.t_sizeInBits.t_restriction.integer)
+                          #partial switch encod_t in ref_t.base.base.t_choice_0 {
+                            case xtce.IntegerDataEncodingType : {
+                              encoding = encod_t.t_encoding.t_restriction.val
+                            }
+                          }
+                        }
+                        case xtce.EnumeratedParameterType : {
+                          size_bits = "EnumeratedVal"
+                          #partial switch encod_t in ref_t.base.base.t_choice_0 {
+                            case xtce.IntegerDataEncodingType : {
+                              encoding = encod_t.t_encoding.t_restriction.val
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  field_name_concat := [?]string {
+                    field_name,
+                    "#_arg_name",
+                    field_name,
+                    "_%d"
+                  }
+                  field_type_concat := [?]string {
+                    field_type,
+                    "#_arg_type_",
+                    field_type,
+                    "_%d"
+                  }
+
+                  default    := [?]string {
+                    default_name,
+                    "#_arg_init_value",
+                    default_name,
+                    "_%d"
+                  }
+
+                  size_in_bits_concat := [?]string {
+                    size_in_bits,
+                    "#_size_in_bits",
+                    size_in_bits,
+                    "_%d",
+                  }
+                  encoding_concat := [?]string {
+                    encoding,
+                    "#encoding_",
+                    encoding,
+                    "_%d",
+                  }
+                  set_layout_next_column(0)
+                  label(container_name, cast(^byte)&row)
+                  set_layout_next_column(1)
+                  label(strings.concatenate(field_type_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+                  set_layout_next_column(2)
+                  label(strings.concatenate(field_name_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+                  set_layout_next_column(3)
+                  label(strings.concatenate(encoding_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+                  set_layout_next_column(4)
+                  label(strings.concatenate(size_in_bits_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
+                  set_layout_next_column(5)
+                  //label(strings.concatenate(field_name, ui_context.per_frame_arena_allocator), container_box)
+                  set_layout_next_column(6)
+                  label(strings.concatenate(default[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
                 }
-                default    := [?]string {
-                  arg.t_initialValue.val,
-                  "#_arg_init_value",
-                  arg.t_initialValue.val,
-                  "_%d"
-                }
-                buff : [64]u8
-                size_in_bits_concat := [?]string {
-                  strconv.itoa(buff[:], cast(int)ref_arg_decl.base.t_sizeInBits.t_restriction.integer),
-                  "#_size_in_bits",
-                  strconv.itoa(buff[:], cast(int)ref_arg_decl.base.t_sizeInBits.t_restriction.integer),
-                  "_%d",
-                }
-                encoding_concat := [?]string {
-                  "#_size_in_bits",
-                  "_%d",
-                }
-                set_layout_next_column(0)
-                label(container_name, cast(^byte)&row)
-                set_layout_next_column(1)
-                label(strings.concatenate(field_type[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
-                set_layout_next_column(2)
-                label(strings.concatenate(field_name[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
-                set_layout_next_column(3)
-                label(strings.concatenate(encoding_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
-                set_layout_next_column(4)
-                label(strings.concatenate(size_in_bits_concat[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
-                set_layout_next_column(5)
-                //label(strings.concatenate(field_name, ui_context.per_frame_arena_allocator), container_box)
-                set_layout_next_column(6)
-                label(strings.concatenate(default[:], ui_context.per_frame_arena_allocator), cast(^byte)&row)
               }
             }
 
@@ -1089,28 +1406,27 @@ case "TC Commands"  : {
         case xtce.NameReferenceType : {}
         case xtce.BlockMetaCommandType : {}
       } 
-        l_it += 1
-      }
-    } 
-    end_next_layout_scrollable_section(n_rows)
-    {
-      set_layout_next_row(0)
-      set_layout_next_column(0)
-      label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
-      set_layout_next_column(1)
-      label("Field Type#_field_type_%p",cast(^byte)clicked_tab)
-      set_layout_next_column(2)
-      label("Field Name#_field_name_%p", cast(^byte)clicked_tab)
-      set_layout_next_column(3)
-      label("Encoding#_vaule_%p", cast(^byte)clicked_tab)
-      set_layout_next_column(4)
-      label("Size#_size_%p", cast(^byte)clicked_tab)
-      set_layout_next_column(5)
-      label("Value#_value_%p", cast(^byte)clicked_tab)
-      set_layout_next_column(6)
-      label("Default Value#_default_value_%p", cast(^byte)clicked_tab)
     }
+  } 
+  end_next_layout_scrollable_section(n_rows)
+  {
+    set_layout_next_row(0)
+    set_layout_next_column(0)
+    label("Container Name#_container_name_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(1)
+    label("Field Type#_field_type_%p",cast(^byte)clicked_tab)
+    set_layout_next_column(2)
+    label("Field Name#_field_name_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(3)
+    label("Encoding#_vaule_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(4)
+    label("Size#_size_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(5)
+    label("Value#_value_%p", cast(^byte)clicked_tab)
+    set_layout_next_column(6)
+    label("Default Value#_default_value_%p", cast(^byte)clicked_tab)
   }
+}
 }
 }
 else if !ok {
@@ -1220,6 +1536,8 @@ app_state: orbitmcs_state = {
 
 main :: proc() {
 
+  hash.init(&app_state.menu_tc.arg_value_map, 5 << 20)
+
  vulkan_iface: render.VulkanIface
 
  libc.signal(libc.SIGINT, handle_ctrl_c)
@@ -1262,7 +1580,7 @@ render.init_vulkan(&vulkan_iface)
 defer glfw.Terminate()
 defer glfw.DestroyWindow(vulkan_iface.va_Window.w_window)
 
-app_state.threading = CreatePoolWithAllocator(2)
+app_state.threading = CreatePoolWithAllocator(3)
 thread.pool_start(&app_state.threading.Pool)
 defer thread.pool_stop_all_tasks(&app_state.threading.Pool)
  // This does not work properly dont know why
@@ -1297,6 +1615,13 @@ net_state_arg : ^net_state = new(net_state)
 net_state_arg.ip = "127.0.0.1"
 net_state_arg.port = 8080
 net_state_arg.socket_type = net.TCP_Socket{}
+
+AddProcToPool(app_state.threading, net_start_server, rawptr(net_state_arg))
+
+net_state_arg_udp : ^net_state = new(net_state)
+net_state_arg_udp.ip = "127.0.0.1"
+net_state_arg_udp.port = 8090
+net_state_arg_udp.socket_type = net.UDP_Socket{}
 
 AddProcToPool(app_state.threading, net_start_server, rawptr(net_state_arg))
 

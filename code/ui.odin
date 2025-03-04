@@ -1615,12 +1615,7 @@ label :: proc(label: string, id: ^byte = nil) -> ^Box {
 
 // ------------------------------------------------------------------- //
 
-input_field :: proc(label: string, id: ^byte = nil) {
-	set_next_box_layout({.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .INPUT_TEXT, .NO_HOVER})
-	defer pop_box_layout()
-
-	set_next_layout_style(ui_context.theme.input_field)
-	defer utils.pop_stack(&ui_context.style)
+input_field :: proc(label: string, id: ^byte = nil) -> EventResults {
 	box: ^Box
 	if id == nil {
 		box = make_box(
@@ -1640,10 +1635,17 @@ input_field :: proc(label: string, id: ^byte = nil) {
 	}
 
 	set_next_hover_cursor(box, glfw.IBEAM_CURSOR)
-	event := consume_box_event(box)
-	if box == ui_context.target_box {
-		//ui_context.cursor_position = box.text_position
+	event : EventResults
+	input := consume_box_event(box)
+
+	if box == ui_context.hover_target {
+		event.left_click_hold = true
 	}
+	if box == ui_context.press_target {
+		event.left_click = true
+	}
+
+	return event
 }
 
 // ------------------------------------------------------------------- //

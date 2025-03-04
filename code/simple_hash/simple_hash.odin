@@ -118,12 +118,12 @@ insert_table :: proc(
 	}
 
 	//bucket_indx := rand.uint64() % MAX_BUCKET_SIZE
- //count += 1
+ 	//count += 1
 	//entry.value[bucket_indx] = value
 	//entry.key = key
 
 	default_v : value_type
- idx_to_insert := 0
+ 	idx_to_insert := 0
 
 	for v, idx in entry.filled {
 	 if v == false {
@@ -165,6 +165,7 @@ delete_key_value_table :: proc(
 	for it := 0; it < MAX_BUCKET_SIZE; it += 1 {
 		if entry.value[it] == value {
 			entry.value[it] = {}
+			entry.filled[it] = false
 			count -= 1
 		}
 	}

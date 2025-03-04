@@ -3000,7 +3000,18 @@ LoadIntegerEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
 // ----------------------------------------------------------------------------------------------------------------- //
 
 LoadIntegerDataEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> IntegerDataEncodingType {
-  type : IntegerDataEncodingType = {}
+  type : IntegerDataEncodingType = {
+    base = LoadDataEncodingType(node)
+  }
+
+  type.t_sizeInBits = LoadPositiveLongType(node)
+  type.t_changeThreshold = LoadNonNegativeLongType()
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "sizeInBits")
+  type.t_sizeInBits.t_restriction.integer = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "changeThreshold")
+  type.t_changeThreshold.t_restriction.integer = auto_cast strconv.atoi(attr.val)
 
   stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
   utils.push_stack(&stack, node)
@@ -3010,10 +3021,6 @@ LoadIntegerDataEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string,
    utils.pop_stack(&stack)
 
    switch n.element.first {
-    case DATA_ENCODING_TYPE : {
-      utils.TODO(ARGUMENT_STRING_DATA_TYPE)
-      type.base = LoadDataEncodingType(n)
-    }
     case CALIBRATOR_TYPE : {
       utils.TODO(CALIBRATOR_TYPE)
     }
@@ -3056,12 +3063,14 @@ LoadArgumentBaseDataType :: proc( node : ^utils.node_tree(utils.tuple(string, xm
    switch n.element.first {
     case ARGUMENT_STRING_DATA_TYPE : {
       utils.TODO(ARGUMENT_STRING_DATA_TYPE)
+      //type.t_choice_0 = LoadArgumentStringDataType(n)
     }
     case INTEGER_DATA_ENCODING_TYPE : {
-      utils.TODO(INTEGER_DATA_ENCODING_TYPE)
+      type.t_choice_0 = LoadIntegerDataEncodingType(n)
     }
     case FLOAT_DATA_ENCODING_TYPE : {
       utils.TODO(FLOAT_DATA_ENCODING_TYPE)
+      
     }
     case ARGUMENT_BINARY_DATA_ENCODING_TYPE : {
       utils.TODO(ARGUMENT_BINARY_DATA_ENCODING_TYPE)
@@ -3086,6 +3095,9 @@ LoadArgumentIntegerDataType :: proc( node : ^utils.node_tree(utils.tuple(string,
     t_sizeInBits = LoadPositiveLongType(node),
     t_signed     = xs_boolean_get_default()
   }
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "sizeInBits")
+  type.t_sizeInBits.t_restriction.integer = auto_cast strconv.atoi(attr.val)
 
   return type
 }
@@ -3428,7 +3440,7 @@ LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
         utils.TODO(AGGREGATE_ARGUMENT_TYPE)
       }
       case ARRAY_ARGUMENT_TYPE : {
-        t := LoadArrayArgumentType(node)
+        t := LoadArrayArgumentType(n)
         append(&type.t_choice_0, t)
       }
       case ABSOLUTE_TIME_ARGUMENT_TYPE : {
@@ -4177,19 +4189,30 @@ GetSpaceSystemVersion :: proc( system : ^SpaceSystemType ) -> string {
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
-GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> IntegerArgumentType {
+GetBaseMetaCommand :: proc( system : ^space_system, ref : string ) -> MetaCommandType {
+  type : MetaCommandType = {}
 
-  type : IntegerArgumentType = {}
+  if len(ref) == 0 {
+    return type
+  }
 
   sys := system
 
   n_depth := strings.count(ref, "/")
+  n_depth += 1 // if we have /UCF/something, we have to split it in three: ["", UCF, something]
   path := strings.split_n(ref, "/", n_depth, context.temp_allocator)
   defer delete(path, context.temp_allocator)
-  if len(path) == 0 {
+  if len(path) == 0 || len(path) == 1 {
     delete(path, context.temp_allocator)
     path = make([]string, 1, context.temp_allocator)
     path[0] = ref
+  }
+
+  last_ss_path : string 
+
+  if n_depth >= 3 { // /UCF/something --> ["", "UCF", "something"]
+    l := len(path)
+    last_ss_path = path[n_depth - 2]
   }
 
   if strings.contains(ref, "/") {
@@ -4201,6 +4224,11 @@ GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> Intege
     utils.push_stack(&tmp_stack, auto_cast sys)
 
     depth_path := 0
+    // if we have /UCF/something, we have to split it in three: ["", UCF, something], 
+    // sow we start checking from index 1
+    if len(path[0]) == 0 { 
+      depth_path = 1
+    }
     found := false
     for tmp_stack.push_count > 0 && !found {
       ss := utils.get_front_stack(&tmp_stack)
@@ -4209,20 +4237,18 @@ GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> Intege
       // we have readched to the system we needed to
       // e.x. /UCF/EPS/eps_arg_1
       //
-      if depth_path == len(path) - 1 {
-        argument := path[depth_path]
-        for ArgType in GetArgumentTypeSet(ss.element) {
-          #partial switch arg in ArgType {
-            case IntegerArgumentType : {
-              // this is outstandingly awful, but it is what it is with xml schemas
-              //
-              if arg.base.base.base.t_name.t_restriction.val == argument {
-                type = arg
+      if ss.element.base.t_name.t_restriction.val == last_ss_path || len(path) == 1 {
+        for command in GetMetaCommandSetType(ss.element) {
+          command_name := path[len(path) - 1]
+          #partial switch CommandType in command {
+            case MetaCommandType : {
+              if CommandType.base.t_name.t_restriction.val == command_name {
+                type = CommandType
                 found = true
               }
             }
           }
-        } 
+        }
       }
 
       if ss.element.base.t_name.t_restriction.val == path[depth_path] {
@@ -4235,6 +4261,160 @@ GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> Intege
   }
 
   return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+GetArgumentDecl :: proc( system : ^space_system, ref : string ) -> (t_ArgumentTypeSetType0, t_ParameterTypeSetType0) {
+  type : t_ArgumentTypeSetType0 = {}
+  param_type : t_ParameterTypeSetType0 = {}
+  if len(ref) == 0 {
+    return type, param_type
+  }
+
+  sys := system
+
+  n_depth := strings.count(ref, "/")
+  n_depth += 1 // if we have /UCF/something, we have to split it in three: ["", UCF, something]
+  path := strings.split_n(ref, "/", n_depth, context.temp_allocator)
+  defer delete(path, context.temp_allocator)
+  if len(path) == 0 || len(path) == 1 {
+    delete(path, context.temp_allocator)
+    path = make([]string, 1, context.temp_allocator)
+    path[0] = ref
+  }
+
+  last_ss_path : string 
+
+  if n_depth >= 3 { // /UCF/something --> ["", "UCF", "something"]
+    l := len(path)
+    last_ss_path = path[n_depth - 2]
+  }
+
+  if strings.contains(ref, "/") {
+    for ; sys.parent != nil; sys = auto_cast sys.parent {}
+  }
+
+  {
+    tmp_stack : utils.Stack(^space_system, 256)
+    utils.push_stack(&tmp_stack, auto_cast sys)
+
+    depth_path := 0
+    // if we have /UCF/something, we have to split it in three: ["", UCF, something], 
+    // sow we start checking from index 1
+    if len(path[0]) == 0 { 
+      depth_path = 1
+    }
+    found := false
+    for tmp_stack.push_count > 0 && !found {
+      ss := utils.get_front_stack(&tmp_stack)
+      utils.pop_stack(&tmp_stack)
+
+      // we have readched to the system we needed to
+      // e.x. /UCF/EPS/eps_arg_1
+      //
+      if ss.element.base.t_name.t_restriction.val == last_ss_path || len(path) == 1 {
+        argument := path[len(path) - 1]
+        for ArgType in GetArgumentTypeSet(ss.element) {
+          #partial switch arg in ArgType {
+            case IntegerArgumentType : {
+              // this is outstandingly awful, but it is what it is with xml schemas
+              //
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg
+                found = true
+              }
+            }
+            case ArrayArgumentType : {
+              if arg.base.base.t_name.t_restriction.val == argument {
+                type = arg
+                found = true
+              }
+            }
+            case EnumeratedArgumentType : {
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+            case FloatArgumentType : {
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+            case BooleanArgumentType : {
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+            case AggregateArgumentType : {
+              if arg.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+          }
+        }
+        
+        if found {
+          break
+        }
+        for ParamType in ss.element.t_TelemetryMetaData.t_ParameterTypeSet.t_choice_0 {
+          #partial switch param in ParamType {
+            case IntegerParameterType : {
+              // this is outstandingly awful, but it is what it is with xml schemas
+              //
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case ArrayParameterType : {
+              if param.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case EnumeratedParameterType : {
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case FloatParameterType : {
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case BooleanParameterType : {
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param 
+                found = true
+              }
+            }
+            case AggregateParameterType : {
+              if param.base.base.t_name.t_restriction.val == argument {
+                param_type = param 
+                found = true
+              }
+            }
+          }
+        }
+      }
+
+      if ss.element.base.t_name.t_restriction.val == path[depth_path] {
+        depth_path += 1
+        for it := ss.next; it != nil; it = it.right {
+          utils.push_stack(&tmp_stack, auto_cast it)
+        }
+      }
+    }
+  }
+
+  return type, param_type
 } 
 
 // ----------------------------------------------------------------------------------------------------------------- //
