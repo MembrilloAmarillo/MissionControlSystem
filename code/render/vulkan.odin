@@ -1752,56 +1752,56 @@ add_texture_font :: proc( vi : ^VulkanIface, font : ^[dynamic]FontCache )
 	//tex_width   := font.BitmapWidth;
 	//text_height := font.BitmapHeight;
 	tex_width   := vi.bitmap.width
-    text_height := vi.bitmap.height
+  text_height := vi.bitmap.height
 	image_size  :vk.DeviceSize = auto_cast (tex_width * text_height); //rgb
 
 	staging_buffer : VulkanBuffer;
 	staging_buffer.vb_Size = image_size;
 	staging_buffer.vb_UsageFlags = vk.BufferUsageFlags{ .TRANSFER_SRC };
-    staging_buffer.vb_Properties = vk.MemoryPropertyFlags{ .HOST_VISIBLE , .HOST_COHERENT };
+  staging_buffer.vb_Properties = vk.MemoryPropertyFlags{ .HOST_VISIBLE , .HOST_COHERENT };
 
-    create_buffer( vi, &staging_buffer );
-    data : rawptr;
-    memory_map_flag: vk.MemoryMapFlags;
-    vk.MapMemory( vi.va_Device.d_LogicalDevice, staging_buffer.vb_DeviceMemory, 0, image_size, memory_map_flag, &data);
-    mem.copy(data, raw_data(vi.bitmap.bitmap), auto_cast image_size);
-    vk.UnmapMemory(vi.va_Device.d_LogicalDevice, staging_buffer.vb_DeviceMemory);
+  create_buffer( vi, &staging_buffer );
+  data : rawptr;
+  memory_map_flag: vk.MemoryMapFlags;
+  vk.MapMemory( vi.va_Device.d_LogicalDevice, staging_buffer.vb_DeviceMemory, 0, image_size, memory_map_flag, &data);
+  mem.copy(data, raw_data(vi.bitmap.bitmap), auto_cast image_size);
+  vk.UnmapMemory(vi.va_Device.d_LogicalDevice, staging_buffer.vb_DeviceMemory);
 
-    vi.va_TextureImage.vi_width      = tex_width;
-    vi.va_TextureImage.vi_height     = text_height;
-    vi.va_TextureImage.vi_Format     = .R8_UNORM;
-    vi.va_TextureImage.vi_Tiling     = .OPTIMAL;
-    vi.va_TextureImage.vi_UsageFlags = vk.ImageUsageFlags{ .TRANSFER_DST, .SAMPLED };
-    vi.va_TextureImage.vi_Properties = vk.MemoryPropertyFlags{ .DEVICE_LOCAL };
-    vi.va_TextureImage.vi_Layout     = .TRANSFER_DST_OPTIMAL;
+  vi.va_TextureImage.vi_width      = tex_width;
+  vi.va_TextureImage.vi_height     = text_height;
+  vi.va_TextureImage.vi_Format     = .R8_UNORM;
+  vi.va_TextureImage.vi_Tiling     = .OPTIMAL;
+  vi.va_TextureImage.vi_UsageFlags = vk.ImageUsageFlags{ .TRANSFER_DST, .SAMPLED };
+  vi.va_TextureImage.vi_Properties = vk.MemoryPropertyFlags{ .DEVICE_LOCAL };
+  vi.va_TextureImage.vi_Layout     = .TRANSFER_DST_OPTIMAL;
 
-    create_image( vi, &vi.va_TextureImage );
-    old_image : VulkanImage;
-    old_image.vi_Layout = .UNDEFINED;
-    transition_image_layout( vi, &old_image, &vi.va_TextureImage );
+  create_image( vi, &vi.va_TextureImage );
+  old_image : VulkanImage;
+  old_image.vi_Layout = .UNDEFINED;
+  transition_image_layout( vi, &old_image, &vi.va_TextureImage );
 
-    copy_buffer_to_image( vi, &staging_buffer.vb_Buffer, &vi.va_TextureImage );
+  copy_buffer_to_image( vi, &staging_buffer.vb_Buffer, &vi.va_TextureImage );
 
-    old_image.vi_Layout = .TRANSFER_DST_OPTIMAL;
-    vi.va_TextureImage.vi_Layout = .SHADER_READ_ONLY_OPTIMAL;
+  old_image.vi_Layout = .TRANSFER_DST_OPTIMAL;
+  vi.va_TextureImage.vi_Layout = .SHADER_READ_ONLY_OPTIMAL;
 
-    transition_image_layout( vi, &old_image, &vi.va_TextureImage );
+  transition_image_layout( vi, &old_image, &vi.va_TextureImage );
 
-    vk.DestroyBuffer( vi.va_Device.d_LogicalDevice, staging_buffer.vb_Buffer, nil );
-    vk.FreeMemory   ( vi.va_Device.d_LogicalDevice, staging_buffer.vb_DeviceMemory, nil );
+  vk.DestroyBuffer( vi.va_Device.d_LogicalDevice, staging_buffer.vb_Buffer, nil );
+  vk.FreeMemory   ( vi.va_Device.d_LogicalDevice, staging_buffer.vb_DeviceMemory, nil );
 
-    create_info := vk.ImageViewCreateInfo {
-    	sType            = .IMAGE_VIEW_CREATE_INFO,
-    	image            = vi.va_TextureImage.vi_Image,
-    	viewType         = .D2,
-    	format           = vi.va_TextureImage.vi_Format,
-    	subresourceRange = {
-    					aspectMask     = vk.ImageAspectFlags{ .COLOR },
-    					baseMipLevel   = 0,
-    					levelCount     = 1,
-    					baseArrayLayer = 0,
-    					layerCount     = 1
-    	}
+  create_info := vk.ImageViewCreateInfo {
+  	sType            = .IMAGE_VIEW_CREATE_INFO,
+  	image            = vi.va_TextureImage.vi_Image,
+  	viewType         = .D2,
+  	format           = vi.va_TextureImage.vi_Format,
+  	subresourceRange = {
+  					aspectMask     = vk.ImageAspectFlags{ .COLOR },
+  					baseMipLevel   = 0,
+  					levelCount     = 1,
+  					baseArrayLayer = 0,
+  					layerCount     = 1
+  	}
 	};
 
 	if vk.CreateImageView( vi.va_Device.d_LogicalDevice, &create_info, nil, &vi.va_TextureImage.vi_ImageView ) != .SUCCESS {
@@ -1809,27 +1809,27 @@ add_texture_font :: proc( vi : ^VulkanIface, font : ^[dynamic]FontCache )
 	}
 
 	properties : vk.PhysicalDeviceProperties;
-    vk.GetPhysicalDeviceProperties( vi.va_Device.d_PhysicalDevice, &properties);
+  vk.GetPhysicalDeviceProperties( vi.va_Device.d_PhysicalDevice, &properties);
 
-    samplerInfo := vk.SamplerCreateInfo{
-    	sType                   = .SAMPLER_CREATE_INFO,
-    	magFilter               = .LINEAR,
-    	minFilter               = .LINEAR,
-    	addressModeU            = .CLAMP_TO_EDGE,
-    	addressModeV            = .CLAMP_TO_EDGE,
-    	addressModeW            = .REPEAT,
-    	anisotropyEnable        = false,
-    	maxAnisotropy           = properties.limits.maxSamplerAnisotropy,
-    	borderColor             = .INT_TRANSPARENT_BLACK,
-    	unnormalizedCoordinates = false,
-    	compareEnable           = false,
-    	compareOp               = .ALWAYS,
-    	mipmapMode              = .LINEAR
+  samplerInfo := vk.SamplerCreateInfo{
+  	sType                   = .SAMPLER_CREATE_INFO,
+  	magFilter               = .LINEAR,
+  	minFilter               = .LINEAR,
+  	addressModeU            = .CLAMP_TO_EDGE,
+  	addressModeV            = .CLAMP_TO_EDGE,
+  	addressModeW            = .REPEAT,
+  	anisotropyEnable        = false,
+  	maxAnisotropy           = properties.limits.maxSamplerAnisotropy,
+  	borderColor             = .INT_TRANSPARENT_BLACK,
+  	unnormalizedCoordinates = false,
+  	compareEnable           = false,
+  	compareOp               = .ALWAYS,
+  	mipmapMode              = .LINEAR
 	};
 
-    if (vk.CreateSampler(vi.va_Device.d_LogicalDevice, &samplerInfo, nil, &vi.va_TextureImage.vi_Sampler) != .SUCCESS) {
-        panic( "[ERROR] Failed to create texture sampler");
-    }
+  if (vk.CreateSampler(vi.va_Device.d_LogicalDevice, &samplerInfo, nil, &vi.va_TextureImage.vi_Sampler) != .SUCCESS) {
+      panic( "[ERROR] Failed to create texture sampler");
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -2407,10 +2407,10 @@ init_vulkan :: proc( v_interface : ^VulkanIface ) {
 	bitmap := bitmap_push( 2160, 126, &v_interface.bitmap )
  	new_bit := bitmap_push( 2160, 126, &v_interface.bitmap )
  	v_interface.va_FontCache = make( [dynamic]FontCache, 2, v_interface.ArenaAllocator )
-	v_interface.va_FontCache[0] = f_BuildFont(20 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(bitmap), "./data/font/RobotoMonoBold.ttf" );
+	v_interface.va_FontCache[0] = f_BuildFont(18 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(bitmap), "./data/font/RobotoMonoBold.ttf" );
 	v_interface.va_FontCache[0].BitmapOffset = {0, 0}
 
-	v_interface.va_FontCache[1] = f_BuildFont(15 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
+	v_interface.va_FontCache[1] = f_BuildFont(13 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
 	v_interface.va_FontCache[1].BitmapOffset = {0, 126}
 
 	// --------------------------------------------------------------

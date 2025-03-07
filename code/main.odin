@@ -105,7 +105,15 @@ net_state :: struct {
   ip : string,
   port : int,
   socket_type : net.Any_Socket,
-  buffer : []u8
+  buffer : []u8,
+  buffer_off : int,
+  total_bytes : int,
+  send_buffer : bool,
+
+  socket_function : enum {
+    RECEIVE_SOCKET,
+    SEND_SOCKET,
+  }
 }
 
 //tcp_net_state :: net_state{ ip = "", port = 8080, socket_type = net.TCP_Socket{} }
@@ -127,10 +135,14 @@ orbitmcs_state :: struct {
  enable_debug: bool,
  SHOW_FLAGS  : APP_SHOW_FLAGS,
  threading   : ^thread_pool,
- tcp_server  : net_state,
- udp_server  : net_state,
+ tcp_server  : ^net_state,
+ udp_server  : ^net_state,
+ tcp_client  : ^net_state,
+ udp_client  : ^net_state,
  menu_db     : db_menu_items,
  menu_tc     : TC_menu_items,
+ tm_rec_buffer : [dynamic]u8,
+ tm_rec_sizes  : [dynamic]int,
  shutdown    : bool,
  hovering_boxes : utils.queue(box_constructor, 216) // IMPORTANT!!: If you put a bigger value (for example 4096) odin compiler (llvm function) will crash
 }
@@ -174,6 +186,11 @@ net_start_server :: proc( t : thread.Task ) {
         address = addr,
         port    = net_state.port
       }
+      send_addr, ok := net.parse_ip4_address("127.0.0.1")
+      send_enpoint := net.Endpoint {
+        address = send_addr,
+        port    = 8091
+      }
       err : net.Network_Error
       net_state.socket_type, err = net.make_bound_udp_socket(addr, net_state.port)
       if err != nil {
@@ -181,13 +198,36 @@ net_start_server :: proc( t : thread.Task ) {
       }
       fmt.printfln("Listening on UDP: %s", net.endpoint_to_string(endpoint))
       for !app_state.shutdown {
-        buff : [2048]u8
-        bytes_read, endpoint, err_accept := net.recv_udp(net_state.socket_type.(net.UDP_Socket), buff[:])
-        if err_accept != nil {
-          //fmt.println("[ERROR] Failed to accept TCP connection")
+
+        if net_state.socket_function == .SEND_SOCKET {
+          if net_state.send_buffer {
+            writen, err := net.send_udp(net_state.socket_type.(net.UDP_Socket), net_state.buffer[:net_state.buffer_off], send_enpoint)
+            if err != nil {
+              fmt.println("[ERROR UDP] Could not send bytes", writen)
+            }
+            //fmt.println(app_state.udp_server.buffer)
+            net_state.send_buffer = false
+
+            net_state.total_bytes += net_state.buffer_off
+            //runtime.mem_zero(&app_state.udp_server.buffer, 2048)
+            net_state.buffer_off = 0
+          }
         }
         else {
-          fmt.println("[INFO] Accepting connection, bytes read", bytes_read)
+          buff : [2048]u8
+          bytes_read, endpoint, err_accept := net.recv_udp(net_state.socket_type.(net.UDP_Socket), buff[:])
+          if err_accept != nil {
+            //fmt.println("[ERROR] Failed to accept UDP connection", endpoint, err_accept)
+          }
+          else {
+            fmt.println("[INFO] Accepting connection, bytes read", bytes_read, endpoint)
+            fmt.println("Buffer", buff[:bytes_read])
+            //new_buf := make([]u8, bytes_read)
+            //runtime.mem_copy(new_buf, buff, bytes_read)
+            append(&app_state.tm_rec_buffer, ..buff[:bytes_read])
+            append(&app_state.tm_rec_sizes, bytes_read)
+            net_state.total_bytes += bytes_read
+          }
         }
         //thread.create_and_start_with_poly_data(cli, handle_msg_tcp)
         //AddProcToPool(&app_state.threading, handle_msg_tcp, rawptr(&cli))
@@ -195,7 +235,6 @@ net_start_server :: proc( t : thread.Task ) {
       fmt.println("Closed socket")
     }
     case net.TCP_Socket : {
-      app_state.tcp_server = net_state^
       if !ok {
         fmt.println("[ERROR] Wrong ip address", net_state.ip)
         return
@@ -204,25 +243,24 @@ net_start_server :: proc( t : thread.Task ) {
         address = addr,
         port    = net_state.port
       }
-
-      sock, err := net.listen_tcp(endpoint)
-      if err != nil {
-        fmt.println("[ERROR] Failed listening on TCP")
-      }
-      fmt.printfln("Listening on TCP: %s", net.endpoint_to_string(endpoint))
-      for !app_state.shutdown {
-        cli, _, err_accept := net.accept_tcp(sock)
-        if err_accept != nil {
-          //fmt.println("[ERROR] Failed to accept TCP connection")
+      if net_state.socket_function == .RECEIVE_SOCKET {
+        sock, err := net.listen_tcp(endpoint)
+        if err != nil {
+          fmt.println("[ERROR] Failed listening on TCP")
         }
-        else {
-        fmt.println("[INFO] Accepting connection", cli)
+        fmt.printfln("Listening on TCP: %s", net.endpoint_to_string(endpoint))
+        for !app_state.shutdown {
+          cli, _, err_accept := net.accept_tcp(sock)
+          if err_accept != nil {
+            //fmt.println("[ERROR] Failed to accept TCP connection")
+          }
+          else {
+            fmt.println("[INFO] Accepting connection", cli)
+          }
         }
-        //thread.create_and_start_with_poly_data(cli, handle_msg_tcp)
-        //AddProcToPool(&app_state.threading, handle_msg_tcp, rawptr(&cli))
+        fmt.println("Closed socket")
+        net.close(sock)
       }
-      fmt.println("Closed socket")
-      net.close(sock)
     }
   }
 }
@@ -251,6 +289,90 @@ consume_app_state_events :: proc(state: ^orbitmcs_state) {
 }
 
 // --------------------------------------------------- OrbitMCS ui function -------------------------------------------- //
+
+GetArgumentDeclSizeInBits :: proc( system : ^xtce.space_system, val : string ) -> int {
+  ref_arg_decl, ref_par_decl := xtce.GetArgumentDecl(system, val)
+  size_in_bits := 0
+  buff : [64]u8
+
+  #partial switch arg_t in ref_arg_decl {
+    case xtce.IntegerArgumentType: {
+      size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.integer
+    }
+    case xtce.FloatArgumentType: {
+      size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.t_restriction.integer
+    }
+    case xtce.EnumeratedArgumentType : {
+      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+        case xtce.IntegerDataEncodingType : {
+          size_in_bits = cast(int)encod_t.t_sizeInBits.t_restriction.integer
+        }
+      }
+    }
+    case xtce.ArrayArgumentType : {
+      type_ref := arg_t.base.t_arrayTypeRef.t_restriction.val 
+      array_ref, par_ref := xtce.GetArgumentDecl(system, type_ref)
+      #partial switch ref_t in array_ref {
+        case xtce.IntegerArgumentType: {
+          size_in_bits = cast(int)ref_t.base.t_sizeInBits.t_restriction.integer
+        }
+      }
+    }
+  }
+
+  if size_in_bits > 0 {
+    return size_in_bits
+  }
+
+  #partial switch arg_t in ref_par_decl {
+    case xtce.IntegerParameterType: {
+      size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.integer
+    }
+    case xtce.FloatParameterType: {
+      size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.t_restriction.integer
+    }
+    case xtce.EnumeratedParameterType : {
+      #partial switch encod_t in arg_t.base.base.t_choice_0 {
+        case xtce.IntegerDataEncodingType : {
+          size_in_bits = cast(int)encod_t.t_sizeInBits.t_restriction.integer
+        }
+      }
+    }
+    case xtce.ArrayParameterType : {
+      type_ref := arg_t.base.t_arrayTypeRef.t_restriction.val 
+      array_ref, par_ref := xtce.GetArgumentDecl(system, type_ref)
+      #partial switch ref_t in array_ref {
+        case xtce.IntegerArgumentType: {
+          size_in_bits = cast(int)ref_t.base.t_sizeInBits.t_restriction.integer
+        }
+        case xtce.EnumeratedArgumentType : {
+          //size_bits = "EnumeratedVal"
+          //#partial switch encod_t in ref_t.base.base.t_choice_0 {
+          //  case xtce.IntegerDataEncodingType : {
+          //    encoding = encod_t.t_encoding.t_restriction.val
+          //  }
+          //}
+        }
+      }
+      #partial switch ref_t in par_ref {
+        case xtce.IntegerParameterType: {
+          size_in_bits = cast(int)ref_t.base.t_sizeInBits.t_restriction.integer
+        }
+        case xtce.EnumeratedParameterType : {
+          //size_bits = "EnumeratedVal"
+          //#partial switch encod_t in ref_t.base.base.t_choice_0 {
+          //  case xtce.IntegerDataEncodingType : {
+          //    encoding = encod_t.t_encoding.t_restriction.val
+          //  }
+          //}
+        }
+      }
+    }
+  }
+  return size_in_bits
+}
+
+// --------------------------------------------------------------------------------------------------------------------- //
 
 orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
   /*
@@ -450,6 +572,7 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
       }
 
       if event.left_click {
+        len_arg := 0
         for &arg in command_to_show.t_ArgumentList.t_Argument {
           value : string
           pointer := uintptr(&arg)
@@ -461,8 +584,16 @@ orbit_show_tc_center :: proc( rect : Rect2D, handler : ^xtce.handler ) {
               value = v
             }
           }
-          app_state.udp_server.buffer[]
+          
+          if app_state.udp_client.buffer_off >= 2047 {
+            break
+          }
+          value_int := strconv.atoi(value)
+          SizeInBits := GetArgumentDeclSizeInBits(system_name, arg.t_argumentTypeRef.t_restriction.val)
+          runtime.mem_copy(&app_state.udp_client.buffer[app_state.udp_client.buffer_off], cast(rawptr)&value_int,SizeInBits)
+          app_state.udp_client.buffer_off += SizeInBits
         }
+        app_state.udp_client.send_buffer = true
       }
     }
   }
@@ -489,6 +620,141 @@ utils.PushQueue(&app_state.hovering_boxes, box)
 // We set it as global as long as Im not sure where to put this
 //
 TmContainerExpandList : []bool
+
+// ---------------------------------------------------------------------------------------------------------------------- //
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------- //
+
+orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
+
+  layout := get_layout_stack()
+  limit_on_screen := false 
+
+  row_start_it := begin_next_layout_scrollable_section(0, layout.box_preferred_size)
+  defer end_next_layout_scrollable_section(0)
+
+  tmp_stack : BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
+  big_stack_init(&tmp_stack, ^utils.node_tree(utils.tuple(string, xml.Element)), 126 << 10, context.temp_allocator)
+  defer big_stack_delete(&tmp_stack, context.temp_allocator)
+
+
+  buffer_off := 0
+  row := 0
+  for buffer_size, idx in app_state.tm_rec_sizes {
+    buffer := app_state.tm_rec_buffer[buffer_off:buffer_off + buffer_size]
+    buffer_off += buffer_size
+
+    buffer_bits_filled := 0
+    // now we have a [buffer_size]u8 buffer with some telemetry we have received
+    //
+    push_stack(&tmp_stack, &xml_handler.tree_eval)
+    buffer_rendered := false
+    for tmp_stack.push_count > 0 && !buffer_rendered {
+      node := get_front_stack(&tmp_stack)
+      pop_stack(&tmp_stack)
+
+      if node.element.first == xtce.SEQUENCE_CONTAINER_TYPE {
+
+        // TODO: Check for abstractness
+        //
+        {
+          el_stack : BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
+          big_stack_init(&el_stack, ^utils.node_tree(utils.tuple(string, xml.Element)), 1 << 10, context.temp_allocator)
+          defer big_stack_delete(&el_stack, context.temp_allocator)
+
+          push_stack(&el_stack, node)
+
+          found_entry_list := false
+          for el_stack.push_count > 0 && !found_entry_list {
+            it := get_front_stack(&el_stack)
+            pop_stack(&el_stack)
+
+            if it.element.first == xtce.ENTRY_LIST_TYPE {
+              node = it
+              found_entry_list = true 
+              break
+            }
+
+            for it2 := it.next; it2 != nil; it2 = auto_cast it2.right {
+              push_stack(&el_stack, it2)
+            }
+          }
+
+          el_stack.push_count = 0 
+          push_stack(&el_stack, node)
+          for el_stack.push_count > 0 {
+            it := get_front_stack(&el_stack)
+            pop_stack(&el_stack)
+
+            node = it
+
+            if it.element.first == xtce.PARAMETER_REF_ENTRY_TYPE {
+              type_decl_it : ^utils.node_tree(utils.tuple(string, xml.Element))
+              for attr in it.element.second.attribs {
+                if attr.key == "parameterRef" {
+                  type_decl_it = xtce.SearchTypeDeclInSystem("UCF", attr.val, xml_handler)
+
+                  if type_decl_it != nil {
+                    for attr2 in type_decl_it.element.second.attribs {
+                      if attr2.key == "parameterTypeRef" {
+                        type_decl_it = xtce.SearchTypeDeclInSystem("UCF", attr2.val, xml_handler)
+                      }
+                    }
+                  }
+                }
+              }
+              if type_decl_it != nil {
+                for attr in type_decl_it.element.second.attribs {
+                  if attr.key == "sizeInBits" {
+                    buffer_bits_filled += strconv.atoi(attr.val)
+                    buff : [64]u8
+                    label_name := strings.concatenate(
+                      {
+                        it.element.second.attribs[0].val, ", ", 
+                        attr.key, ", ",
+                        attr.val, "#_name_", 
+                        strconv.itoa(buff[:], row),
+                        "%p"
+                      }
+                    )
+                    //set_layout_next_font(20, "./data/font/RobotoMonoBold.ttf")
+                    label(label_name, cast(^byte)it)
+                    //unset_layout_font()
+                    if buffer_bits_filled == buffer_size {
+                      buffer_rendered = true
+                    }
+                    row += 1
+                    break
+                  }
+                }
+              }
+            }
+
+            if buffer_rendered || buffer_bits_filled >= buffer_size {
+              buffer_rendered = true
+              break
+            }
+
+            for it2 := it.next; it2 != nil; it2 = auto_cast it2.right {
+              push_stack(&el_stack, it2)
+            }
+          }
+        }
+
+
+      }
+
+
+      
+
+      for it := node.next; it != nil; it = auto_cast it.right {
+        push_stack(&tmp_stack, it) 
+      }
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------------------------------------------------- //
 
@@ -1580,7 +1846,7 @@ render.init_vulkan(&vulkan_iface)
 defer glfw.Terminate()
 defer glfw.DestroyWindow(vulkan_iface.va_Window.w_window)
 
-app_state.threading = CreatePoolWithAllocator(3)
+app_state.threading = CreatePoolWithAllocator(6)
 thread.pool_start(&app_state.threading.Pool)
 defer thread.pool_stop_all_tasks(&app_state.threading.Pool)
  // This does not work properly dont know why
@@ -1603,6 +1869,7 @@ defer thread.pool_stop_all_tasks(&app_state.threading.Pool)
   state := cast(^xtce_state)t.data
   state.schema = state.parse_proc(state.schema_path, context.allocator)
   state.system = state.validate_proc(state.system_path, state.schema, context.allocator)
+  xml.destroy(state.schema.document)
   fmt.println("Validation completed!!")
   fmt.println(
    "---------------------------------------------------------------------------------------------",
@@ -1615,15 +1882,41 @@ net_state_arg : ^net_state = new(net_state)
 net_state_arg.ip = "127.0.0.1"
 net_state_arg.port = 8080
 net_state_arg.socket_type = net.TCP_Socket{}
+net_state_arg.socket_function = .RECEIVE_SOCKET
+
+app_state.tcp_server = net_state_arg
 
 AddProcToPool(app_state.threading, net_start_server, rawptr(net_state_arg))
+
+net_state_arg_tcp_send : ^net_state = new(net_state)
+net_state_arg_tcp_send.ip = "127.0.0.1"
+net_state_arg_tcp_send.port = 8081
+net_state_arg_tcp_send.socket_type = net.TCP_Socket{}
+net_state_arg_tcp_send.socket_function = .SEND_SOCKET
+
+app_state.tcp_client = net_state_arg_tcp_send
+
+AddProcToPool(app_state.threading, net_start_server, rawptr(net_state_arg_tcp_send))
 
 net_state_arg_udp : ^net_state = new(net_state)
 net_state_arg_udp.ip = "127.0.0.1"
 net_state_arg_udp.port = 8090
 net_state_arg_udp.socket_type = net.UDP_Socket{}
+net_state_arg_udp.socket_function = .SEND_SOCKET
 
-AddProcToPool(app_state.threading, net_start_server, rawptr(net_state_arg))
+app_state.udp_client = net_state_arg_udp
+
+AddProcToPool(app_state.threading, net_start_server, rawptr(net_state_arg_udp))
+
+net_state_arg_udp_rec : ^net_state = new(net_state)
+net_state_arg_udp_rec.ip = "127.0.0.1"
+net_state_arg_udp_rec.port = 8091
+net_state_arg_udp_rec.socket_type = net.UDP_Socket{}
+net_state_arg_udp_rec.socket_function = .RECEIVE_SOCKET
+
+app_state.udp_server = net_state_arg_udp_rec
+
+AddProcToPool(app_state.threading, net_start_server, rawptr(net_state_arg_udp_rec))
 
  // Create the panel tree so we got a debug-like style editor
  //
@@ -1921,6 +2214,9 @@ ui_begin()
        set_layout_next_row(1)
        set_layout_next_column(0)
        label("UDP Connection: #_udp_label_%p", cast(^byte)p)
+       set_layout_next_column(1)
+       buff : [64]u8
+       label(strings.concatenate({"Rx: Bytes Received: ", strconv.itoa(buff[:], app_state.udp_server.total_bytes)}, ui_context.per_frame_arena_allocator))
      }
    }
    case APP_SHOW_FLAGS.SHOW_TC:
@@ -1937,12 +2233,11 @@ ui_begin()
   case APP_SHOW_FLAGS.SHOW_TM:
   {
     set_next_box_layout({.Y_CENTERED_STRING})
-    set_next_layout( p.rect.top_left, p.rect.size, 4, 2, LayoutType.FIXED)
-    set_box_preferred_size({300, 35})
+    set_next_layout( p.rect.top_left, p.rect.size, 0, 0, LayoutType.FIXED)
+    set_box_preferred_size({p.rect.size.x, 35})
     if begin( "Telemetry Center#TM_Center%p", pointer = cast(^byte)p )
     {
-      set_layout_next_row(0)
-      label("TM Log")
+      orbit_show_tm_received(p.rect, xtce_state_arg.system)
     }
   }
   case APP_SHOW_FLAGS.SHOW_DB:

@@ -743,8 +743,14 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
   //
   schema_root_el = hash_schema(schema)
 
-  temp_arena := vmem.arena_temp_begin(&schema.arena)
-  temp_alloc := vmem.arena_allocator(temp_arena.arena)
+  temp_arena : vmem.Arena
+  err := vmem.arena_init_growing(&temp_arena)
+
+  temp_alloc := vmem.arena_allocator(&temp_arena)
+
+  defer vmem.arena_free_all(&temp_arena)
+  defer mem.free_all(temp_alloc)
+  defer vmem.arena_destroy(&temp_arena)
 
   // Here it is stored the tree evaluation of the whole xtce user file
   //
@@ -769,7 +775,10 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
     document, error := xml.parse(
       string(content),
       xml.Options{flags = {.Error_on_Unsupported}, expected_doctype = "xtce:SpaceSystem"},
+      allocator = schema.allocator
     )
+
+    defer xml.destroy(document)
 
     // This is the root element of our file
     //
@@ -4473,3 +4482,66 @@ SearchTypeInSystem :: proc( system : string, type : string, xml_handler : ^handl
 }
 
 // -----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+SearchTypeDeclInSystem :: proc( system : string, name : string, xml_handler : ^handler ) -> ^utils.node_tree(utils.tuple(string, xml.Element)) {
+
+  // In a width-search we try to locate the node in which a space system starts
+  //
+  SpaceSystemNode : ^utils.node_tree(utils.tuple(string, xml.Element))
+  TypeNode        : ^utils.node_tree(utils.tuple(string, xml.Element))
+  node_values : utils.queue(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+  node_stack  : utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+
+  utils.PushQueue(&node_values, &xml_handler.tree_eval)
+
+  system_not_found := true
+  for ;node_values.IdxFront != node_values.IdxTail && system_not_found; {
+    node_it := utils.GetFrontQueue(&node_values)
+    utils.PopQueue(&node_values)
+
+    el := node_it.element.second
+    for it in el.attribs {
+      if it.val == system {
+        SpaceSystemNode = node_it
+        system_not_found = false
+      }
+    }
+
+    for b := node_it.next; b != node_it.tail && b != nil; b = b.right {
+      utils.PushQueue(&node_values, b)
+    }
+  }
+
+  if SpaceSystemNode == nil {
+    return nil
+  }
+
+  utils.ClearQueue( &node_values )
+
+  TypeNotFound := true
+  utils.push_stack(&node_stack, SpaceSystemNode)
+
+  for ;node_stack.push_count > 0 && TypeNotFound; {
+    node_it := utils.get_front_stack(&node_stack)
+    utils.pop_stack(&node_stack)
+
+    for attr, idx in node_it.element.second.attribs {
+      if attr.key == "name" {
+        if attr.val == name {
+          TypeNotFound = false 
+          TypeNode = node_it
+        }
+      }
+    }
+
+    for b := node_it.next; b != nil; b = b.right {
+      utils.push_stack(&node_stack, b)
+    }
+  }
+  return TypeNode
+}
+
+// -----------------------------------------------------------------------------
+

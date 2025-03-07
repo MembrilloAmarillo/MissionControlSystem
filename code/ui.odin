@@ -14,6 +14,7 @@ import "core:strings"
 import textedit "core:text/edit"
 
 import "vendor:glfw"
+import vk "vendor:vulkan"
 
 import "render"
 
@@ -132,6 +133,7 @@ Box :: struct {
 	style:                           StyleParam,
 	animation_progress:              f32,
 	is_animating:                    bool,
+	font_cache:                      ^render.FontCache,
 }
 
 UI_NilBox : Box = {
@@ -147,6 +149,16 @@ axis_type :: enum u32 {
 	axis_horizontal = 1,
 }
 
+FontType :: enum {
+	BOLD,
+	REGULAR
+}
+FontOption :: struct {
+	type : FontType,
+	size : int,
+	font_path : string,
+}
+
 Layout :: struct {
 	position:           glsl.vec2,
 	size:               glsl.vec2,
@@ -158,6 +170,7 @@ Layout :: struct {
 	box_preferred_size: glsl.vec2,
 	parent_box:         ^Box,
 	parent_seed:        utils.Stack(u64, MAX_LAYOUT_STACK) "This id can be deferent from the parent box",
+	text_option:        utils.Stack(FontOption, MAX_LAYOUT_STACK) "This id can be deferent from the parent box",
 	padding:            glsl.vec2,
 	string_padding:     glsl.vec2
 }
@@ -351,7 +364,7 @@ get_default_ui_light_style :: proc() -> UI_Style {
 
 	style: UI_Style
 
-	black      := rgba_to_norm(hex_rgba_to_vec4(0x0D101cFF))
+	black      := rgba_to_norm(hex_rgba_to_vec4(0x0C0C0CFF))
 	dark_blue  := rgba_to_norm(hex_rgba_to_vec4(0x496FC2FF))
 	blue       := rgba_to_norm(hex_rgba_to_vec4(0x447EF2FF))
 	gray       := rgba_to_norm(hex_rgba_to_vec4(0xeee8d5FF))
@@ -487,6 +500,33 @@ set_layout_next_column :: proc(column: u32) {
 		} else {
 			layout.at.x += layout.box_preferred_size.x
 			//layout.at.x += layout.padding.x
+		}
+	}
+}
+
+// ------------------------------------------------------------------- //
+
+set_layout_next_font :: proc( FontSize : int, FontPath : string, type : FontType = .REGULAR ) {
+	layout := get_layout_stack()
+
+	if layout != nil {
+		font_option : FontOption = {
+			type = type,
+			size = FontSize,
+			font_path = FontPath
+		}
+		utils.push_stack(&layout.text_option, font_option)
+	}
+}
+
+// ------------------------------------------------------------------- //
+
+unset_layout_font :: proc() {
+	layout := get_layout_stack()
+	if layout != nil {
+
+		if layout.text_option.push_count > 0 {
+			utils.pop_stack(&layout.text_option)
 		}
 	}
 }
@@ -1060,10 +1100,10 @@ make_box_no_key :: proc(
 		}
 
 		box.zindex    = box_root.zindex
-  //ui_context.last_zindex += 1
-  box_root.tail = box
-  box.parent    = box_root
-  fixed_size := false
+		//ui_context.last_zindex += 1
+		box_root.tail = box
+		box.parent    = box_root
+		fixed_size := false
 
   if (top_l == {-1, -1} || w_h == {-1, -1}) {
   	top_l = box_root.rect.top_left
@@ -1092,6 +1132,38 @@ make_box_no_key :: proc(
 
 		if .DRAW_STRING in box_flags && layout != nil {
 			box.text_position = box.rect.top_left + layout.string_padding
+		}
+
+		if layout != nil {
+
+			if layout.text_option.push_count > 0 {
+				font_opt := utils.get_front_stack(&layout.text_option)
+
+				already_stored := false
+				for &option in ui_context.vulkan_iface.va_FontCache {
+					if option.FontSize == cast(f32)font_opt.size * ui_context.vulkan_iface.va_Window.scaling_factor.x {
+						already_stored = true
+						box.font_cache = &option
+					}
+				}
+
+				if !already_stored {
+					bitmap := render.bitmap_push(2160, 126, &ui_context.vulkan_iface.bitmap)
+					font := render.f_BuildFont(
+						cast(f32)font_opt.size * ui_context.vulkan_iface.va_Window.scaling_factor.x,
+						2160, 126, raw_data(bitmap), font_opt.font_path
+						)
+					last_bitmap_offset := ui_context.vulkan_iface.va_FontCache[len(ui_context.vulkan_iface.va_FontCache) - 1].BitmapOffset
+					font.BitmapOffset = last_bitmap_offset + {0, 126}
+					append(&ui_context.vulkan_iface.va_FontCache, font)
+					vk.DestroyImageView(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_ImageView, nil)
+					vk.DestroyImage(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_Image, nil)
+					vk.DestroySampler(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_Sampler, nil)
+					vk.DeviceWaitIdle(ui_context.vulkan_iface.va_Device.d_LogicalDevice)
+					render.add_texture_font(ui_context.vulkan_iface, &ui_context.vulkan_iface.va_FontCache)
+					box.font_cache = &ui_context.vulkan_iface.va_FontCache[len(ui_context.vulkan_iface.va_FontCache) - 1]
+				}
+			}
 		}
 
 		// NOTE: If fixed is true, layout not updated!!
@@ -2034,10 +2106,15 @@ ui_build :: proc() {
 
 		current_font_cache: render.FontCache
 
-		if box.parent == root_box {
-			current_font_cache = ui_context.vulkan_iface.va_FontCache[0]
-		} else {
-			current_font_cache = ui_context.vulkan_iface.va_FontCache[1]
+		if box.font_cache == nil {
+			if box.parent == root_box {
+				current_font_cache = ui_context.vulkan_iface.va_FontCache[0]
+			} else {
+				current_font_cache = ui_context.vulkan_iface.va_FontCache[1]
+			}
+		}
+		else {
+			current_font_cache = box.font_cache^
 		}
 
 		// Adding draw data to render batch
