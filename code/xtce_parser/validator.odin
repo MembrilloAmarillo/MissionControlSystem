@@ -743,8 +743,14 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
   //
   schema_root_el = hash_schema(schema)
 
-  temp_arena := vmem.arena_temp_begin(&schema.arena)
-  temp_alloc := vmem.arena_allocator(temp_arena.arena)
+  temp_arena : vmem.Arena
+  err := vmem.arena_init_growing(&temp_arena)
+
+  temp_alloc := vmem.arena_allocator(&temp_arena)
+
+  defer vmem.arena_free_all(&temp_arena)
+  defer mem.free_all(temp_alloc)
+  defer vmem.arena_destroy(&temp_arena)
 
   // Here it is stored the tree evaluation of the whole xtce user file
   //
@@ -769,7 +775,10 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
     document, error := xml.parse(
       string(content),
       xml.Options{flags = {.Error_on_Unsupported}, expected_doctype = "xtce:SpaceSystem"},
+      allocator = schema.allocator
     )
+
+    defer xml.destroy(document)
 
     // This is the root element of our file
     //
@@ -1157,13 +1166,16 @@ validate_xml :: proc( path_to_file: string, schema: ^xsd_schema, allocator := co
          utils.pop_stack(&t)
          //fmt.println(n.element.second)
          switch( n.element.first ) {
-          case ARRAY_DATA_TYPE_TYPE: {}
-          case DIMENSION_LIST_TYPE: {}
+          //case ARRAY_DATA_TYPE_TYPE: {}
+          case DIMENSION_LIST_TYPE: {
+            array_type.t_DimensionList = LoadDimensionListType(n, "DimensionList" )
+          }
          }
          for b := n.next; b != nil; b = b.right {
           utils.push_stack(&t, b)
          }
         }
+        array_type.base = LoadArrayDataType( node_it_dst )
        }
        case ABSOLUTE_TIME_PARAMETER_TYPE: {
         absolute_time_type : AbsoluteTimeParameterType
@@ -2910,6 +2922,52 @@ LoadSequenceContainerTypes :: proc( node : ^utils.node_tree(utils.tuple(string, 
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+LoadDimensionType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> DimensionType {
+  type : DimensionType = {}
+
+  type.t_StartingIndex = LoadIntegerValueType(node, "StartingIndex")
+  type.t_EndingIndex = LoadIntegerValueType(node, "EndingIndex")
+
+  return type
+}
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadDimensionListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> DimensionListType {
+  type : DimensionListType
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+ utils.push_stack(&stack, node)
+
+ for stack.push_count > 0 {
+   n := utils.get_front_stack(&stack)
+   utils.pop_stack(&stack)
+
+   if n.element.first == DIMENSION_TYPE {
+    member := LoadDimensionType(n, "Dimension")
+    append(&type.t_Dimension, member)
+   }
+
+   for it := n.next; it != nil; it = it.right {
+     utils.push_stack(&stack, it)
+   }
+ }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArrayDataType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArrayDataTypeType {
+  type : ArrayDataTypeType = {
+    base = LoadNameDescriptionType( node )
+  }
+  type.t_arrayTypeRef = LoadNameReferenceType(node, "arrayTypeRef")
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 GetSequenceContainer :: proc( space_system : ^SpaceSystemType ) -> [dynamic]t_ContainerSetType0 {
   return space_system.t_TelemetryMetaData.t_ContainerSet.t_choice_0
 }
@@ -2951,7 +3009,18 @@ LoadIntegerEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
 // ----------------------------------------------------------------------------------------------------------------- //
 
 LoadIntegerDataEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> IntegerDataEncodingType {
-  type : IntegerDataEncodingType = {}
+  type : IntegerDataEncodingType = {
+    base = LoadDataEncodingType(node)
+  }
+
+  type.t_sizeInBits = LoadPositiveLongType(node)
+  type.t_changeThreshold = LoadNonNegativeLongType()
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "sizeInBits")
+  type.t_sizeInBits.t_restriction.integer = auto_cast strconv.atoi(attr.val)
+
+  attr, _ = internal_DepthFirstSearch_Node(node, "changeThreshold")
+  type.t_changeThreshold.t_restriction.integer = auto_cast strconv.atoi(attr.val)
 
   stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
   utils.push_stack(&stack, node)
@@ -2961,10 +3030,6 @@ LoadIntegerDataEncodingType :: proc( node : ^utils.node_tree(utils.tuple(string,
    utils.pop_stack(&stack)
 
    switch n.element.first {
-    case DATA_ENCODING_TYPE : {
-      utils.TODO(ARGUMENT_STRING_DATA_TYPE)
-      type.base = LoadDataEncodingType(n)
-    }
     case CALIBRATOR_TYPE : {
       utils.TODO(CALIBRATOR_TYPE)
     }
@@ -3007,12 +3072,14 @@ LoadArgumentBaseDataType :: proc( node : ^utils.node_tree(utils.tuple(string, xm
    switch n.element.first {
     case ARGUMENT_STRING_DATA_TYPE : {
       utils.TODO(ARGUMENT_STRING_DATA_TYPE)
+      //type.t_choice_0 = LoadArgumentStringDataType(n)
     }
     case INTEGER_DATA_ENCODING_TYPE : {
-      utils.TODO(INTEGER_DATA_ENCODING_TYPE)
+      type.t_choice_0 = LoadIntegerDataEncodingType(n)
     }
     case FLOAT_DATA_ENCODING_TYPE : {
       utils.TODO(FLOAT_DATA_ENCODING_TYPE)
+      
     }
     case ARGUMENT_BINARY_DATA_ENCODING_TYPE : {
       utils.TODO(ARGUMENT_BINARY_DATA_ENCODING_TYPE)
@@ -3037,6 +3104,9 @@ LoadArgumentIntegerDataType :: proc( node : ^utils.node_tree(utils.tuple(string,
     t_sizeInBits = LoadPositiveLongType(node),
     t_signed     = xs_boolean_get_default()
   }
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "sizeInBits")
+  type.t_sizeInBits.t_restriction.integer = auto_cast strconv.atoi(attr.val)
 
   return type
 }
@@ -3148,6 +3218,220 @@ LoadEnumeratedArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, 
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+LoadArgumentInstanceRefType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ArgumentInstanceRefType {
+  type : ArgumentInstanceRefType = {}
+
+  type.t_argumentRef = LoadNameType(node)
+  type.t_useCalibratedValue = xs_boolean_get_default()
+
+  attr, _ := internal_DepthFirstSearch_Node(node, "t_useCalibratedValue")
+
+  type.t_useCalibratedValue.val = attr.val == "true" ? true : false
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDynamicValueType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ArgumentDynamicValueType {
+  type : ArgumentDynamicValueType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    if n.element.second.ident == "LinearAdjustment" {
+      switch n.element.first {
+        case LINEAR_ADJUSTMENT_TYPE: {
+          t := LoadLinearAdjustmentType(n)
+          type.t_LinearAdjustment = t
+        }
+      }
+    }
+    switch n.element.first {
+      case PARAMETER_INSTANCE_REF_TYPE : {
+        t := LoadParameterInstanceRefType(n)
+        type.t_choice_0 = t
+      }
+      case ARGUMENT_INSTANCE_REF_TYPE : {
+        t := LoadArgumentInstanceRefType(n)
+        type.t_choice_0 = t
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDiscreteLookupListType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ArgumentDiscreteLookupListType {
+  type : ArgumentDiscreteLookupListType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case ARGUMENT_DISCRETE_LOOKUP_TYPE: {
+        t : ArgumentDiscreteLookupType = {
+          base = LoadArgumentMatchCriteriaType(n),
+          t_value = xs_long_get_default()
+        }
+        attr, _ := internal_DepthFirstSearch_Node(n, "value")
+        t.t_value.integer = auto_cast strconv.atoi(attr.val)
+        append(&type.t_DiscreteLookup, t)
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentIntegerValueType :: proc(node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string) -> ArgumentIntegerValueType {
+  type : ArgumentIntegerValueType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    if n.element.second.ident == name {
+      switch n.element.first {
+        case ARGUMENT_DISCRETE_LOOKUP_LIST_TYPE: {
+          t := LoadArgumentDiscreteLookupListType(n)
+          type.t_choice_0 = t
+        }
+        case ARGUMENT_DYNAMIC_VALUE_TYPE: {
+          t := LoadArgumentDynamicValueType(n)
+          type.t_choice_0 = t
+        }
+        case "xs_long" : {
+          long_type := xs_long_get_default()
+          long_type.integer = auto_cast strconv.atoi(n.element.second.attribs[0].val)
+          type.t_choice_0 = long_type
+        }
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDimensionType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)), name : string ) -> ArgumentDimensionType {
+  type : ArgumentDimensionType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case DIMENSION_TYPE: {
+        type.t_StartingIndex = LoadArgumentIntegerValueType(n, "StartingIndex")
+        type.t_EndingIndex   = LoadArgumentIntegerValueType(n, "EndingIndex")
+        found = true
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArgumentDimensionListType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentDimensionListType {
+  type : ArgumentDimensionListType = {}
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  for stack.push_count > 0 {
+    n := utils.get_front_stack(&stack)
+    utils.pop_stack(&stack)
+
+    switch n.element.first {
+      case ARGUMENT_DIMENSION_TYPE: {
+        list := LoadArgumentDimensionType(n, "Dimension")
+        append(&type.t_Dimension, list)
+      }
+    }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+LoadArrayArgumentType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArrayArgumentType {
+  type : ArrayArgumentType = {
+    base = LoadArrayDataType(node)
+  }
+
+  stack : utils.Stack( ^utils.node_tree(utils.tuple(string, xml.Element)), 4096 )
+  utils.push_stack(&stack, node)
+
+  found := false
+  for stack.push_count > 0 && !found {
+      n := utils.get_front_stack(&stack)
+      utils.pop_stack(&stack)
+
+      switch n.element.first {
+        case ARGUMENT_DIMENSION_LIST_TYPE: {
+          list := LoadArgumentDimensionListType(n)
+          type.t_DimensionList = list
+          found = true
+        }
+      }
+
+    for it := n.next; it != nil; it = it.right {
+    utils.push_stack(&stack, it)
+    }
+  }
+
+  return type 
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml.Element)) ) -> ArgumentTypeSetType {
  type : ArgumentTypeSetType = {
  }
@@ -3165,7 +3449,8 @@ LoadArgumentTypeSetType :: proc( node : ^utils.node_tree(utils.tuple(string, xml
         utils.TODO(AGGREGATE_ARGUMENT_TYPE)
       }
       case ARRAY_ARGUMENT_TYPE : {
-        utils.TODO(ARRAY_ARGUMENT_TYPE)
+        t := LoadArrayArgumentType(n)
+        append(&type.t_choice_0, t)
       }
       case ABSOLUTE_TIME_ARGUMENT_TYPE : {
         utils.TODO(ABSOLUTE_TIME_ARGUMENT_TYPE)
@@ -3913,19 +4198,30 @@ GetSpaceSystemVersion :: proc( system : ^SpaceSystemType ) -> string {
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
-GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> IntegerArgumentType {
+GetBaseMetaCommand :: proc( system : ^space_system, ref : string ) -> MetaCommandType {
+  type : MetaCommandType = {}
 
-  type : IntegerArgumentType = {}
+  if len(ref) == 0 {
+    return type
+  }
 
   sys := system
 
   n_depth := strings.count(ref, "/")
+  n_depth += 1 // if we have /UCF/something, we have to split it in three: ["", UCF, something]
   path := strings.split_n(ref, "/", n_depth, context.temp_allocator)
   defer delete(path, context.temp_allocator)
-  if len(path) == 0 {
+  if len(path) == 0 || len(path) == 1 {
     delete(path, context.temp_allocator)
     path = make([]string, 1, context.temp_allocator)
     path[0] = ref
+  }
+
+  last_ss_path : string 
+
+  if n_depth >= 3 { // /UCF/something --> ["", "UCF", "something"]
+    l := len(path)
+    last_ss_path = path[n_depth - 2]
   }
 
   if strings.contains(ref, "/") {
@@ -3937,6 +4233,11 @@ GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> Intege
     utils.push_stack(&tmp_stack, auto_cast sys)
 
     depth_path := 0
+    // if we have /UCF/something, we have to split it in three: ["", UCF, something], 
+    // sow we start checking from index 1
+    if len(path[0]) == 0 { 
+      depth_path = 1
+    }
     found := false
     for tmp_stack.push_count > 0 && !found {
       ss := utils.get_front_stack(&tmp_stack)
@@ -3945,20 +4246,18 @@ GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> Intege
       // we have readched to the system we needed to
       // e.x. /UCF/EPS/eps_arg_1
       //
-      if depth_path == len(path) - 1 {
-        argument := path[depth_path]
-        for ArgType in GetArgumentTypeSet(ss.element) {
-          #partial switch arg in ArgType {
-            case IntegerArgumentType : {
-              // this is outstandingly awful, but it is what it is with xml schemas
-              //
-              if arg.base.base.base.t_name.t_restriction.val == argument {
-                type = arg
+      if ss.element.base.t_name.t_restriction.val == last_ss_path || len(path) == 1 {
+        for command in GetMetaCommandSetType(ss.element) {
+          command_name := path[len(path) - 1]
+          #partial switch CommandType in command {
+            case MetaCommandType : {
+              if CommandType.base.t_name.t_restriction.val == command_name {
+                type = CommandType
                 found = true
               }
             }
           }
-        } 
+        }
       }
 
       if ss.element.base.t_name.t_restriction.val == path[depth_path] {
@@ -3971,6 +4270,160 @@ GetIntegerArgumentDecl :: proc( system : ^space_system, ref : string ) -> Intege
   }
 
   return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+GetArgumentDecl :: proc( system : ^space_system, ref : string ) -> (t_ArgumentTypeSetType0, t_ParameterTypeSetType0) {
+  type : t_ArgumentTypeSetType0 = {}
+  param_type : t_ParameterTypeSetType0 = {}
+  if len(ref) == 0 {
+    return type, param_type
+  }
+
+  sys := system
+
+  n_depth := strings.count(ref, "/")
+  n_depth += 1 // if we have /UCF/something, we have to split it in three: ["", UCF, something]
+  path := strings.split_n(ref, "/", n_depth, context.temp_allocator)
+  defer delete(path, context.temp_allocator)
+  if len(path) == 0 || len(path) == 1 {
+    delete(path, context.temp_allocator)
+    path = make([]string, 1, context.temp_allocator)
+    path[0] = ref
+  }
+
+  last_ss_path : string 
+
+  if n_depth >= 3 { // /UCF/something --> ["", "UCF", "something"]
+    l := len(path)
+    last_ss_path = path[n_depth - 2]
+  }
+
+  if strings.contains(ref, "/") {
+    for ; sys.parent != nil; sys = auto_cast sys.parent {}
+  }
+
+  {
+    tmp_stack : utils.Stack(^space_system, 256)
+    utils.push_stack(&tmp_stack, auto_cast sys)
+
+    depth_path := 0
+    // if we have /UCF/something, we have to split it in three: ["", UCF, something], 
+    // sow we start checking from index 1
+    if len(path[0]) == 0 { 
+      depth_path = 1
+    }
+    found := false
+    for tmp_stack.push_count > 0 && !found {
+      ss := utils.get_front_stack(&tmp_stack)
+      utils.pop_stack(&tmp_stack)
+
+      // we have readched to the system we needed to
+      // e.x. /UCF/EPS/eps_arg_1
+      //
+      if ss.element.base.t_name.t_restriction.val == last_ss_path || len(path) == 1 {
+        argument := path[len(path) - 1]
+        for ArgType in GetArgumentTypeSet(ss.element) {
+          #partial switch arg in ArgType {
+            case IntegerArgumentType : {
+              // this is outstandingly awful, but it is what it is with xml schemas
+              //
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg
+                found = true
+              }
+            }
+            case ArrayArgumentType : {
+              if arg.base.base.t_name.t_restriction.val == argument {
+                type = arg
+                found = true
+              }
+            }
+            case EnumeratedArgumentType : {
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+            case FloatArgumentType : {
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+            case BooleanArgumentType : {
+              if arg.base.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+            case AggregateArgumentType : {
+              if arg.base.base.t_name.t_restriction.val == argument {
+                type = arg 
+                found = true
+              }
+            }
+          }
+        }
+        
+        if found {
+          break
+        }
+        for ParamType in ss.element.t_TelemetryMetaData.t_ParameterTypeSet.t_choice_0 {
+          #partial switch param in ParamType {
+            case IntegerParameterType : {
+              // this is outstandingly awful, but it is what it is with xml schemas
+              //
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case ArrayParameterType : {
+              if param.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case EnumeratedParameterType : {
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case FloatParameterType : {
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param
+                found = true
+              }
+            }
+            case BooleanParameterType : {
+              if param.base.base.base.t_name.t_restriction.val == argument {
+                param_type = param 
+                found = true
+              }
+            }
+            case AggregateParameterType : {
+              if param.base.base.t_name.t_restriction.val == argument {
+                param_type = param 
+                found = true
+              }
+            }
+          }
+        }
+      }
+
+      if ss.element.base.t_name.t_restriction.val == path[depth_path] {
+        depth_path += 1
+        for it := ss.next; it != nil; it = it.right {
+          utils.push_stack(&tmp_stack, auto_cast it)
+        }
+      }
+    }
+  }
+
+  return type, param_type
 } 
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -4029,3 +4482,66 @@ SearchTypeInSystem :: proc( system : string, type : string, xml_handler : ^handl
 }
 
 // -----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+SearchTypeDeclInSystem :: proc( system : string, name : string, xml_handler : ^handler ) -> ^utils.node_tree(utils.tuple(string, xml.Element)) {
+
+  // In a width-search we try to locate the node in which a space system starts
+  //
+  SpaceSystemNode : ^utils.node_tree(utils.tuple(string, xml.Element))
+  TypeNode        : ^utils.node_tree(utils.tuple(string, xml.Element))
+  node_values : utils.queue(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+  node_stack  : utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+
+  utils.PushQueue(&node_values, &xml_handler.tree_eval)
+
+  system_not_found := true
+  for ;node_values.IdxFront != node_values.IdxTail && system_not_found; {
+    node_it := utils.GetFrontQueue(&node_values)
+    utils.PopQueue(&node_values)
+
+    el := node_it.element.second
+    for it in el.attribs {
+      if it.val == system {
+        SpaceSystemNode = node_it
+        system_not_found = false
+      }
+    }
+
+    for b := node_it.next; b != node_it.tail && b != nil; b = b.right {
+      utils.PushQueue(&node_values, b)
+    }
+  }
+
+  if SpaceSystemNode == nil {
+    return nil
+  }
+
+  utils.ClearQueue( &node_values )
+
+  TypeNotFound := true
+  utils.push_stack(&node_stack, SpaceSystemNode)
+
+  for ;node_stack.push_count > 0 && TypeNotFound; {
+    node_it := utils.get_front_stack(&node_stack)
+    utils.pop_stack(&node_stack)
+
+    for attr, idx in node_it.element.second.attribs {
+      if attr.key == "name" {
+        if attr.val == name {
+          TypeNotFound = false 
+          TypeNode = node_it
+        }
+      }
+    }
+
+    for b := node_it.next; b != nil; b = b.right {
+      utils.push_stack(&node_stack, b)
+    }
+  }
+  return TypeNode
+}
+
+// -----------------------------------------------------------------------------
+

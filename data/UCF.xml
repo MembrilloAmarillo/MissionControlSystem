@@ -140,7 +140,7 @@
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="32"/>
 				</xtce:IntegerParameterType>
 
-				<xtce:IntegerParameterType name="CSP_Packet_Priority_Type"> signed="false">
+				<xtce:IntegerParameterType name="CSP_Packet_Priority_Type" signed="false">
 				    <xtce:LongDescription>Long Description</xtce:LongDescription>
 				    <xtce:UnitSet>
 				        <xtce:Unit description="Size">Bits</xtce:Unit>
