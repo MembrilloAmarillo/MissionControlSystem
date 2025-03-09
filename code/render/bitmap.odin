@@ -8,6 +8,7 @@ texture_bitmap :: struct {
 	bitmap:    []u8,
 	width:     u32,
 	height:    u32,
+	offset:    u32,
 	usage:     glsl.vec2,
 	allocator: runtime.Allocator,
 }
@@ -39,16 +40,16 @@ bitmap_push :: proc(w, h: f32, using bmap: ^texture_bitmap) -> []u8 {
 
 	new_bmap: []u8
 
-	if cast(u32)((usage.x * usage.y) + (w * h)) > width * height {
+	if offset + cast(u32)(w * h) > (width * height) {
 		return new_bmap
 	}
-
-	offset := usage.x * usage.y
 
 	usage.x += w
 	usage.y += h
 
-	idx_offset := cast(u32)math.ceil(offset)
+	idx_offset := offset 
+
+	offset += cast(u32)(w * h)
 
 	new_bmap = bitmap[idx_offset:idx_offset + cast(u32)(w * h)]
 

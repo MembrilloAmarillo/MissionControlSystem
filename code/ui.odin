@@ -364,11 +364,11 @@ get_default_ui_light_style :: proc() -> UI_Style {
 
 	style: UI_Style
 
-	black      := rgba_to_norm(hex_rgba_to_vec4(0x0C0C0CFF))
+	black      := rgba_to_norm(hex_rgba_to_vec4(0x020202FF))
 	dark_blue  := rgba_to_norm(hex_rgba_to_vec4(0x496FC2FF))
 	blue       := rgba_to_norm(hex_rgba_to_vec4(0x447EF2FF))
 	gray       := rgba_to_norm(hex_rgba_to_vec4(0xeee8d5FF))
-	white      := rgba_to_norm(hex_rgba_to_vec4(0xfdf6e3FF))
+	white      := rgba_to_norm(hex_rgba_to_vec4(0xf0f0f0FF))
 	light_blue := rgba_to_norm(hex_rgba_to_vec4(0x6393F2FF))
 
 	style.background_panel = {
@@ -470,6 +470,20 @@ set_next_layout :: proc(
 	}
 
 	utils.push_stack(&ui_context.layout_stack, new_lay)
+}
+
+// ------------------------------------------------------------------- //
+
+set_next_layout_horizontal :: proc() {
+	layout := get_layout_stack()
+	layout.axis = axis_type.axis_horizontal
+}
+
+// ------------------------------------------------------------------- //
+
+set_next_layout_vertical :: proc() {
+	layout := get_layout_stack()
+	layout.axis = axis_type.axis_vertical
 }
 
 // ------------------------------------------------------------------- //
@@ -1105,19 +1119,20 @@ make_box_no_key :: proc(
 		box.parent    = box_root
 		fixed_size := false
 
-  if (top_l == {-1, -1} || w_h == {-1, -1}) {
-  	top_l = box_root.rect.top_left
-  	w_h = {
-  		box_root.rect.size.x,
-  		auto_cast ui_context.vulkan_iface.va_FontCache[1].line_height + 6,
-  	}
+		if (top_l == {-1, -1} || w_h == {-1, -1}) {
+			top_l = box_root.rect.top_left
+			w_h = {
+				box_root.rect.size.x,
+				auto_cast ui_context.vulkan_iface.va_FontCache[1].line_height + 6,
+			}
 			// NOTE: Only do this when title bar enabled
 			//
 			if !(.DISABLE_TITLE_BAR in box_flags) {
 				top_l.y += auto_cast ui_context.vulkan_iface.va_FontCache[0].line_height + 6
 			}
 
-		} else {
+		}	 
+		else {
 			fixed_size = true
 		}
 
@@ -1134,12 +1149,14 @@ make_box_no_key :: proc(
 			box.text_position = box.rect.top_left + layout.string_padding
 		}
 
+		// ============= FONT UPDATE ===================
 		if layout != nil {
-
 			if layout.text_option.push_count > 0 {
 				font_opt := utils.get_front_stack(&layout.text_option)
 
 				already_stored := false
+				// TODO: Check also if it is the same font
+				//
 				for &option in ui_context.vulkan_iface.va_FontCache {
 					if option.FontSize == cast(f32)font_opt.size * ui_context.vulkan_iface.va_Window.scaling_factor.x {
 						already_stored = true
@@ -1159,8 +1176,9 @@ make_box_no_key :: proc(
 					vk.DestroyImageView(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_ImageView, nil)
 					vk.DestroyImage(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_Image, nil)
 					vk.DestroySampler(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_Sampler, nil)
-					vk.DeviceWaitIdle(ui_context.vulkan_iface.va_Device.d_LogicalDevice)
 					render.add_texture_font(ui_context.vulkan_iface, &ui_context.vulkan_iface.va_FontCache)
+					render.update_descriptor_sets(ui_context.vulkan_iface)
+					vk.DeviceWaitIdle(ui_context.vulkan_iface.va_Device.d_LogicalDevice)
 					box.font_cache = &ui_context.vulkan_iface.va_FontCache[len(ui_context.vulkan_iface.va_FontCache) - 1]
 				}
 			}
@@ -1669,8 +1687,6 @@ button :: proc(label: string, id: ^byte = nil) -> EventResults {
 //
 label :: proc(label: string, id: ^byte = nil) -> ^Box {
 	box: ^Box
-	set_next_layout_style(ui_context.theme.text)
-	defer utils.pop_stack(&ui_context.style)
 	if id == nil {
 		box = make_box_no_key(label, box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
 	} else {
@@ -2314,10 +2330,6 @@ ui_build :: proc() {
 					str_render = strings.to_string(box.text_input)
 				}
 
-				if box.parent == root_box {
-					style.color_text = style.color_text
-				}
-
 				if .CHECKBOX in box.flags {
 					box.text_position.x += box.rect.size.y + 10
 				}
@@ -2346,9 +2358,9 @@ ui_build :: proc() {
 						)
 				}
 			}
-			}
 		}
 	}
+}
 	//big_stack_delete(&tmp_stack, temp_allocator)
 
 	end_batch2D_instance_group(ui_context.vulkan_iface)

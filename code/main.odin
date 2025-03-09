@@ -657,15 +657,63 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 
       if node.element.first == xtce.SEQUENCE_CONTAINER_TYPE {
 
-        // TODO: Check for abstractness
+        el_stack : BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
+        big_stack_init(&el_stack, ^utils.node_tree(utils.tuple(string, xml.Element)), 1 << 10, context.temp_allocator)
+        defer big_stack_delete(&el_stack, context.temp_allocator)
+
+        push_stack(&el_stack, node)
+
+        // Abstraction checking
         //
         {
-          el_stack : BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
-          big_stack_init(&el_stack, ^utils.node_tree(utils.tuple(string, xml.Element)), 1 << 10, context.temp_allocator)
-          defer big_stack_delete(&el_stack, context.temp_allocator)
+          found_base_container := false
+          for el_stack.push_count > 0 && !found_base_container {
+            it := get_front_stack(&el_stack)
+            pop_stack(&el_stack)
 
+            if it.element.first == xtce.BASE_CONTAINER_TYPE {
+              node = it
+              found_base_container = true 
+              break
+            }
+
+            for it2 := it.next; it2 != nil; it2 = auto_cast it2.right {
+              push_stack(&el_stack, it2)
+            }
+          }
+
+          // reset stack 
+          // 
+          el_stack.push_count = 0
           push_stack(&el_stack, node)
 
+          // If base container found, we have to check its values first
+          //
+          BaseContainerDecl := node
+          for found_base_container {
+            for it in BaseContainerDecl.element.second.attribs {
+              if it.key == "containerRef" {
+                base_ref := xtce.SearchTypeDeclInSystem("UCF", it.val, xml_handler)
+
+                // Now we have to check if the container has nested base containers
+                //
+                if base_ref != nil {
+                  base_ref = xtce.GetTypeFromNode(xtce.BASE_CONTAINER_TYPE, base_ref)
+                  if base_ref == nil {
+                    found_base_container = false
+                  }
+                  else {
+                    BaseContainerDecl = base_ref
+                  }
+                }
+                else {
+                  found_base_container = false
+                }
+              }
+            }
+          }
+        }
+        {
           found_entry_list := false
           for el_stack.push_count > 0 && !found_entry_list {
             it := get_front_stack(&el_stack)
@@ -719,9 +767,24 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
                         "%p"
                       }
                     )
-                    //set_layout_next_font(20, "./data/font/RobotoMonoBold.ttf")
+                    style := ui_context.theme.text
+                    style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x43302FF))
+                    set_next_layout_style(style)
+
+                    set_layout_next_font(18, "./data/font/RobotoMonoBold.ttf")
                     label(label_name, cast(^byte)it)
-                    //unset_layout_font()
+                    unset_layout_font()
+                    ui_pop_style()
+
+                    set_next_layout_horizontal()
+
+                    // Put values 
+
+
+                    // reset layout for next row
+
+                    set_next_layout_vertical()
+
                     if buffer_bits_filled == buffer_size {
                       buffer_rendered = true
                     }
@@ -742,12 +805,7 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
             }
           }
         }
-
-
       }
-
-
-      
 
       for it := node.next; it != nil; it = auto_cast it.right {
         push_stack(&tmp_stack, it) 

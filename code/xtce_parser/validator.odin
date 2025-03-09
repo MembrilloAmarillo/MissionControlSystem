@@ -4481,7 +4481,40 @@ SearchTypeInSystem :: proc( system : string, type : string, xml_handler : ^handl
   return TypeNode
 }
 
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------- //
+/*
+  Description: This function tries to search for a xtce type used, so what it tries is to find, from a certain node,
+  a child which its type is the one that the user wants to find.
+  Example: node := GetTypeFromNode( xtce.BASE_CONTAINER_TYPE, xml_handle_node )
+  Tries to find a declaration somewhere on this fashion
+  <BaseContainer containerRef = "AnotherContainer">
+
+  - INPUT: type to search, node withing to start the search
+  - OUTPUT: Node which uses the type search, nil in case it was not found
+*/
+
+GetTypeFromNode :: proc(type : string, node : ^utils.node_tree(utils.tuple(string, xml.Element))) -> ^utils.node_tree(utils.tuple(string, xml.Element))
+{
+  type_node : ^utils.node_tree(utils.tuple(string, xml.Element))
+
+  node_stack  : utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+  utils.push_stack(&node_stack, node)
+
+  for node_stack.push_count > 0 {
+    it := utils.get_front_stack(&node_stack)
+    utils.pop_stack(&node_stack)
+
+    if it.element.first == type {
+      type_node = it
+    }
+
+    for it2 := it.next; it2 != nil; it2 = it2.next {
+      utils.push_stack(&node_stack, it2)
+    }
+  }
+
+  return type_node
+}
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
