@@ -1966,6 +1966,65 @@ render_pass :: proc( vi : ^VulkanIface, command_buffer : vk.CommandBuffer, pipel
 
 // -----------------------------------------------------------------------------
 
+update_descriptor_sets :: proc( v_interface : ^VulkanIface ) {
+  for i in 0..<MAX_FRAMES_IN_FLIGHT
+  {
+      bufferInfo : vk.DescriptorBufferInfo;
+      bufferInfo.buffer = v_interface.va_UniformBufferUI[i].vb_Buffer;
+      bufferInfo.offset = 0;
+      bufferInfo.range = size_of(UniformBufferUI);
+
+      bufferInfo3D : vk.DescriptorBufferInfo;
+      bufferInfo3D.buffer = v_interface.va_UniformBuffer3D[i].vb_Buffer;
+      bufferInfo3D.offset = 0;
+      bufferInfo3D.range = size_of(UniformBuffer3D);
+
+      imageInfo : vk.DescriptorImageInfo;
+      imageInfo.imageLayout = .SHADER_READ_ONLY_OPTIMAL;
+      imageInfo.imageView   = v_interface.va_TextureImage.vi_ImageView;
+      imageInfo.sampler     = v_interface.va_TextureImage.vi_Sampler;
+
+      descriptorWrites := make([]vk.WriteDescriptorSet, 3);
+      defer delete_slice(descriptorWrites);
+
+      descriptor_set := v_interface.va_Descriptors[0].d_DescriptorSet[i];
+
+      descriptorWrites[0].sType = .WRITE_DESCRIPTOR_SET;
+      descriptorWrites[0].dstSet = descriptor_set;
+      descriptorWrites[0].dstBinding = 0;
+      descriptorWrites[0].dstArrayElement = 0;
+      descriptorWrites[0].descriptorType = .UNIFORM_BUFFER;
+      descriptorWrites[0].descriptorCount = 1;
+      descriptorWrites[0].pBufferInfo = &bufferInfo;
+      descriptorWrites[0].pNext = nil;
+      descriptorWrites[0].pTexelBufferView = nil;
+
+      descriptorWrites[1].sType = .WRITE_DESCRIPTOR_SET;
+      descriptorWrites[1].dstSet = descriptor_set;
+      descriptorWrites[1].dstBinding = 1;
+      descriptorWrites[1].dstArrayElement = 0;
+      descriptorWrites[1].descriptorType = .UNIFORM_BUFFER;
+      descriptorWrites[1].descriptorCount = 1;
+      descriptorWrites[1].pBufferInfo = &bufferInfo3D;
+      descriptorWrites[1].pNext = nil;
+      descriptorWrites[1].pTexelBufferView = nil;
+
+      descriptorWrites[2].sType = .WRITE_DESCRIPTOR_SET;
+      descriptorWrites[2].dstSet = descriptor_set;
+      descriptorWrites[2].dstBinding = 2;
+      descriptorWrites[2].dstArrayElement = 0;
+      descriptorWrites[2].descriptorType = .COMBINED_IMAGE_SAMPLER;
+      descriptorWrites[2].descriptorCount = 1;
+      descriptorWrites[2].pImageInfo = &imageInfo;
+      descriptorWrites[2].pNext = nil;
+      descriptorWrites[2].pTexelBufferView = nil;
+
+      vk.UpdateDescriptorSets(v_interface.va_Device.d_LogicalDevice, 3, raw_data(descriptorWrites), 0, nil);
+  }
+}
+
+// -----------------------------------------------------------------------------
+
 update_uniform_buffer :: proc( vi : ^VulkanIface )
 {
  //vi.va_CurrentUB_UI.time        = cast(f32)vi.glfw_timer
@@ -2410,7 +2469,7 @@ init_vulkan :: proc( v_interface : ^VulkanIface ) {
 	v_interface.va_FontCache[0] = f_BuildFont(18 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(bitmap), "./data/font/RobotoMonoBold.ttf" );
 	v_interface.va_FontCache[0].BitmapOffset = {0, 0}
 
-	v_interface.va_FontCache[1] = f_BuildFont(13 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
+	v_interface.va_FontCache[1] = f_BuildFont(14 * v_interface.va_Window.scaling_factor.x, 2160, 126, raw_data(new_bit) );
 	v_interface.va_FontCache[1].BitmapOffset = {0, 126}
 
 	// --------------------------------------------------------------
