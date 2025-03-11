@@ -14,10 +14,10 @@ import "core:fmt"
 MAX_BUCKET_SIZE :: 12
 
 Entry :: struct($key_type, $value_type: typeid) {
-	hash:  u64,
-	key:   key_type,
+	hash:   u64,
+	key:    key_type,
 	filled: [MAX_BUCKET_SIZE]bool,
-	value: [MAX_BUCKET_SIZE]value_type,
+	value:  [MAX_BUCKET_SIZE]value_type,
 }
 
 Table :: struct($key_type, $value_type: typeid) {
@@ -63,20 +63,19 @@ init :: proc(
 	}
 }
 
-resize_hash_table :: proc( using table: ^$T/Table($key_type, $value_type) )
-{
- fmt.println("[INFO] Reallocating hash table, current size", allocated)
- n := next_power_of_two( cast(u64)(allocated + 1))
- allocated = auto_cast n
+resize_hash_table :: proc(using table: ^$T/Table($key_type, $value_type)) {
+	fmt.println("[INFO] Reallocating hash table, current size", allocated)
+	n := next_power_of_two(cast(u64)(allocated + 1))
+	allocated = auto_cast n
 
- new_entry := make([]Entry(key_type, value_type), n, allocator)
- copy(new_entry, entries)
- delete(entries, allocator)
- // NOTE I think this will not work. Maybe I need to recreate the entries slice
- // and do a copy again
- //
- entries = new_entry
- fmt.println("[INFO] New hash table size", allocated)
+	new_entry := make([]Entry(key_type, value_type), n, allocator)
+	copy(new_entry, entries)
+	delete(entries, allocator)
+	// NOTE I think this will not work. Maybe I need to recreate the entries slice
+	// and do a copy again
+	//
+	entries = new_entry
+	fmt.println("[INFO] New hash table size", allocated)
 }
 
 deinit :: proc(using table: ^$T/Table($key_type, $value_type)) {
@@ -105,7 +104,7 @@ insert_table :: proc(
   case : {}
   }
   */
-	key_hash : u64
+	key_hash: u64
 	key_hash = xxhash.XXH3_64_with_seed(transmute([]u8)key, parent_key)
 
 	index := key_hash % cast(u64)allocated
@@ -118,29 +117,29 @@ insert_table :: proc(
 	}
 
 	//bucket_indx := rand.uint64() % MAX_BUCKET_SIZE
- 	//count += 1
+	//count += 1
 	//entry.value[bucket_indx] = value
 	//entry.key = key
 
-	default_v : value_type
- 	idx_to_insert := 0
+	default_v: value_type
+	idx_to_insert := 0
 
 	for v, idx in entry.filled {
-	 if v == false {
-	  idx_to_insert = idx
-	  break
-	 }
+		if v == false {
+			idx_to_insert = idx
+			break
+		}
 	}
 
 	entry.filled[idx_to_insert] = true
-	entry.value[idx_to_insert]  = value
+	entry.value[idx_to_insert] = value
 	entry.key = key
 
- LOAD_FACTOR_PERCENT = cast(f32)slots_filled / cast(f32)allocated
+	LOAD_FACTOR_PERCENT = cast(f32)slots_filled / cast(f32)allocated
 
- if LOAD_FACTOR_PERCENT > 0.6 {
-  resize_hash_table(table)
- }
+	if LOAD_FACTOR_PERCENT > 0.6 {
+		resize_hash_table(table)
+	}
 
 	return key_hash
 }
@@ -154,7 +153,7 @@ delete_key_value_table :: proc(
 	key_hash: u64
 	key_hash = xxhash.XXH3_64_with_seed(transmute([]u8)key, parent_key) //hash.sdbm(transmute([]u8)key, parent_key)
 
-		index := key_hash % cast(u64)allocated
+	index := key_hash % cast(u64)allocated
 
 	entry := &entries[index]
 
@@ -171,7 +170,7 @@ delete_key_value_table :: proc(
 	}
 }
 
-get_hash_from_key :: proc(key : $key_type, parent_key : u64 = 0 ) -> u64 {
+get_hash_from_key :: proc(key: $key_type, parent_key: u64 = 0) -> u64 {
 
 	key_hash: u64
 	key_hash = xxhash.XXH3_64_with_seed(transmute([]u8)key, parent_key) //hash.sdbm(transmute([]u8)key, parent_key)
@@ -187,7 +186,7 @@ delete_key_table :: proc(
 	key_hash: u64
 	key_hash = xxhash.XXH3_64_with_seed(transmute([]u8)key, parent_key) //hash.sdbm(transmute([]u8)key, parent_key)
 
-		index := key_hash % cast(u64)allocated
+	index := key_hash % cast(u64)allocated
 	entry := &entries[index]
 
 	if entry.hash == 0 {
@@ -230,7 +229,7 @@ lookup_table :: proc(
 
 	key_hash = xxhash.XXH3_64_with_seed(transmute([]u8)key, parent_key) //hash.sdbm(transmute([]u8)key, parent_key)
 
-		index := key_hash % cast(u64)allocated
+	index := key_hash % cast(u64)allocated
 	entry := &entries[index]
 
 	for it in entry.value {

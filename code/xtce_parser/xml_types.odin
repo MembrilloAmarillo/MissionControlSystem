@@ -14,22 +14,22 @@ import utils "../utils"
 // --------------------------------------------------------------- //
 
 xml_occurs :: struct {
-	minOccurs : u32,
-	maxOccurs : u32
+	minOccurs: u32,
+	maxOccurs: u32,
 }
 
 // --------------------------------------------------------------- //
 
 xml_name_type_usage :: struct {
-	used : bool,
-	name : string,
-	type : string,
+	used: bool,
+	name: string,
+	type: string,
 }
 
 // --------------------------------------------------------------- //
 
 xml_choice :: struct {
-	_ : union {
+	_: union {
 		xml_occurs, // minOccurs maxOccurs
 		xml_name_type_usage, // name and type, plus if that type is being used at the momment
 	},

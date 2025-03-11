@@ -3,8 +3,8 @@ package render
 import "core:fmt"
 import "core:math"
 import "core:math/linalg/glsl"
-import "core:os"
 import "core:mem"
+import "core:os"
 import "vendor:stb/truetype"
 
 f_Glyph :: struct {
@@ -39,7 +39,13 @@ FontCache :: struct {
 	kerning_size: u32,
 }
 
-f_BuildFont :: proc(FontSize: f32, width: u32, height: u32, BitmapArray: ^u8, font_path : string = "" ) -> FontCache {
+f_BuildFont :: proc(
+	FontSize: f32,
+	width: u32,
+	height: u32,
+	BitmapArray: ^u8,
+	font_path: string = "",
+) -> FontCache {
 	using truetype
 
 	fc := FontCache {
@@ -53,9 +59,9 @@ f_BuildFont :: proc(FontSize: f32, width: u32, height: u32, BitmapArray: ^u8, fo
 	allocator: rawptr
 	PackBegin(&ctx, fc.BitmapArray, cast(i32)width, cast(i32)height, 0, 1, allocator)
 
-	data : []u8
+	data: []u8
 	if len(font_path) == 0 {
-		data, _ =  os.read_entire_file("./data/font/LiterationMono.ttf", context.temp_allocator);
+		data, _ = os.read_entire_file("./data/font/LiterationMono.ttf", context.temp_allocator)
 	} else {
 		data, _ = os.read_entire_file(font_path, context.temp_allocator)
 	}
@@ -95,7 +101,7 @@ f_BuildFont :: proc(FontSize: f32, width: u32, height: u32, BitmapArray: ^u8, fo
 			&y1,
 		)
 
-		fc.glyph[glyph].width  = cast(f32)(x1 - x0)
+		fc.glyph[glyph].width = cast(f32)(x1 - x0)
 		fc.glyph[glyph].height = cast(f32)(y1 - y0)
 	}
 
@@ -125,9 +131,9 @@ f_BuildFont :: proc(FontSize: f32, width: u32, height: u32, BitmapArray: ^u8, fo
 		//fmt.println(fc.glyph[i]);
 	}
 
-	table_length   := GetKerningTableLength(&info)
+	table_length := GetKerningTableLength(&info)
 	fc.kerning_size = cast(u32)table_length
-	fc.kerning      = make([]f_kerning, table_length)
+	fc.kerning = make([]f_kerning, table_length)
 
 	table := make([]kerningentry, table_length)
 	defer delete(table)
@@ -137,7 +143,7 @@ f_BuildFont :: proc(FontSize: f32, width: u32, height: u32, BitmapArray: ^u8, fo
 	for i in 0 ..< table_length {
 		k := table[i]
 		fmt.println(k)
-		fc.kerning[i].first  = cast(u32)k.glyph1
+		fc.kerning[i].first = cast(u32)k.glyph1
 		fc.kerning[i].second = cast(u32)k.glyph2
 		fc.kerning[i].amount = cast(u32)k.advance
 	}

@@ -11,8 +11,8 @@ import "core:slice"
 import "core:strings"
 import "core:text/regex"
 
-import utils "../utils"
 import my_hash "../simple_hash"
+import utils "../utils"
 
 /*
   XSD : Notes
@@ -53,8 +53,7 @@ import my_hash "../simple_hash"
  */
 
 CHECK_MEM_ERROR :: proc(error: vmem.Allocator_Error) {
-	switch (error)
-	{
+	switch (error) {
 	case .None:
 		break
 	case .Out_Of_Memory:
@@ -101,12 +100,12 @@ space_system :: distinct utils.node_tree(^SpaceSystemType)
 parse_xsd :: proc(path_to_file: string, allocator := context.allocator) -> ^xsd_schema {
 
 	data := new(xsd_schema, allocator)
-	
+
 	CHECK_MEM_ERROR(vmem.arena_init_growing(&data.arena))
 
-	temp          := vmem.arena_temp_begin(&data.arena)
+	temp := vmem.arena_temp_begin(&data.arena)
 	data.allocator = vmem.arena_allocator(&data.arena)
-	temp_alloc    := vmem.arena_allocator(&data.arena)
+	temp_alloc := vmem.arena_allocator(&data.arena)
 
 	xml_content, success := os.read_entire_file(path_to_file, temp_alloc)
 

@@ -1,34 +1,34 @@
 package utils
 
-import "core:math"
 import "core:fmt"
+import "core:math"
 
 // -----------------------------------------------------------------------------
 
-TODO :: proc( args : ..string ) {
+TODO :: proc(args: ..string) {
 	fmt.println("[TODO] ", args)
 }
 
 // -----------------------------------------------------------------------------
 
 tuple :: struct($T: typeid, $R: typeid) {
-	first : T,
-	second: R
+	first:  T,
+	second: R,
 }
 
 // -----------------------------------------------------------------------------
 
 key_val :: struct($T: typeid, $R: typeid) {
-	key : T,
-	val : R
+	key: T,
+	val: R,
 }
 
 // -----------------------------------------------------------------------------
 
 node_tree :: struct($T: typeid) {
 	parent, left, right, next, tail: ^node_tree(T),
-	element: T,
-	depth  : int
+	element:                         T,
+	depth:                           int,
 }
 
 // -----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ push_node :: proc(node, parent: ^$T/node_tree) {
 
 	parent.tail = node
 	node.parent = cast(^T)parent
-	node.depth  = parent.depth + 1
+	node.depth = parent.depth + 1
 }
 
 // -----------------------------------------------------------------------------
@@ -103,43 +103,43 @@ pop_stack :: #force_inline proc(stk: ^$T/Stack($V, $N)) {
 
 // -----------------------------------------------------------------------------
 
-queue :: struct( $T: typeid, $N: u32) where N > 1 {
-	Items    : [N]T,
-	IdxFront : int,
-	IdxTail  : int,
-	N_Elements : int
+queue :: struct($T: typeid, $N: u32) where N > 1 {
+	Items:      [N]T,
+	IdxFront:   int,
+	IdxTail:    int,
+	N_Elements: int,
 }
 
 // -----------------------------------------------------------------------------
 
-PushQueue :: #force_inline proc( q : ^$T/queue($V, $N), val : V) {
+PushQueue :: #force_inline proc(q: ^$T/queue($V, $N), val: V) {
 	q.Items[q.IdxTail] = val
-	q.IdxTail = cast(int)math.mod( cast(f32)(q.IdxTail + 1), cast(f32)N)
+	q.IdxTail = cast(int)math.mod(cast(f32)(q.IdxTail + 1), cast(f32)N)
 	q.N_Elements += 1
 }
 
 // -----------------------------------------------------------------------------
 
-PopQueue :: #force_inline proc( q : ^$T/queue($V, $N)) {
+PopQueue :: #force_inline proc(q: ^$T/queue($V, $N)) {
 	if q.IdxFront == q.IdxTail && q.IdxFront != 0 {
 		q.IdxFront, q.IdxTail = 0, 0
 	} else {
-		q.IdxFront = cast(int)math.mod( cast(f32)(q.IdxFront + 1), cast(f32) N)
+		q.IdxFront = cast(int)math.mod(cast(f32)(q.IdxFront + 1), cast(f32)N)
 	}
 	q.N_Elements -= 1
 }
 
 // -----------------------------------------------------------------------------
 
-GetFrontQueue :: #force_inline proc( q : ^$T/queue($V, $N)) -> V {
+GetFrontQueue :: #force_inline proc(q: ^$T/queue($V, $N)) -> V {
 	return q.Items[q.IdxFront]
 }
 
 // -----------------------------------------------------------------------------
 
-ClearQueue :: #force_inline proc( q : ^$T/queue($V, $N)) {
-	q.IdxFront   = 0
-	q.IdxTail    = 0 
+ClearQueue :: #force_inline proc(q: ^$T/queue($V, $N)) {
+	q.IdxFront = 0
+	q.IdxTail = 0
 	q.N_Elements = 0
 }
 

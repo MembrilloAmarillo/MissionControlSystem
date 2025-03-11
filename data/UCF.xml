@@ -356,7 +356,7 @@
 			</xtce:ParameterSet>
 
 			<xtce:ContainerSet>
-				<xtce:SequenceContainer name="CSP_Header_TM">
+				<xtce:SequenceContainer name="CSP_Header_TM" abstract="true">
 					<xtce:EntryList>
 						<xtce:ParameterRefEntry parameterRef="CSP_Packet_Priority"/>
 						<xtce:ParameterRefEntry parameterRef="CSP_Packet_Destination"/>
@@ -371,7 +371,7 @@
 					</xtce:EntryList>
 				</xtce:SequenceContainer>
 
-				<xtce:SequenceContainer name="CCSDS_Header_TM">
+				<xtce:SequenceContainer name="CCSDS_Header_TM" abstract="true">
 					<xtce:EntryList>
 						<xtce:ParameterRefEntry parameterRef="CCSDS_Packet_Version_Number"/>
 						<xtce:ParameterRefEntry parameterRef="CCSDS_Packet_Type"/>
@@ -383,7 +383,7 @@
 					</xtce:EntryList>
 				</xtce:SequenceContainer>
 
-				<xtce:SequenceContainer name="CCSDS_Full_Header_TM">
+				<xtce:SequenceContainer name="CCSDS_Full_Header_TM" abstract="true">
 					<xtce:EntryList>
 						<xtce:ParameterRefEntry parameterRef="CCSDS_PUS_Version_Number"/>
 						<xtce:ParameterRefEntry parameterRef="CCSDS_SC_Time_Reference_Status"/>
@@ -1181,7 +1181,7 @@
 
 		<xtce:ContainerSet>
 
-			<xtce:SequenceContainer name="Source_Data">
+			<xtce:SequenceContainer name="Source_Data" abstract="true">
 				<xtce:EntryList>
 					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Packet_Version_Number"/>
 					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Packet_Type"/>
@@ -1573,7 +1573,7 @@
 				</xtce:BaseContainer>
 			</xtce:SequenceContainer>
 
-			<xtce:SequenceContainer name="PUS_12_9_Body">
+			<xtce:SequenceContainer name="PUS_12_9_Body" abstract="true">
 				<xtce:EntryList>
 					<xtce:ParameterRefEntry parameterRef="Max_Transition_Reporting_Delay"/>
 					<xtce:ParameterRefEntry parameterRef="N"/>

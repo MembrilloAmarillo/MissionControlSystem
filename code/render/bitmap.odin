@@ -47,7 +47,7 @@ bitmap_push :: proc(w, h: f32, using bmap: ^texture_bitmap) -> []u8 {
 	usage.x += w
 	usage.y += h
 
-	idx_offset := offset 
+	idx_offset := offset
 
 	offset += cast(u32)(w * h)
 

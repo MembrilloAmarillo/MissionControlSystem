@@ -28,17 +28,17 @@ import "utils"
 // [] Take into account borders to not overlap with boxes inside the window panel
 //
 
-MAX_TEXT_STORE      :: #config(UI_TEXT_STORE_SIZE, 4096)
-MAX_LAYOUT_STACK    :: #config(UI_LAYOUT_SIZE    , 1024)
-MAX_ROOT_STACK      :: #config(UI_ROOT_SIZE      , 256 )
+MAX_TEXT_STORE :: #config(UI_TEXT_STORE_SIZE, 4096)
+MAX_LAYOUT_STACK :: #config(UI_LAYOUT_SIZE, 1024)
+MAX_ROOT_STACK :: #config(UI_ROOT_SIZE, 256)
 MAX_TABLE_HASH_SIZE :: #config(UI_TABLE_HASH_SIZE, 4096)
-MAX_RENDER_STACK    :: #config(UI_RENDER_BOX_SIZE, 125 << 10)
+MAX_RENDER_STACK :: #config(UI_RENDER_BOX_SIZE, 125 << 10)
 
 DEFAULT_SCROLL_DELTA: f32 = 6
 
 id :: distinct u64
 
-MIN_WINDOW_WIDTH  :: 50
+MIN_WINDOW_WIDTH :: 50
 MIN_WINDOW_HEIGHT :: 100
 
 UI_Opt :: enum int {
@@ -105,15 +105,15 @@ Rect2D :: struct {
 }
 
 UI_AnimationData :: struct {
-	id              : u64,
-	bouncing        : u32,
-	animation_dt    : f32,
-	current         : f32,
-	target          : f32,
-	currentVelocity : f32,
-	smoothTime      : f32,
-	maxSpeed        : f32,
-	output          : f32
+	id:              u64,
+	bouncing:        u32,
+	animation_dt:    f32,
+	current:         f32,
+	target:          f32,
+	currentVelocity: f32,
+	smoothTime:      f32,
+	maxSpeed:        f32,
+	output:          f32,
 }
 
 Box :: struct {
@@ -136,12 +136,12 @@ Box :: struct {
 	font_cache:                      ^render.FontCache,
 }
 
-UI_NilBox : Box = {
+UI_NilBox: Box = {
 	first  = nil,
 	next   = nil,
 	prev   = nil,
 	tail   = nil,
-	parent = nil
+	parent = nil,
 }
 
 axis_type :: enum u32 {
@@ -151,12 +151,12 @@ axis_type :: enum u32 {
 
 FontType :: enum {
 	BOLD,
-	REGULAR
+	REGULAR,
 }
 FontOption :: struct {
-	type : FontType,
-	size : int,
-	font_path : string,
+	type:      FontType,
+	size:      int,
+	font_path: string,
 }
 
 Layout :: struct {
@@ -169,10 +169,16 @@ Layout :: struct {
 	axis:               axis_type "By default the layout will be done vertically",
 	box_preferred_size: glsl.vec2,
 	parent_box:         ^Box,
-	parent_seed:        utils.Stack(u64, MAX_LAYOUT_STACK) "This id can be deferent from the parent box",
-	text_option:        utils.Stack(FontOption, MAX_LAYOUT_STACK) "This id can be deferent from the parent box",
+	parent_seed:        utils.Stack(
+		u64,
+		MAX_LAYOUT_STACK,
+	) "This id can be deferent from the parent box",
+	text_option:        utils.Stack(
+		FontOption,
+		MAX_LAYOUT_STACK,
+	) "This id can be deferent from the parent box",
 	padding:            glsl.vec2,
-	string_padding:     glsl.vec2
+	string_padding:     glsl.vec2,
 }
 
 Queue :: struct($T: typeid, $N: u32) where N > 1 {
@@ -199,7 +205,6 @@ pop_queue :: #force_inline proc(queue: ^$T/Queue($V, $N)) {
 }
 
 UI_State :: struct {
-
 	hash_boxes:                 hash.Table(string, ^Box),
 	hover_id:                   id,
 	focus_id:                   id,
@@ -237,8 +242,7 @@ UI_State :: struct {
 	animation_dt:               f32,
 	animation_rate:             f32,
 	is_animating:               bool,
-
-	animation_data: hash.Table(string, ^UI_AnimationData),
+	animation_data:             hash.Table(string, ^UI_AnimationData),
 
 	// Only one cursor active for the app
 	//
@@ -301,12 +305,12 @@ get_default_ui_dark_style :: proc() -> UI_Style {
 	style: UI_Style
 
 	liquid_lava := rgba_to_norm(hex_rgba_to_vec4(0xEF6024FF))
-	dark_void   := rgba_to_norm(hex_rgba_to_vec4(0x191b1cFF))
+	dark_void := rgba_to_norm(hex_rgba_to_vec4(0x191b1cFF))
 	//dark_void   := rgba_to_norm(hex_rgba_to_vec4(0x000000FF))
-	dusty_grey  := rgba_to_norm(hex_rgba_to_vec4(0x878787FF))
-	gluon_grey  := rgba_to_norm(hex_rgba_to_vec4(0x1f2223FF))
-	slate_grey  := rgba_to_norm(hex_rgba_to_vec4(0x262626FF))
-	snow        := rgba_to_norm(hex_rgba_to_vec4(0xdddee0FF))
+	dusty_grey := rgba_to_norm(hex_rgba_to_vec4(0x878787FF))
+	gluon_grey := rgba_to_norm(hex_rgba_to_vec4(0x1f2223FF))
+	slate_grey := rgba_to_norm(hex_rgba_to_vec4(0x262626FF))
+	snow := rgba_to_norm(hex_rgba_to_vec4(0xdddee0FF))
 
 	style.background_panel = {
 		color_border     = liquid_lava,
@@ -364,11 +368,11 @@ get_default_ui_light_style :: proc() -> UI_Style {
 
 	style: UI_Style
 
-	black      := rgba_to_norm(hex_rgba_to_vec4(0x020202FF))
-	dark_blue  := rgba_to_norm(hex_rgba_to_vec4(0x496FC2FF))
-	blue       := rgba_to_norm(hex_rgba_to_vec4(0x447EF2FF))
-	gray       := rgba_to_norm(hex_rgba_to_vec4(0xeee8d5FF))
-	white      := rgba_to_norm(hex_rgba_to_vec4(0xf0f0f0FF))
+	black := rgba_to_norm(hex_rgba_to_vec4(0x020202FF))
+	dark_blue := rgba_to_norm(hex_rgba_to_vec4(0x496FC2FF))
+	blue := rgba_to_norm(hex_rgba_to_vec4(0x447EF2FF))
+	gray := rgba_to_norm(hex_rgba_to_vec4(0xeee8d5FF))
+	white := rgba_to_norm(hex_rgba_to_vec4(0xf0f0f0FF))
 	light_blue := rgba_to_norm(hex_rgba_to_vec4(0x6393F2FF))
 
 	style.background_panel = {
@@ -456,7 +460,7 @@ set_next_layout :: proc(
 	n_rows: u32 = 0,
 	n_columns: u32 = 0,
 	type: LayoutType = .NONE,
-	) {
+) {
 	new_lay, lay_error := new(Layout, ui_context.per_frame_arena_allocator)
 	CHECK_MEM_ERROR(lay_error)
 	new_lay^ = Layout {
@@ -520,14 +524,14 @@ set_layout_next_column :: proc(column: u32) {
 
 // ------------------------------------------------------------------- //
 
-set_layout_next_font :: proc( FontSize : int, FontPath : string, type : FontType = .REGULAR ) {
+set_layout_next_font :: proc(FontSize: int, FontPath: string, type: FontType = .REGULAR) {
 	layout := get_layout_stack()
 
 	if layout != nil {
-		font_option : FontOption = {
-			type = type,
-			size = FontSize,
-			font_path = FontPath
+		font_option: FontOption = {
+			type      = type,
+			size      = FontSize,
+			font_path = FontPath,
 		}
 		utils.push_stack(&layout.text_option, font_option)
 	}
@@ -553,7 +557,10 @@ unset_layout_font :: proc() {
 //
 // NOTE: Further improve layout scrollable sections, barely usable as of now
 //
-begin_next_layout_scrollable_section :: proc(max_rows: u32 = 0, box_size : glsl.vec2 = {300, 30}) -> int {
+begin_next_layout_scrollable_section :: proc(
+	max_rows: u32 = 0,
+	box_size: glsl.vec2 = {300, 30},
+) -> int {
 	layout := get_layout_stack()
 	if layout != nil && layout.parent_box != &UI_NilBox {
 		layout.at += layout.parent_box.scroll
@@ -568,13 +575,12 @@ begin_next_layout_scrollable_section :: proc(max_rows: u32 = 0, box_size : glsl.
 	}
 
 	row_start_it := 0
-	l_it         := 0
+	l_it := 0
 	if layout.at.y < layout.position.y {
-		off : f32 = layout.position.y - layout.at.y
+		off: f32 = layout.position.y - layout.at.y
 		if layout.box_preferred_size.y == 0 {
 			row_start_it = auto_cast math.ceil(off / box_size.y)
-		}
-		else {
+		} else {
 			row_start_it = auto_cast math.ceil(off / cast(f32)layout.box_preferred_size.y)
 		}
 	}
@@ -595,8 +601,9 @@ end_next_layout_scrollable_section :: proc(max_rows: u32 = 0) {
 			size = cast(f32)max_rows * layout.box_preferred_size.y
 			parent_box := layout.parent_box
 
-			padd_offset := (parent_box.rect.top_left.y - layout.position.y) + parent_box.rect.size.y
-			pct :=  padd_offset / size
+			padd_offset :=
+				(parent_box.rect.top_left.y - layout.position.y) + parent_box.rect.size.y
+			pct := padd_offset / size
 			scroll_bar_size := padd_offset * pct
 			set_next_layout_style(ui_context.theme.button)
 			offset := -parent_box.scroll.y
@@ -606,14 +613,15 @@ end_next_layout_scrollable_section :: proc(max_rows: u32 = 0) {
 				{layout.position.x + parent_box.rect.size.x - 20, layout.position.y + offset},
 				{20, scroll_bar_size},
 				{.DRAW_RECT, .DRAW_BORDER},
-				)
+			)
 			utils.pop_stack(&ui_context.style)
 		} else {
 			parent_box := layout.parent_box
 			size: f32 = layout.at.y - layout.position.y
 
-			padd_offset := (parent_box.rect.top_left.y - layout.position.y) + parent_box.rect.size.y
-			pct :=  padd_offset / size
+			padd_offset :=
+				(parent_box.rect.top_left.y - layout.position.y) + parent_box.rect.size.y
+			pct := padd_offset / size
 			offset := -parent_box.scroll.y
 			scroll_bar_size := padd_offset
 			if size > padd_offset {
@@ -624,8 +632,8 @@ end_next_layout_scrollable_section :: proc(max_rows: u32 = 0) {
 				"scroll_bar",
 				{layout.position.x + parent_box.rect.size.x - 15, layout.position.y + offset},
 				{15, scroll_bar_size},
-				{.DRAW_RECT, .DRAW_BORDER}
-				)
+				{.DRAW_RECT, .DRAW_BORDER},
+			)
 			utils.pop_stack(&ui_context.style)
 		}
 	}
@@ -633,7 +641,7 @@ end_next_layout_scrollable_section :: proc(max_rows: u32 = 0) {
 
 // ------------------------------------------------------------------- //
 
-ui_vspacer :: proc( space : f32 ) {
+ui_vspacer :: proc(space: f32) {
 	layout := get_layout_stack()
 	if layout != nil {
 		layout.at.y += space
@@ -642,7 +650,7 @@ ui_vspacer :: proc( space : f32 ) {
 
 // ------------------------------------------------------------------- //
 
-ui_hspacer :: proc( space : f32 ) {
+ui_hspacer :: proc(space: f32) {
 	layout := get_layout_stack()
 	if layout != nil {
 		layout.at.x += space
@@ -652,7 +660,7 @@ ui_hspacer :: proc( space : f32 ) {
 // ------------------------------------------------------------------- //
 
 @(deferred_out = unset_layout_ui_parent_seed)
-set_layout_ui_parent_seed :: proc( box : ^Box ) {
+set_layout_ui_parent_seed :: proc(box: ^Box) {
 	layout := get_layout_stack()
 	if layout != nil && box != nil {
 		utils.push_stack(&layout.parent_seed, box.id)
@@ -700,21 +708,19 @@ set_layout_reset_row :: proc() {
 
 // ------------------------------------------------------------------- //
 
-set_layout_next_padding :: proc( x_padd : f32 = 0, y_padd : f32 = 0 )
-{
+set_layout_next_padding :: proc(x_padd: f32 = 0, y_padd: f32 = 0) {
 	layout := get_layout_stack()
 	if layout != nil {
-		layout.padding = { x_padd, y_padd }
+		layout.padding = {x_padd, y_padd}
 	}
 }
 
 // ------------------------------------------------------------------- //
 
-set_layout_string_padding :: proc( x_padd : f32 = 0, y_padd : f32 = 0 )
-{
+set_layout_string_padding :: proc(x_padd: f32 = 0, y_padd: f32 = 0) {
 	layout := get_layout_stack()
 	if layout != nil {
-		layout.string_padding = { x_padd, y_padd }
+		layout.string_padding = {x_padd, y_padd}
 	}
 }
 
@@ -773,7 +779,7 @@ set_next_hover_cursor :: proc(box: ^Box, cursor_type: c.int) {
 	cursor = hash.lookup_table(
 		&ui_context.cursor_image_per_box,
 		strconv.itoa(buf[:], auto_cast box.id),
-		)
+	)
 
 	if cursor == nil {
 		cursor = glfw.CreateStandardCursor(cursor_type)
@@ -781,7 +787,7 @@ set_next_hover_cursor :: proc(box: ^Box, cursor_type: c.int) {
 			&ui_context.cursor_image_per_box,
 			strconv.itoa(buf[:], auto_cast box.id),
 			cursor,
-			)
+		)
 	}
 }
 
@@ -793,36 +799,36 @@ consume_box_event :: proc(box: ^Box) -> render.os_input_type {
 
 	layout := get_layout_stack()
 
-	if point_intersect({cast(f32)x, cast(f32)y}, box.rect)
-	{
-	  // FIX if there are two windows overlaping it will take the last one to render
-	  // as the scroll target (or both simultaneusly)
-	  //
-	  if .SCROLLABLE in box.flags {
-	  	ui_context.scroll_target = box
-	  }
-	  if ui_context.hover_target == &UI_NilBox || box.zindex > ui_context.hover_target.zindex {
-	  	buf: [32]u8
-	  	cursor := hash.lookup_table(
-	  		&ui_context.cursor_image_per_box,
-	  		strconv.itoa(buf[:], auto_cast box.id),
-	  		)
-	  	if cursor != nil {
-	  		glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
-	  	} else {
-	  		cursor = glfw.CreateStandardCursor(glfw.ARROW_CURSOR)
-	  		glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
-	  	}
-	  	ui_context.hover_target  = box
-	  	box.is_animating = true
-	  }
+	if point_intersect({cast(f32)x, cast(f32)y}, box.rect) {
+		// FIX if there are two windows overlaping it will take the last one to render
+		// as the scroll target (or both simultaneusly)
+		//
+		if .SCROLLABLE in box.flags {
+			ui_context.scroll_target = box
+		}
+		if ui_context.hover_target == &UI_NilBox || box.zindex > ui_context.hover_target.zindex {
+			buf: [32]u8
+			cursor := hash.lookup_table(
+				&ui_context.cursor_image_per_box,
+				strconv.itoa(buf[:], auto_cast box.id),
+			)
+			if cursor != nil {
+				glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
+			} else {
+				cursor = glfw.CreateStandardCursor(glfw.ARROW_CURSOR)
+				glfw.SetCursor(ui_context.vulkan_iface.va_Window.w_window, cursor)
+			}
+			ui_context.hover_target = box
+			box.is_animating = true
+		}
 	}
 
 	for input, idx in ui_context.vulkan_iface.va_OsInput {
 		if .LEFT_CLICK in input.type && !(.NO_CLICKABLE in box.flags) {
 			click := input.mouse_click
-			if point_intersect(click, box.rect) && (ui_context.press_target == &UI_NilBox || (box.zindex >= ui_context.press_target.zindex))
-			{
+			if point_intersect(click, box.rect) &&
+			   (ui_context.press_target == &UI_NilBox ||
+					   (box.zindex >= ui_context.press_target.zindex)) {
 				if box.zindex == 0 && box.lay_type != .FIXED {
 					ui_context.last_zindex += 1
 					box.zindex = ui_context.last_zindex
@@ -839,19 +845,16 @@ consume_box_event :: proc(box: ^Box) -> render.os_input_type {
 
 				return .LEFT_CLICK
 			}
-		}
-		else if .LEFT_CLICK_RELEASE in input.type {
+		} else if .LEFT_CLICK_RELEASE in input.type {
 			ui_context.press_target = &UI_NilBox
 			ui_context.resizing = false
 			ui_context.drag_delta = {0, 0}
 			return .LEFT_CLICK_RELEASE
-		}
-		else if .RIGHT_CLICK in input.type {
+		} else if .RIGHT_CLICK in input.type {
 			ui_context.hover_target =
-			ui_context.hover_target != &UI_NilBox ? ui_context.hover_target : box
+				ui_context.hover_target != &UI_NilBox ? ui_context.hover_target : box
 			return .RIGHT_CLICK
-		}
-		else if .ARROW_DOWN in input.type {
+		} else if .ARROW_DOWN in input.type {
 			if ui_context.scroll_target != &UI_NilBox {
 				if input.scroll_off.y == 0 {
 					ui_context.scroll_target.scroll.y -= DEFAULT_SCROLL_DELTA * 0.2
@@ -860,8 +863,7 @@ consume_box_event :: proc(box: ^Box) -> render.os_input_type {
 				}
 			}
 			return .ARROW_DOWN
-		}
-		else if .ARROW_UP in input.type {
+		} else if .ARROW_UP in input.type {
 			if ui_context.scroll_target != &UI_NilBox {
 				if input.scroll_off.y == 0 {
 					ui_context.scroll_target.scroll.y += DEFAULT_SCROLL_DELTA * 0.2
@@ -870,13 +872,11 @@ consume_box_event :: proc(box: ^Box) -> render.os_input_type {
 				}
 			}
 			return .ARROW_UP
-		}
-		else if .CHARACHTER in input.type {
+		} else if .CHARACHTER in input.type {
 			strings.write_rune(&ui_context.text_input, input.codepoint)
 			unordered_remove(&ui_context.vulkan_iface.va_OsInput, idx)
 			return .CHARACHTER
-		}
-		else if .BACKSPACE in input.type {
+		} else if .BACKSPACE in input.type {
 			if box == ui_context.target_box && .INPUT_TEXT in ui_context.target_box.flags {
 				strings.pop_rune(&ui_context.target_box.text_input)
 			}
@@ -925,12 +925,12 @@ get_key_from_string :: proc(text: string, key: rawptr) -> (string, string) {
 
 	strings.write_string(&new_string, key_part[:len(key_part) - 2])
 	switch key_part[j + 1] {
-		case 'p':
+	case 'p':
 		{
 			value := cast(u64)cast(uintptr)key
 			strings.write_u64(&new_string, value)
 		}
-		case 'd':
+	case 'd':
 		{
 			value: int = (cast(^int)key)^
 			strings.write_int(&new_string, value)
@@ -956,14 +956,14 @@ make_box_from_key :: proc(
 	width_height: glsl.vec2 = {-1, -1},
 	box_flags: UI_Options = {.DRAW_RECT},
 	key: ^$T,
-	) -> ^Box {
+) -> ^Box {
 
 	//tracy.ZoneS(depth = 10)
 
 	display_text, key_text := get_key_from_string(text, key)
 	box := make_box_no_key(key_text, top_left, width_height, box_flags)
-	box.title_string = display_text// strings.clone(display_text, ui_context.per_frame_arena_allocator)
-	box.key_text     = key_text
+	box.title_string = display_text // strings.clone(display_text, ui_context.per_frame_arena_allocator)
+	box.key_text = key_text
 	return box
 }
 
@@ -974,7 +974,7 @@ make_box_no_key :: proc(
 	top_left: glsl.vec2 = {-1, -1},
 	width_height: glsl.vec2 = {-1, -1},
 	box_flags: UI_Options = {.DRAW_RECT},
-	) -> ^Box {
+) -> ^Box {
 
 	//tracy.ZoneS(depth = 10)
 
@@ -983,7 +983,7 @@ make_box_no_key :: proc(
 	box: ^Box
 	layout := get_layout_stack()
 	if layout == nil {
-		string_hash := hash.get_hash_from_key( text )
+		string_hash := hash.get_hash_from_key(text)
 		bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text)
 		for &v in bucket {
 			if v != nil {
@@ -994,9 +994,10 @@ make_box_no_key :: proc(
 			}
 		}
 	} else {
-		parent_seed := layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0 // if it is not set is 0
+		parent_seed :=
+			layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0 // if it is not set is 0
 		if layout.parent_box == nil {
-			string_hash := hash.get_hash_from_key( text, parent_seed )
+			string_hash := hash.get_hash_from_key(text, parent_seed)
 			bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed)
 			for &v in bucket {
 				if v != nil {
@@ -1006,17 +1007,20 @@ make_box_no_key :: proc(
 					}
 				}
 			}
-		}
-		else {
-			string_hash : u64
+		} else {
+			string_hash: u64
 			if parent_seed > 0 {
-				string_hash = hash.get_hash_from_key( text, parent_seed )
+				string_hash = hash.get_hash_from_key(text, parent_seed)
 			} else {
-				string_hash = hash.get_hash_from_key( text, layout.parent_box.id )
+				string_hash = hash.get_hash_from_key(text, layout.parent_box.id)
 			}
 			// if there is a parent seed set, it has higher priority than it default set parent box
 			//
-			bucket := hash.lookup_table_bucket(&ui_context.hash_boxes, text, parent_seed > 0 ? parent_seed : layout.parent_box.id)
+			bucket := hash.lookup_table_bucket(
+				&ui_context.hash_boxes,
+				text,
+				parent_seed > 0 ? parent_seed : layout.parent_box.id,
+			)
 			for &v in bucket {
 				if v != nil {
 					if v.id == string_hash {
@@ -1037,11 +1041,11 @@ make_box_no_key :: proc(
 		if layout == nil {
 			box.id = hash.insert_table(&ui_context.hash_boxes, text, box)
 		} else {
-			parent_seed := layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0
+			parent_seed :=
+				layout.parent_seed.push_count > 0 ? utils.get_front_stack(&layout.parent_seed) : 0
 			if layout.parent_box == nil {
 				box.id = hash.insert_table(&ui_context.hash_boxes, text, box, parent_seed)
-			}
-			else {
+			} else {
 				if parent_seed == 0 {
 					parent_seed = layout.parent_box.id
 				}
@@ -1053,23 +1057,22 @@ make_box_no_key :: proc(
 	}
 
 	box.parent = &UI_NilBox
-	box.first  = &UI_NilBox
-	box.tail   = &UI_NilBox
-	box.next   = &UI_NilBox
-	box.prev   = &UI_NilBox
+	box.first = &UI_NilBox
+	box.tail = &UI_NilBox
+	box.next = &UI_NilBox
+	box.prev = &UI_NilBox
 	box.zindex = 0
 	box.title_string = text //strings.clone(text, ui_context.per_frame_arena_allocator)
-	box.key_text     = text
+	box.key_text = text
 
 	// ============= Animations ===================
 	//
 	if .HOVER_ANIMATION in box_flags {
 		anim_data_bucket := hash.lookup_table_bucket(&ui_context.animation_data, text)
-		anim_data : ^UI_AnimationData
+		anim_data: ^UI_AnimationData
 
 		for &anim in anim_data_bucket {
-			if anim != nil && anim.id == hash.get_hash_from_key(text)
-			{
+			if anim != nil && anim.id == hash.get_hash_from_key(text) {
 				anim_data = anim
 				break
 			}
@@ -1082,13 +1085,13 @@ make_box_no_key :: proc(
 			anim_data.id = hash.insert_table(&ui_context.animation_data, text, anim_data)
 
 			anim_data^ = UI_AnimationData {
-				id           = anim_data.id,
-				animation_dt = ui_context.animation_dt,
-				current      = 0.0,
-				target       = 1,
+				id              = anim_data.id,
+				animation_dt    = ui_context.animation_dt,
+				current         = 0.0,
+				target          = 1,
 				currentVelocity = 0.0,
 				smoothTime      = 0.15,
-				maxSpeed        = 10000
+				maxSpeed        = 10000,
 			}
 		}
 	}
@@ -1113,10 +1116,10 @@ make_box_no_key :: proc(
 			box.prev = b
 		}
 
-		box.zindex    = box_root.zindex
+		box.zindex = box_root.zindex
 		//ui_context.last_zindex += 1
 		box_root.tail = box
-		box.parent    = box_root
+		box.parent = box_root
 		fixed_size := false
 
 		if (top_l == {-1, -1} || w_h == {-1, -1}) {
@@ -1131,8 +1134,7 @@ make_box_no_key :: proc(
 				top_l.y += auto_cast ui_context.vulkan_iface.va_FontCache[0].line_height + 6
 			}
 
-		}	 
-		else {
+		} else {
 			fixed_size = true
 		}
 
@@ -1140,7 +1142,7 @@ make_box_no_key :: proc(
 
 		if .SET_WIDTH_TO_TEXT in box_flags {
 			box.rect.size.x =
-			calc_text_size(box.title_string, ui_context.vulkan_iface.va_FontCache[1]).x
+				calc_text_size(box.title_string, ui_context.vulkan_iface.va_FontCache[1]).x
 		}
 
 		layout: ^Layout = get_layout_stack()
@@ -1158,7 +1160,9 @@ make_box_no_key :: proc(
 				// TODO: Check also if it is the same font
 				//
 				for &option in ui_context.vulkan_iface.va_FontCache {
-					if option.FontSize == cast(f32)font_opt.size * ui_context.vulkan_iface.va_Window.scaling_factor.x {
+					if option.FontSize ==
+					   cast(f32)font_opt.size *
+						   ui_context.vulkan_iface.va_Window.scaling_factor.x {
 						already_stored = true
 						box.font_cache = &option
 					}
@@ -1167,19 +1171,40 @@ make_box_no_key :: proc(
 				if !already_stored {
 					bitmap := render.bitmap_push(2160, 126, &ui_context.vulkan_iface.bitmap)
 					font := render.f_BuildFont(
-						cast(f32)font_opt.size * ui_context.vulkan_iface.va_Window.scaling_factor.x,
-						2160, 126, raw_data(bitmap), font_opt.font_path
-						)
-					last_bitmap_offset := ui_context.vulkan_iface.va_FontCache[len(ui_context.vulkan_iface.va_FontCache) - 1].BitmapOffset
+						cast(f32)font_opt.size *
+						ui_context.vulkan_iface.va_Window.scaling_factor.x,
+						2160,
+						126,
+						raw_data(bitmap),
+						font_opt.font_path,
+					)
+					last_bitmap_offset :=
+						ui_context.vulkan_iface.va_FontCache[len(ui_context.vulkan_iface.va_FontCache) - 1].BitmapOffset
 					font.BitmapOffset = last_bitmap_offset + {0, 126}
 					append(&ui_context.vulkan_iface.va_FontCache, font)
-					vk.DestroyImageView(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_ImageView, nil)
-					vk.DestroyImage(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_Image, nil)
-					vk.DestroySampler(ui_context.vulkan_iface.va_Device.d_LogicalDevice, ui_context.vulkan_iface.va_TextureImage.vi_Sampler, nil)
-					render.add_texture_font(ui_context.vulkan_iface, &ui_context.vulkan_iface.va_FontCache)
+					vk.DestroyImageView(
+						ui_context.vulkan_iface.va_Device.d_LogicalDevice,
+						ui_context.vulkan_iface.va_TextureImage.vi_ImageView,
+						nil,
+					)
+					vk.DestroyImage(
+						ui_context.vulkan_iface.va_Device.d_LogicalDevice,
+						ui_context.vulkan_iface.va_TextureImage.vi_Image,
+						nil,
+					)
+					vk.DestroySampler(
+						ui_context.vulkan_iface.va_Device.d_LogicalDevice,
+						ui_context.vulkan_iface.va_TextureImage.vi_Sampler,
+						nil,
+					)
+					render.add_texture_font(
+						ui_context.vulkan_iface,
+						&ui_context.vulkan_iface.va_FontCache,
+					)
 					render.update_descriptor_sets(ui_context.vulkan_iface)
 					vk.DeviceWaitIdle(ui_context.vulkan_iface.va_Device.d_LogicalDevice)
-					box.font_cache = &ui_context.vulkan_iface.va_FontCache[len(ui_context.vulkan_iface.va_FontCache) - 1]
+					box.font_cache =
+					&ui_context.vulkan_iface.va_FontCache[len(ui_context.vulkan_iface.va_FontCache) - 1]
 				}
 			}
 		}
@@ -1273,7 +1298,8 @@ make_box_no_key :: proc(
 	}
 
 	if box.rect.top_left.y + box.rect.size.y > ui_context.render_root.rect.size.y {
-		extract_size := (box.rect.top_left.y + box.rect.size.y) - ui_context.render_root.rect.size.y 
+		extract_size :=
+			(box.rect.top_left.y + box.rect.size.y) - ui_context.render_root.rect.size.y
 
 		box.rect.size.y -= extract_size
 	}
@@ -1293,47 +1319,47 @@ begin :: proc(
 	top_left: glsl.vec2 = {-1, -1},
 	width_height: glsl.vec2 = {-1, -1},
 	pointer: ^byte = nil,
-	) -> (
+) -> (
 	open: bool,
-	) {
-		return window_begin(text, top_left, width_height, pointer)
+) {
+	return window_begin(text, top_left, width_height, pointer)
+}
+
+window_begin :: proc(
+	text: string,
+	top_left: glsl.vec2 = {-1, -1},
+	width_height: glsl.vec2 = {-1, -1},
+	pointer: ^byte = nil,
+) -> (
+	open: bool,
+) {
+	layout: ^Layout = get_layout_stack()
+	top_l := top_left
+	w_h := width_height
+	box: ^Box = &UI_NilBox
+
+	if ui_context.option_stack.push_count == 0 {
+		set_next_box_layout({.NONE})
 	}
 
-	window_begin :: proc(
-		text: string,
-		top_left: glsl.vec2 = {-1, -1},
-		width_height: glsl.vec2 = {-1, -1},
-		pointer: ^byte = nil,
-		) -> (
-		open: bool,
-		) {
-			layout: ^Layout = get_layout_stack()
-			top_l := top_left
-			w_h := width_height
-			box: ^Box = &UI_NilBox
+	if ui_context.vulkan_iface == nil {
+		fmt.eprintln("[INFO ERROR] Did not setup the interface with vulkan, variable vulkan_iface")
+		return false
+	}
 
-			if ui_context.option_stack.push_count == 0 {
-				set_next_box_layout({.NONE})
-			}
+	if pointer == nil {
+		box = hash.lookup_table(&ui_context.hash_boxes, text)
+	} else {
+		disp, text_k := get_key_from_string(text, pointer)
+		box = hash.lookup_table(&ui_context.hash_boxes, text_k)
+	}
 
-			if ui_context.vulkan_iface == nil {
-				fmt.eprintln("[INFO ERROR] Did not setup the interface with vulkan, variable vulkan_iface")
-				return false
-			}
+	if box == nil {
+		box = &UI_NilBox
+	}
 
-			if pointer == nil {
-				box = hash.lookup_table(&ui_context.hash_boxes, text)
-			} else {
-				disp, text_k := get_key_from_string(text, pointer)
-				box = hash.lookup_table(&ui_context.hash_boxes, text_k)
-			}
-
-			if box == nil {
-				box = &UI_NilBox
-			}
-
-			if box == &UI_NilBox {
-				if layout == nil {
+	if box == &UI_NilBox {
+		if layout == nil {
 			//fmt.println("[INFO] No layout defined")
 			if top_l == {-1, -1} {
 				top_l = {40, 40}
@@ -1388,13 +1414,7 @@ begin :: proc(
 	if pointer == nil {
 		begin_box = make_box(text, top_l, w_h, box_options)
 	} else {
-		begin_box = make_box_from_key(
-			text,
-			top_l,
-			w_h,
-			box_options,
-			pointer,
-			)
+		begin_box = make_box_from_key(text, top_l, w_h, box_options, pointer)
 	}
 
 	utils.push_stack(&ui_context.root_stack, begin_box)
@@ -1423,10 +1443,13 @@ menu_begin :: proc(
 	w_h: glsl.vec2 = {-1, -1},
 	key_pointer: ^byte = nil,
 	entries: ..string,
-	) -> (clicked_box: ^Box, ok : bool) {
+) -> (
+	clicked_box: ^Box,
+	ok: bool,
+) {
 
 	clicked_box = &UI_NilBox
-	ok          = false
+	ok = false
 
 	title_tab: string
 	if title[len(title) - 2:] == "%d" || title[len(title) - 2:] == "%p" {
@@ -1442,7 +1465,13 @@ menu_begin :: proc(
 
 	set_next_box_layout({.DISABLE_VERTICAL_SCROLLBAR, .DISABLE_TITLE_BAR})
 	// NOTE: We hardcode 40 as height, but it should be the line height + something
-	set_next_layout(top_left, {w_h.x, ui_context.vulkan_iface.va_FontCache[1].line_height + 6}, 0, auto_cast len(entries), LayoutType.FIXED)
+	set_next_layout(
+		top_left,
+		{w_h.x, ui_context.vulkan_iface.va_FontCache[1].line_height + 6},
+		0,
+		auto_cast len(entries),
+		LayoutType.FIXED,
+	)
 	set_box_preferred_size({200, ui_context.vulkan_iface.va_FontCache[1].line_height + 6})
 	set_next_layout_style(tab_stile)
 
@@ -1467,14 +1496,20 @@ menu_begin :: proc(
 			{w_h.x, 2},
 			{.DRAW_RECT, .DRAW_BORDER},
 			key_pointer,
-			)
+		)
 
 		end(true)
 	}
 
 	set_next_box_layout({.SET_WIDTH_TO_TEXT, .DISABLE_TITLE_BAR, .SCROLLABLE})
 	// NOTE: We hardcode 60 as height, but it should be the line height + something
-	set_next_layout(top_left + {0, ui_context.vulkan_iface.va_FontCache[1].line_height + 6}, w_h - {0, ui_context.vulkan_iface.va_FontCache[1].line_height - 12}, 0, 0, LayoutType.FIXED)
+	set_next_layout(
+		top_left + {0, ui_context.vulkan_iface.va_FontCache[1].line_height + 6},
+		w_h - {0, ui_context.vulkan_iface.va_FontCache[1].line_height - 12},
+		0,
+		0,
+		LayoutType.FIXED,
+	)
 	//set_box_preferred_size({200, 30})
 	set_next_layout_style(tab_stile)
 
@@ -1495,9 +1530,9 @@ end_menu :: proc(open: bool = false) {
 
 point_intersect :: #force_inline proc(point: glsl.vec2, r2: Rect2D) -> bool {
 	if (point.x >= r2.top_left.x &&
-		point.x <= r2.top_left.x + r2.size.x &&
-		point.y >= r2.top_left.y &&
-		point.y <= r2.top_left.y + r2.size.y) {
+		   point.x <= r2.top_left.x + r2.size.x &&
+		   point.y >= r2.top_left.y &&
+		   point.y <= r2.top_left.y + r2.size.y) {
 		return true
 	}
 
@@ -1515,12 +1550,13 @@ end :: proc(open: bool = false) {
 	}
 	root_box := utils.get_front_stack(&ui_context.root_stack)
 
-	if ((root_box.zindex < ui_context.last_zindex) || root_box.zindex == 0) && root_box.lay_type != .FIXED {
+	if ((root_box.zindex < ui_context.last_zindex) || root_box.zindex == 0) &&
+	   root_box.lay_type != .FIXED {
 		ui_context.last_zindex += 1
 		root_box.zindex = ui_context.last_zindex
 	}
 
-	if ui_context.render_root.first == &UI_NilBox || ui_context.render_root.first == nil  {
+	if ui_context.render_root.first == &UI_NilBox || ui_context.render_root.first == nil {
 		ui_context.render_root.first = root_box
 	} else {
 		box := ui_context.render_root.first
@@ -1563,9 +1599,9 @@ end :: proc(open: bool = false) {
 			//
 			//if box.lay_type == .FIXED { break }
 			if (ui_context.drag_data.x >= box.rect.top_left.x + box.rect.size.x - 20 &&
-				ui_context.drag_data.x <= box.rect.top_left.x + box.rect.size.x &&
-				ui_context.drag_data.y >= box.rect.top_left.y + box.rect.size.y - 20 &&
-				ui_context.drag_data.y <= box.rect.top_left.y + box.rect.size.y) {
+				   ui_context.drag_data.x <= box.rect.top_left.x + box.rect.size.x &&
+				   ui_context.drag_data.y >= box.rect.top_left.y + box.rect.size.y - 20 &&
+				   ui_context.drag_data.y <= box.rect.top_left.y + box.rect.size.y) {
 				ui_context.resizing = true
 				delta := (ui_context.drag_delta - ui_context.drag_data)
 				ui_context.drag_data = ui_context.drag_delta
@@ -1592,25 +1628,14 @@ end :: proc(open: bool = false) {
 
 // ------------------------------------------------------------------- //
 
-checkbox :: proc( label: string, id: ^byte = nil ) -> EventResults {
+checkbox :: proc(label: string, id: ^byte = nil) -> EventResults {
 	set_next_layout_style(ui_context.theme.button)
 	defer utils.pop_stack(&ui_context.style)
 	box: ^Box
 	if id == nil {
-		box = make_box(
-			label,
-			{-1, -1},
-			{-1, -1},
-			UI_Options{.DRAW_STRING, .CHECKBOX},
-			)
+		box = make_box(label, {-1, -1}, {-1, -1}, UI_Options{.DRAW_STRING, .CHECKBOX})
 	} else {
-		box = make_box(
-			label,
-			{-1, -1},
-			{-1, -1},
-			UI_Options{.DRAW_STRING, .CHECKBOX},
-			id,
-			)
+		box = make_box(label, {-1, -1}, {-1, -1}, UI_Options{.DRAW_STRING, .CHECKBOX}, id)
 	}
 
 	set_next_hover_cursor(box, glfw.HAND_CURSOR)
@@ -1647,7 +1672,7 @@ button :: proc(label: string, id: ^byte = nil) -> EventResults {
 			{-1, -1},
 			{-1, -1},
 			UI_Options{.DRAW_STRING, .DRAW_RECT, .DRAW_BORDER, .HOVER_ANIMATION},
-			)
+		)
 	} else {
 		box = make_box(
 			label,
@@ -1655,7 +1680,7 @@ button :: proc(label: string, id: ^byte = nil) -> EventResults {
 			{-1, -1},
 			UI_Options{.DRAW_STRING, .DRAW_RECT, .DRAW_BORDER, .HOVER_ANIMATION},
 			id,
-			)
+		)
 	}
 
 	set_next_hover_cursor(box, glfw.HAND_CURSOR)
@@ -1688,13 +1713,16 @@ button :: proc(label: string, id: ^byte = nil) -> EventResults {
 label :: proc(label: string, id: ^byte = nil) -> ^Box {
 	box: ^Box
 	if id == nil {
-		box = make_box_no_key(label, box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER})
+		box = make_box_no_key(
+			label,
+			box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER},
+		)
 	} else {
 		box = make_box_from_key(
 			label,
 			box_flags = UI_Options{.DRAW_STRING, .NO_CLICKABLE, .NO_HOVER},
 			key = id,
-			)
+		)
 	}
 	event := consume_box_event(box)
 
@@ -1711,7 +1739,7 @@ input_field :: proc(label: string, id: ^byte = nil) -> EventResults {
 			{-1, -1},
 			{-1, -1},
 			UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .INPUT_TEXT, .NO_HOVER},
-			)
+		)
 	} else {
 		box = make_box(
 			label,
@@ -1719,11 +1747,11 @@ input_field :: proc(label: string, id: ^byte = nil) -> EventResults {
 			{-1, -1},
 			UI_Options{.DRAW_RECT, .DRAW_BORDER, .DRAW_STRING, .INPUT_TEXT, .NO_HOVER},
 			id,
-			)
+		)
 	}
 
 	set_next_hover_cursor(box, glfw.IBEAM_CURSOR)
-	event : EventResults
+	event: EventResults
 	input := consume_box_event(box)
 
 	if box == ui_context.hover_target {
@@ -1749,8 +1777,8 @@ calc_text_size :: proc(text: string, font_cache: render.FontCache) -> glsl.vec2 
 		if text[i] == ' ' {
 			text_offset += 6
 
-			if i == len(text) - 1 && i > 0{
-				text_offset += font_cache.glyph[text[i-1] - 31].width
+			if i == len(text) - 1 && i > 0 {
+				text_offset += font_cache.glyph[text[i - 1] - 31].width
 			}
 		} else if text[i] == '\n' {
 			max_text_offset = math.max(max_text_offset, text_offset)
@@ -1782,14 +1810,14 @@ add_text :: proc(
 	vulkan_iface: ^render.VulkanIface,
 	style: StyleParam,
 	font_cache: render.FontCache,
-	) {
+) {
 	using render
 
 	//	context.allocator = ui_context.per_frame_arena_allocator
 
 	new_batch: Batch2D
-	new_batch.vertices    = make([dynamic]Vertex2D, ui_context.per_frame_arena_allocator)
-	new_batch.indices     = make([dynamic]u32, ui_context.per_frame_arena_allocator)
+	new_batch.vertices = make([dynamic]Vertex2D, ui_context.per_frame_arena_allocator)
+	new_batch.indices = make([dynamic]u32, ui_context.per_frame_arena_allocator)
 	new_batch.n_instances = make([dynamic]u32, ui_context.per_frame_arena_allocator)
 
 	top_left_corner := pos_start
@@ -1830,7 +1858,7 @@ add_text :: proc(
 					0.0,
 					0,
 				},
-				)
+			)
 			text_offset += 10
 			n_instances += 1
 
@@ -1839,7 +1867,7 @@ add_text :: proc(
 			x_next := top_left_corner.x + text_offset + glyph.x_off + glyph.advance
 			// (s.p) Workaround to avoid having the font not start centered in a pixel
 			//
-			x_next  = math.round_f32(x_next)
+			x_next = math.round_f32(x_next)
 			y_next := top_left_corner.y + line_height + glyph.y_off
 
 			bitmap_factor := glsl.vec2 {
@@ -1876,9 +1904,9 @@ add_text :: proc(
 					0,
 					0,
 				},
-				)
+			)
 
-			text_offset += glyph.advance// glyph.width + glyph.x_off
+			text_offset += glyph.advance // glyph.width + glyph.x_off
 
 			n_instances += 1
 		}
@@ -1907,7 +1935,7 @@ add_rect :: proc(
 	width_height: glsl.vec2,
 	vulkan_iface: ^render.VulkanIface,
 	style: StyleParam,
-	) {
+) {
 	using render
 	//	context.allocator = ui_context.per_frame_arena_allocator
 	//Temp := vmem.arena_temp_begin(&ui_context.arena)
@@ -1944,7 +1972,7 @@ add_rect :: proc(
 			style.edge_softness,
 			style.border_thickness,
 		},
-		)
+	)
 
 	append(&new_batch.indices, 0, 1, 3, 3, 2, 0)
 	append(&new_batch.n_instances, 1)
@@ -1961,20 +1989,23 @@ add_rect :: proc(
 
 // ------------------------------------------------------------------- //
 
-UI_SmoothDampAnim :: proc(animation_dt, current, target, currentVelocity, smoothTime, maxSpeed : f32) -> (smoothTime_t, currentVelocity_t, target_t, output_t : f32)
-{
+UI_SmoothDampAnim :: proc(
+	animation_dt, current, target, currentVelocity, smoothTime, maxSpeed: f32,
+) -> (
+	smoothTime_t, currentVelocity_t, target_t, output_t: f32,
+) {
 	smoothTime_t = math.max(smoothTime, 0.001)
-	omega       := 2. / smoothTime_t
-	x           := omega * animation_dt
-	exp         := 1. / (1. + x + 0.48 * x * x + 0.235 * x * x * x)
-	change      := current - target
-	originalTo  := target
+	omega := 2. / smoothTime_t
+	x := omega * animation_dt
+	exp := 1. / (1. + x + 0.48 * x * x + 0.235 * x * x * x)
+	change := current - target
+	originalTo := target
 
-	maxChange   := maxSpeed * smoothTime_t
-	change       = clamp(change, -maxChange, maxChange)
-	target_t     = current - change
+	maxChange := maxSpeed * smoothTime_t
+	change = clamp(change, -maxChange, maxChange)
+	target_t = current - change
 
-	temp        := (currentVelocity + omega * change) * animation_dt
+	temp := (currentVelocity + omega * change) * animation_dt
 	currentVelocity_t = (currentVelocity - omega * temp) * exp
 
 	output_t = target_t + (change + temp) * exp
@@ -1989,7 +2020,7 @@ UI_SmoothDampAnim :: proc(animation_dt, current, target, currentVelocity, smooth
 
 // ------------------------------------------------------------------- //
 
-ui_begin :: proc( animation_dt : f32 = 0.00833333333 ) {
+ui_begin :: proc(animation_dt: f32 = 0.00833333333) {
 	using render
 	// Update the box position if it has been resized or moved
 	// given the input from last frame
@@ -2012,8 +2043,8 @@ ui_begin :: proc( animation_dt : f32 = 0.00833333333 ) {
 			math.min(w_height, math.max(new_size.y, MIN_WINDOW_HEIGHT)),
 		}
 	} else if !ui_context.resizing &&
-	ui_context.drag_delta != {0, 0} &&
-	ui_context.press_target.lay_type != .FIXED {
+	   ui_context.drag_delta != {0, 0} &&
+	   ui_context.press_target.lay_type != .FIXED {
 		ui_context.press_target.rect.top_left += ui_context.drag_delta
 	}
 
@@ -2040,7 +2071,7 @@ big_stack_init :: #force_inline proc(
 	$V: typeid,
 	N: u32,
 	allocator := context.allocator,
-	) {
+) {
 	stk.items = make([]V, N, allocator)
 	stk.push_count = 0
 }
@@ -2104,11 +2135,17 @@ ui_build :: proc() {
 		// I put it_box.prev != box.tail in case I have some strange duplicacy
 		{
 			it_box := box.tail
-			for ; it_box != box.first && it_box != nil && it_box != &UI_NilBox && tmp_stack.push_count < len(tmp_stack.items) ; it_box = it_box.prev {
+			for ; it_box != box.first &&
+			    it_box != nil &&
+			    it_box != &UI_NilBox &&
+			    tmp_stack.push_count < len(tmp_stack.items);
+			    it_box = it_box.prev {
 				push_stack(&tmp_stack, it_box)
 			}
 
-			if box.first != nil && box.first != &UI_NilBox && tmp_stack.push_count < len(tmp_stack.items){
+			if box.first != nil &&
+			   box.first != &UI_NilBox &&
+			   tmp_stack.push_count < len(tmp_stack.items) {
 				push_stack(&tmp_stack, box.first)
 			}
 		}
@@ -2128,8 +2165,7 @@ ui_build :: proc() {
 			} else {
 				current_font_cache = ui_context.vulkan_iface.va_FontCache[1]
 			}
-		}
-		else {
+		} else {
 			current_font_cache = box.font_cache^
 		}
 
@@ -2148,9 +2184,9 @@ ui_build :: proc() {
 			}
 
 			if ((box.rect.top_left.y >= box.parent.rect.top_left.y + title_padding) &&
-				(box.rect.top_left.y + box.rect.size.y <= box.parent.rect.top_left.y + box.parent.rect.size.y)) ||
-			is_window
-			{
+				   (box.rect.top_left.y + box.rect.size.y <=
+						   box.parent.rect.top_left.y + box.parent.rect.size.y)) ||
+			   is_window {
 				/*
     if .HOVER_ANIMATION in box.flags {
      is_hover : f32 = 0.
@@ -2164,203 +2200,216 @@ ui_build :: proc() {
     }
     */
 
-    anim_rate : f32 = 1.
-    if .HOVER_ANIMATION in box.flags {
-    	box_animation : ^UI_AnimationData
-    	box_animation_bucket := hash.lookup_table_bucket(&ui_context.animation_data, box.key_text)
-
-    	for &anim in box_animation_bucket {
-    		if anim != nil && anim.id == hash.get_hash_from_key(box.key_text) {
-    			box_animation = anim
-    			break
-    		}
-    	}
-    	if box_animation != nil {
-    		anim_data : ^UI_AnimationData = box_animation
-
-    		anim_data.smoothTime, anim_data.currentVelocity, anim_data.target, anim_data.output = UI_SmoothDampAnim(
-    			anim_data.animation_dt,
-    			anim_data.current,
-    			anim_data.target,
-    			anim_data.currentVelocity,
-    			anim_data.smoothTime,
-    			anim_data.maxSpeed
-    			)
-
-    		if box != ui_context.hover_target {
-    			if box.is_animating {
-    				anim_data.target = 0
-    			}
-    			if box.is_animating && anim_data.output <= anim_data.smoothTime {
-    				box.is_animating  = false
-    				anim_data.target  = 1
-    				anim_data.current = 0
-    				anim_data.output  = 0
-    			}
-    			else if box.is_animating {
-    				anim_data.current = anim_data.output
-    			}
-
-    			if !box.is_animating {
-    				anim_data.output = 0
-    			}
-    		}
-    		else {
-    			anim_data.current = anim_data.output
-    		}
-
-    		pre_box_size  := box.rect.size
-    		box.rect.size += 10*(anim_data.output)
-   			dt_change_size := box.rect.size - pre_box_size//glsl.vec2{abs(box.rect.size.x - pre_box_size.x), abs(box.rect.size.y - pre_box_size.y)}
-   			box.rect.top_left -= dt_change_size / 2
-
-   			anim_rate = anim_data.output
-   		}
-   	}
-
-   	if .DRAW_RECT in box.flags || ui_context.hover_target == box && !(.NO_HOVER in box.flags) {
-			// I want it to have some kind of frame for the window, so the easiest way is just to check if it is a window, and if it is,
-			// change the frame of the title
-			//
-			style_frame := style
-			style.color_rect00.a *= anim_rate
-			style.color_rect01.a *= anim_rate
-			style.color_rect10.a *= anim_rate
-			style.color_rect11.a *= anim_rate
-			style.color_border.a *= anim_rate
-
-			style_frame.border_thickness = 0
-
-			// NOTE: This may be not the best place to place it
-			// What I want to do here is to create some sort of shadow
-			// so that it differenciates well from other boxes. I only
-			// set it when layout_type is relative because is the only
-			// way the boxes can overlap
-			//
-			if box.parent == root_box && box.lay_type == .RELATIVE {
-				background_style := style_frame
-				background_style.color_rect00 -= 0.8 * background_style.color_rect00
-				background_style.color_rect01 -= 0.8 * background_style.color_rect01
-				background_style.color_rect10 -= 0.8 * background_style.color_rect10
-				background_style.color_rect11 -= 0.8 * background_style.color_rect11
-				add_rect(
-					box.rect.top_left + {10, 10},
-					box.rect.size,
-					ui_context.vulkan_iface,
-					background_style,
+				anim_rate: f32 = 1.
+				if .HOVER_ANIMATION in box.flags {
+					box_animation: ^UI_AnimationData
+					box_animation_bucket := hash.lookup_table_bucket(
+						&ui_context.animation_data,
+						box.key_text,
 					)
-			}
 
-			add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
+					for &anim in box_animation_bucket {
+						if anim != nil && anim.id == hash.get_hash_from_key(box.key_text) {
+							box_animation = anim
+							break
+						}
+					}
+					if box_animation != nil {
+						anim_data: ^UI_AnimationData = box_animation
 
-			if box.parent == root_box && !(.DISABLE_TITLE_BAR in box.flags) {
-				style_frame = style
-				style_frame.color_rect00 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-				style_frame.color_rect11 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-				style_frame.color_rect01 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-				style_frame.color_rect10 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
-				//style_frame.corner_radius = 0
-				//style_frame.edge_softness = 0
+						anim_data.smoothTime, anim_data.currentVelocity, anim_data.target, anim_data.output =
+							UI_SmoothDampAnim(
+								anim_data.animation_dt,
+								anim_data.current,
+								anim_data.target,
+								anim_data.currentVelocity,
+								anim_data.smoothTime,
+								anim_data.maxSpeed,
+							)
 
-				line_height := cast(f32)current_font_cache.line_height + 6
-				add_rect(
-					box.rect.top_left,
-					{box.rect.size.x, line_height},
-					ui_context.vulkan_iface,
-					style_frame,
-					)
-			}
-		}
+						if box != ui_context.hover_target {
+							if box.is_animating {
+								anim_data.target = 0
+							}
+							if box.is_animating && anim_data.output <= anim_data.smoothTime {
+								box.is_animating = false
+								anim_data.target = 1
+								anim_data.current = 0
+								anim_data.output = 0
+							} else if box.is_animating {
+								anim_data.current = anim_data.output
+							}
 
-		if .DRAW_BORDER in box.flags {
-			style.border_thickness = 1.//ui_context.theme.front_panel.border_thickness
-			add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
-			// This has to be done as setting up border thickness before calling draw_rect
-			// it will create a hollow rect
-			//
-		}
+							if !box.is_animating {
+								anim_data.output = 0
+							}
+						} else {
+							anim_data.current = anim_data.output
+						}
 
-		if .CHECKBOX in box.flags {
-			style.border_thickness = ui_context.theme.front_panel.border_thickness
-			add_rect(box.rect.top_left + 5, {box.rect.size.y - 10, box.rect.size.y - 10}, ui_context.vulkan_iface, style)
-		}
+						pre_box_size := box.rect.size
+						box.rect.size += 10 * (anim_data.output)
+						dt_change_size := box.rect.size - pre_box_size //glsl.vec2{abs(box.rect.size.x - pre_box_size.x), abs(box.rect.size.y - pre_box_size.y)}
+						box.rect.top_left -= dt_change_size / 2
 
-			// NOTE: the arena allocator keeps accumulating a little bit of memory
-			// even after telling it to free, maybe it has to accumulate a bigger chunk
-			// of memory (maybe a page size) to free the whole chunk
-			//
-			if ui_context.target_box == box {
-				if .INPUT_TEXT in box.flags && len(strings.to_string(ui_context.text_input)) > 0 {
-					strings.write_string(&box.text_input, strings.to_string(ui_context.text_input))
+						anim_rate = anim_data.output
+					}
 				}
-			}
-			if .DRAW_STRING in box.flags && !(box.parent == root_box && (.DISABLE_TITLE_BAR in box.flags)) {
-				// Check for string centering
+
+				if .DRAW_RECT in box.flags ||
+				   ui_context.hover_target == box && !(.NO_HOVER in box.flags) {
+					// I want it to have some kind of frame for the window, so the easiest way is just to check if it is a window, and if it is,
+					// change the frame of the title
+					//
+					style_frame := style
+					style.color_rect00.a *= anim_rate
+					style.color_rect01.a *= anim_rate
+					style.color_rect10.a *= anim_rate
+					style.color_rect11.a *= anim_rate
+					style.color_border.a *= anim_rate
+
+					style_frame.border_thickness = 0
+
+					// NOTE: This may be not the best place to place it
+					// What I want to do here is to create some sort of shadow
+					// so that it differenciates well from other boxes. I only
+					// set it when layout_type is relative because is the only
+					// way the boxes can overlap
+					//
+					if box.parent == root_box && box.lay_type == .RELATIVE {
+						background_style := style_frame
+						background_style.color_rect00 -= 0.8 * background_style.color_rect00
+						background_style.color_rect01 -= 0.8 * background_style.color_rect01
+						background_style.color_rect10 -= 0.8 * background_style.color_rect10
+						background_style.color_rect11 -= 0.8 * background_style.color_rect11
+						add_rect(
+							box.rect.top_left + {10, 10},
+							box.rect.size,
+							ui_context.vulkan_iface,
+							background_style,
+						)
+					}
+
+					add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
+
+					if box.parent == root_box && !(.DISABLE_TITLE_BAR in box.flags) {
+						style_frame = style
+						style_frame.color_rect00 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+						style_frame.color_rect11 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+						style_frame.color_rect01 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+						style_frame.color_rect10 *= 0.9 //rgba_to_norm(hex_rgba_to_vec4(0x5B5F97FF))
+						//style_frame.corner_radius = 0
+						//style_frame.edge_softness = 0
+
+						line_height := cast(f32)current_font_cache.line_height + 6
+						add_rect(
+							box.rect.top_left,
+							{box.rect.size.x, line_height},
+							ui_context.vulkan_iface,
+							style_frame,
+						)
+					}
+				}
+
+				if .DRAW_BORDER in box.flags {
+					style.border_thickness = 1. //ui_context.theme.front_panel.border_thickness
+					add_rect(box.rect.top_left, box.rect.size, ui_context.vulkan_iface, style)
+					// This has to be done as setting up border thickness before calling draw_rect
+					// it will create a hollow rect
+					//
+				}
+
+				if .CHECKBOX in box.flags {
+					style.border_thickness = ui_context.theme.front_panel.border_thickness
+					add_rect(
+						box.rect.top_left + 5,
+						{box.rect.size.y - 10, box.rect.size.y - 10},
+						ui_context.vulkan_iface,
+						style,
+					)
+				}
+
+				// NOTE: the arena allocator keeps accumulating a little bit of memory
+				// even after telling it to free, maybe it has to accumulate a bigger chunk
+				// of memory (maybe a page size) to free the whole chunk
 				//
-				text_size: glsl.vec2
-				{
-					options := box.flags
+				if ui_context.target_box == box {
+					if .INPUT_TEXT in box.flags &&
+					   len(strings.to_string(ui_context.text_input)) > 0 {
+						strings.write_string(
+							&box.text_input,
+							strings.to_string(ui_context.text_input),
+						)
+					}
+				}
+				if .DRAW_STRING in box.flags &&
+				   !(box.parent == root_box && (.DISABLE_TITLE_BAR in box.flags)) {
+					// Check for string centering
+					//
+					text_size: glsl.vec2
+					{
+						options := box.flags
+						str_render := box.title_string
+						if .INPUT_TEXT in box.flags && strings.builder_len(box.text_input) > 0 {
+							str_render = strings.to_string(box.text_input)
+						}
+						text_size = calc_text_size(str_render, current_font_cache)
+						//box.text_position = box.rect.top_left
+						if .X_CENTERED_STRING in options || box.parent == root_box {
+							line_height: f32 = cast(f32)current_font_cache.line_height
+							box.text_position.x = math.floor(
+								box.rect.top_left.x + (box.rect.size.x / 2 - text_size.x / 2),
+							)
+							box.text_position.y = math.floor(box.rect.top_left.y) // - (line_height - 6) / 2);
+						} else {
+							//box.text_position.x += 16 // Hardcoded padding. NOTE: Update it and make it cofigurable
+							box.text_position.x = math.floor(box.text_position.x)
+						}
+						box.text_position.y = math.floor(box.text_position.y)
+
+						box.rect.size.y = math.max(box.rect.size.y, text_size.y)
+
+						if .Y_CENTERED_STRING in options && box.parent != root_box {
+							box.text_position.y += 0 // math.floor((box.rect.size.y / 2) - cast(f32)current_font_cache.line_height / 2)
+						}
+
+					}
 					str_render := box.title_string
 					if .INPUT_TEXT in box.flags && strings.builder_len(box.text_input) > 0 {
 						str_render = strings.to_string(box.text_input)
 					}
-					text_size = calc_text_size(str_render, current_font_cache)
-					//box.text_position = box.rect.top_left
-					if .X_CENTERED_STRING in options || box.parent == root_box {
-						line_height: f32 = cast(f32)current_font_cache.line_height
-						box.text_position.x = math.floor(
-							box.rect.top_left.x + (box.rect.size.x / 2 - text_size.x / 2),
-							)
-						box.text_position.y = math.floor(box.rect.top_left.y) // - (line_height - 6) / 2);
-					} else {
-						//box.text_position.x += 16 // Hardcoded padding. NOTE: Update it and make it cofigurable
-						box.text_position.x = math.floor(box.text_position.x)
-					}
-					box.text_position.y = math.floor(box.text_position.y)
 
-					box.rect.size.y = math.max(box.rect.size.y, text_size.y)
-
-					if .Y_CENTERED_STRING in options && box.parent != root_box {
-						box.text_position.y += 0// math.floor((box.rect.size.y / 2) - cast(f32)current_font_cache.line_height / 2)
+					if .CHECKBOX in box.flags {
+						box.text_position.x += box.rect.size.y + 10
 					}
 
-				}
-				str_render := box.title_string
-				if .INPUT_TEXT in box.flags && strings.builder_len(box.text_input) > 0 {
-					str_render = strings.to_string(box.text_input)
-				}
-
-				if .CHECKBOX in box.flags {
-					box.text_position.x += box.rect.size.y + 10
-				}
-
-				add_text(
-					str_render,
-					box.text_position,
-					box.rect.size,
-					ui_context.vulkan_iface,
-					style,
-					current_font_cache,
-					)
-
-				if box == ui_context.target_box && .INPUT_TEXT in box.flags {
-					style.border_thickness = 1
-					style.corner_radius    = 1
-					style.color_border = rgba_to_norm({10, 10, 10, 255})
-					ui_context.cursor_position = box.text_position
-					ui_context.cursor_position.x += text_size.x
-					ui_context.cursor_position.y += box.rect.size.y * 0.25
-					add_rect(
-						ui_context.cursor_position,
-						{8, math.floor(box.rect.size.y - box.rect.size.y / 2)},
+					add_text(
+						str_render,
+						box.text_position,
+						box.rect.size,
 						ui_context.vulkan_iface,
 						style,
+						current_font_cache,
+					)
+
+					if box == ui_context.target_box && .INPUT_TEXT in box.flags {
+						style.border_thickness = 1
+						style.corner_radius = 1
+						style.color_border = rgba_to_norm({10, 10, 10, 255})
+						ui_context.cursor_position = box.text_position
+						ui_context.cursor_position.x += text_size.x
+						ui_context.cursor_position.y += box.rect.size.y * 0.25
+						add_rect(
+							ui_context.cursor_position,
+							{8, math.floor(box.rect.size.y - box.rect.size.y / 2)},
+							ui_context.vulkan_iface,
+							style,
 						)
+					}
 				}
 			}
 		}
 	}
-}
 	//big_stack_delete(&tmp_stack, temp_allocator)
 
 	end_batch2D_instance_group(ui_context.vulkan_iface)
@@ -2370,17 +2419,17 @@ ui_build :: proc() {
 
 	strings.builder_reset(&ui_context.text_input)
 
-	ui_context.hover_target            = &UI_NilBox
-	ui_context.render_root.first       = &UI_NilBox
-	ui_context.render_root.prev        = &UI_NilBox
-	ui_context.render_root.next        = &UI_NilBox
-	ui_context.render_root.parent      = &UI_NilBox
-	ui_context.render_root.tail        = &UI_NilBox
+	ui_context.hover_target = &UI_NilBox
+	ui_context.render_root.first = &UI_NilBox
+	ui_context.render_root.prev = &UI_NilBox
+	ui_context.render_root.next = &UI_NilBox
+	ui_context.render_root.parent = &UI_NilBox
+	ui_context.render_root.tail = &UI_NilBox
 	ui_context.layout_stack.push_count = 0
-	ui_context.root_stack.push_count   = 0
+	ui_context.root_stack.push_count = 0
 	ui_context.option_stack.push_count = 0
-	ui_context.style.push_count        = 0
-	ui_context.last_zindex             = 0
+	ui_context.style.push_count = 0
+	ui_context.last_zindex = 0
 
 	clear(&ui_context.vulkan_iface.va_OsInput)
 	// [s.p] Free per frame ui memory
@@ -2393,7 +2442,7 @@ ui_build :: proc() {
 
 // ------------------------------------------------------------------- //
 
-ui_init :: proc( vulkan_iface: ^render.VulkanIface ) {
+ui_init :: proc(vulkan_iface: ^render.VulkanIface) {
 
 	// Permanent arena
 	//
@@ -2414,22 +2463,25 @@ ui_init :: proc( vulkan_iface: ^render.VulkanIface ) {
 
 	ui_context.press_target = &UI_NilBox
 	ui_context.hover_target = &UI_NilBox
-	ui_context.target_box   = &UI_NilBox
-	ui_context.scroll_target= &UI_NilBox
+	ui_context.target_box = &UI_NilBox
+	ui_context.scroll_target = &UI_NilBox
 
-	ui_context.render_root  = new(Box, ui_context.persistent_arena_allocator)
-	ui_context.last_zindex  = 0
-	ui_context.text_input   = strings.builder_from_bytes(ui_context.text_store[:])
-	ui_context.first_frame  = true
+	ui_context.render_root = new(Box, ui_context.persistent_arena_allocator)
+	ui_context.last_zindex = 0
+	ui_context.text_input = strings.builder_from_bytes(ui_context.text_store[:])
+	ui_context.first_frame = true
 	ui_context.vulkan_iface = vulkan_iface
 
-	hash.init(&ui_context.animation_data, MAX_TABLE_HASH_SIZE, ui_context.persistent_arena_allocator)
+	hash.init(
+		&ui_context.animation_data,
+		MAX_TABLE_HASH_SIZE,
+		ui_context.persistent_arena_allocator,
+	)
 	hash.init(&ui_context.hash_boxes, MAX_TABLE_HASH_SIZE, ui_context.persistent_arena_allocator)
 	hash.init(
 		&ui_context.cursor_image_per_box,
 		MAX_TABLE_HASH_SIZE,
 		ui_context.persistent_arena_allocator,
-		)
+	)
 
 }
-
