@@ -1008,7 +1008,7 @@ validate_xml :: proc(
 			// the attributes we have defined
 			// NOTE: Is important to know that an attr can be an user-defined
 			// type, and we should then, check that the user-defined type is conformant
-			// inside the parameter called. I think that, if the type is valid, we could
+			// inside the parameter called. If the type is valid, we could
 			// assume that the parameter definition can take that type as is. In that case
 			// we should then just not try to validate the type definition of our parameters/arguments
 			// definitions.
@@ -5017,6 +5017,7 @@ SearchTypeDeclInSystem :: proc(
 				if attr.val == path[len(path) - 1] {
 					TypeNotFound = false
 					TypeNode = node_it
+					break 
 				}
 			}
 		}

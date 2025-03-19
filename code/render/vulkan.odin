@@ -467,18 +467,33 @@ framebuffer_resize_callback :: proc "c" (window: glfw.WindowHandle, width, heigh
 }
 // -----------------------------------------------------------------------------
 
-debugCallback :: proc "stdcall" (
-	messageSeverity: vk.DebugUtilsMessageSeverityFlagsEXT,
-	messageType: vk.DebugUtilsMessageTypeFlagsEXT,
-	pCallbackData: ^vk.DebugUtilsMessengerCallbackDataEXT,
-	pUserData: rawptr,
-) -> b32 {
-	context = runtime.default_context()
-	fmt.println("validation layer: ", pCallbackData.pMessage)
+when ODIN_OS == .Windows {
+	debugCallback :: proc "stdcall" (
+		messageSeverity: vk.DebugUtilsMessageSeverityFlagsEXT,
+		messageType: vk.DebugUtilsMessageTypeFlagsEXT,
+		pCallbackData: ^vk.DebugUtilsMessengerCallbackDataEXT,
+		pUserData: rawptr,
+	) -> b32 {
+		context = runtime.default_context()
+		fmt.println("validation layer: ", pCallbackData.pMessage)
 
-	return false
+		return false
+	}
 }
 
+when ODIN_OS == .Linux {
+	debugCallback :: proc "cdecl" (
+		messageSeverity: vk.DebugUtilsMessageSeverityFlagsEXT,
+		messageType: vk.DebugUtilsMessageTypeFlagsEXT,
+		pCallbackData: ^vk.DebugUtilsMessengerCallbackDataEXT,
+		pUserData: rawptr,
+	) -> b32 {
+		context = runtime.default_context()
+		fmt.println("validation layer: ", pCallbackData.pMessage)
+
+		return false
+	}
+}
 // -----------------------------------------------------------------------------
 
 populate_debug_messenger_create_info :: proc(createInfo: ^vk.DebugUtilsMessengerCreateInfoEXT) {
