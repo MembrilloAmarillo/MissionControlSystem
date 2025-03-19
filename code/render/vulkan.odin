@@ -983,6 +983,7 @@ create_swap_chain :: proc(vi: ^VulkanIface) {
 }
 
 // -----------------------------------------------------------------------------
+
 create_render_pass :: proc(vi: ^VulkanIface) {
 	color_attachment := vk.AttachmentDescription {
 		format         = vi.va_SwapChain.sc_Format,

@@ -235,6 +235,8 @@ net_start_server :: proc(t: thread.Task) {
        bytes_read,
        endpoint,
       )
+      //sync.mutex_lock(&app_state.thread_lock)
+      //defer sync.mutex_unlock(&app_state.thread_lock)
       fmt.println("Buffer", buff[:bytes_read])
       //new_buf := make([]u8, bytes_read)
       //runtime.mem_copy(new_buf, buff, bytes_read)
@@ -961,7 +963,7 @@ check_param_correctness :: proc(
 
  list := get_param_entry_list(node, xml_handler)
  append(&entry_list_params, ..list[:])
- delete(list)
+ //delete(list)
 
  for tmp_stack.push_count > 0 {
   it := utils.get_front_stack(&tmp_stack)
@@ -1160,7 +1162,7 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
  // =========== Set UI Title ================= //
  {
   style := ui_context.theme.text
-  style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x432243FF))
+  style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x502218FF))
   set_next_layout_style(style)
 
   set_layout_next_font(22, "./data/font/0xProtoNerdFontMono-Bold.ttf")
@@ -1169,8 +1171,8 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
   ui_pop_style()
  }
 
- sync.mutex_lock(&app_state.thread_lock)
- defer sync.mutex_unlock(&app_state.thread_lock)
+ //sync.mutex_lock(&app_state.thread_lock)
+ //defer sync.mutex_unlock(&app_state.thread_lock)
 
  to_destroy := make([dynamic]bool, len(app_state.tm_rec_sizes), context.temp_allocator)
 
@@ -2799,7 +2801,7 @@ main :: proc() {
  xtce_state_arg.parse_proc = xtce.parse_xsd
  xtce_state_arg.validate_proc = xtce.validate_xml
  xtce_state_arg.schema_path = "./data/SpaceSystem.xsd"
- xtce_state_arg.system_path = "./data/UCF.xml"
+ xtce_state_arg.system_path = "./data/xtce.xml"
  xtce_state_arg.schema = new(xtce.xsd_schema)
  xtce_state_arg.system = new(xtce.handler)
 
