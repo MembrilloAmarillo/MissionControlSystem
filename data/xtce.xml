@@ -14,7 +14,7 @@
 		<xtce:TelemetryMetaData>
 
 			<xtce:ParameterTypeSet>
-	
+
 				<xtce:AbsoluteTimeParameterType name="POSIXTimeType" shortDescription="POSIX UNIX Time 'timeval' which is 2 unsigned 32 bit integers">
 					<xtce:Encoding>
 						<xtce:IntegerDataEncoding sizeInBits="64"/>
@@ -30,12 +30,12 @@
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="8"/>
 				</xtce:IntegerParameterType>
-				
+
 				<xtce:IntegerParameterType name="uint16_t" signed="false">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="16"/>
 				</xtce:IntegerParameterType>
-				
+
 				<xtce:IntegerParameterType name="uint32_t" signed="false">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="32"/>
@@ -44,7 +44,7 @@
 				<xtce:IntegerParameterType name="uint64_t" signed="false">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="64"/>
-				</xtce:IntegerParameterType>				
+				</xtce:IntegerParameterType>
 
 				<xtce:EnumeratedParameterType name="TM_CHECKSUM_Type" initialValue="CRC">
 					<xtce:UnitSet/>
@@ -77,7 +77,7 @@
 						</xtce:EnumerationList>
 						<xtce:IntegerDataEncoding sizeInBits="1" encoding="unsigned"/>
 				</xtce:EnumeratedParameterType>
-				
+
 				<xtce:IntegerParameterType name="CCSDS_Packet_APID_Type" sizeInBits="11" signed="false">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="11"/>
@@ -111,7 +111,7 @@
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="4"/>
 				</xtce:IntegerParameterType>
-				
+
 				<xtce:IntegerParameterType name="CCSDS_SC_Time_Reference_Status_Type" sizeInBits="4" signed="false">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="4"/>
@@ -133,7 +133,7 @@
 				</xtce:IntegerParameterType>
 
 			</xtce:ParameterTypeSet>
-			
+
 			<xtce:ParameterSet>
 
 				<xtce:Parameter name="POSIXTime" parameterTypeRef="POSIXTimeType">
@@ -145,12 +145,12 @@
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
 					</xtce:Parameter>
-	
+
 				<xtce:Parameter name="CCSDS_Packet_Version_Number" parameterTypeRef="CCSDS_Packet_Version_Number_Type">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
 					</xtce:Parameter>
-	
+
 				<xtce:Parameter name="CCSDS_Packet_Type" parameterTypeRef="CCSDS_Packet_Type_Type">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
@@ -184,37 +184,37 @@
 				<xtce:Parameter name="CCSDS_PUS_Version_Number" parameterTypeRef="CCSDS_PUS_Version_Number_Type">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
-				</xtce:Parameter>				
+				</xtce:Parameter>
 
 				<xtce:Parameter name="CCSDS_SC_Time_Reference_Status" parameterTypeRef="CCSDS_SC_Time_Reference_Status_Type">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
-				</xtce:Parameter>				
+				</xtce:Parameter>
 
 				<xtce:Parameter name="CCSDS_Service_Type_ID" parameterTypeRef="uint8_t">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
-				</xtce:Parameter>				
+				</xtce:Parameter>
 
 				<xtce:Parameter name="CCSDS_Message_SubType_ID" parameterTypeRef="CCSDS_Message_SubType_ID_Type">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
-				</xtce:Parameter>				
+				</xtce:Parameter>
 
 				<xtce:Parameter name="CCSDS_Message_Type_Counter" parameterTypeRef="CCSDS_Message_Type_Counter_Type">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
-				</xtce:Parameter>				
+				</xtce:Parameter>
 
 				<xtce:Parameter name="CCSDS_Destination_ID" parameterTypeRef="CCSDS_Destination_ID_Type">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
-				</xtce:Parameter>				
+				</xtce:Parameter>
 
-				<xtce:Parameter name="CCSDS_Time" parameterTypeRef="/UCF/uint32_t">
+				<xtce:Parameter name="CCSDS_Time" parameterTypeRef="/UCF/uint64_t">
 						<xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 						</xtce:ParameterProperties>
-				</xtce:Parameter>				
+				</xtce:Parameter>
 
 			</xtce:ParameterSet>
 
@@ -289,7 +289,7 @@
 						</xtce:EnumerationList>
 						<xtce:IntegerDataEncoding sizeInBits="1" encoding="unsigned"/>
 				</xtce:EnumeratedArgumentType>
-				
+
 				<xtce:IntegerArgumentType name="CCSDS_Packet_APID_Type" sizeInBits="11" signed="false">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="11"/>
@@ -328,7 +328,7 @@
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="4"/>
 				</xtce:IntegerArgumentType>
-				
+
 				<xtce:IntegerArgumentType name="CCSDS_Source_ID_Type" sizeInBits="16" signed="false">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding encoding="unsigned" sizeInBits="16"/>
@@ -337,7 +337,7 @@
 			</xtce:ArgumentTypeSet>
 
 			<xtce:MetaCommandSet>
-				
+
 				<xtce:MetaCommand name="CCSDS_Primary_Header_TC">
 					<xtce:ArgumentList>
 							<xtce:Argument argumentTypeRef="CCSDS_Packet_Version_Number_Type" 			name="CCSDS_Packet_Version_Number"/>
@@ -347,8 +347,8 @@
 							<xtce:Argument argumentTypeRef="CCSDS_Packet_Sequence_Flags_Type" 			name="CCSDS_Sequence_Flags"/>
 							<xtce:Argument argumentTypeRef="CCSDS_Packet_Sequence_Count_Type" 			name="CCSDS_Packet_Sequence_Count"/>
 							<xtce:Argument argumentTypeRef="/UCF/uint16_t"								name="CCSDS_Packet_Data_Length"/>
-					</xtce:ArgumentList>				
-		
+					</xtce:ArgumentList>
+
 					<xtce:CommandContainer name="CCSDS_Primary_Header_TC_Container">
 						<xtce:EntryList>
 							<xtce:ArgumentRefEntry argumentRef="CCSDS_Packet_Version_Number"/>
@@ -370,8 +370,8 @@
 							<xtce:Argument argumentTypeRef="uint8_t" 	name="CCSDS_Service_Type_ID"/>
 							<xtce:Argument argumentTypeRef="uint8_t" name="CCSDS_Service_SubType_ID"/>
 							<xtce:Argument argumentTypeRef="CCSDS_Source_ID_Type" 			name="CCSDS_Source_ID"/>
-					</xtce:ArgumentList>				
-		
+					</xtce:ArgumentList>
+
 					<xtce:CommandContainer name="CCSDS_Full_Header_TC_Container">
 						<xtce:EntryList>
 							<xtce:ArgumentRefEntry argumentRef="CCSDS_PUS_Version_Number"/>
@@ -381,7 +381,7 @@
 							<xtce:ArgumentRefEntry argumentRef="CCSDS_Source_ID"/>
 						</xtce:EntryList>
 					</xtce:CommandContainer>
-				</xtce:MetaCommand>				
+				</xtce:MetaCommand>
 
 			</xtce:MetaCommandSet>
 		</xtce:CommandMetaData>
@@ -389,7 +389,7 @@
 	<xtce:SpaceSystem name="PUS" shortDescription="PUS related parameters and arguments">
 	 <xtce:Header date="2022-11-23" validationStatus="Draft" version="1"/>
 		<xtce:TelemetryMetaData>
-		
+
 			<xtce:ParameterTypeSet>
 
 				<xtce:EnumeratedParameterType name="Acceptance_Error_Type">
@@ -485,7 +485,7 @@
 						<xtce:Enumeration value="0" label="UnknownRoutingError"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
-			
+
 				<xtce:EnumeratedParameterType name="HK_Structure_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="8" signed="false"/>
 					<xtce:EnumerationList>
@@ -504,7 +504,7 @@
 					<xtce:Enumeration label="EPS_PBU_ABF" value="10"/>
 					<xtce:Enumeration label="EPS_Param" value="11"/>
 					<xtce:Enumeration label="EPS_OBC_Mode" value="12"/>
-				
+
 				<!-- SAFE MODE HK STRUCTURE ID -->
 
 					<xtce:Enumeration label="ADCS_SM" value="17"/>
@@ -536,7 +536,7 @@
 					<xtce:Enumeration label="Transceiver_OM" value="54"/>
 
 				<!-- DEPLOY MODE STRUCTURE ID -->
-				
+
 					<xtce:Enumeration label="ADCS_DM" value="65"/>
 					<xtce:Enumeration label="EPS_PBU_DM" value="66"/>
 					<xtce:Enumeration label="EPS_PDU_DM" value="67"/>
@@ -546,13 +546,13 @@
 					<xtce:Enumeration label="Transceiver_DM" value="71"/>
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
-				
+
 				<xtce:EnumeratedParameterType name="HK_Param_ID_Type">
 					<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
 					<xtce:EnumerationList>
 
 					<!-- ADCS PARAM ID -->
-					
+
 						<xtce:Enumeration label="SP_MAG_TEMP"			value="257"/>
 						<xtce:Enumeration label="SP_PHOTO_X_PLUS"		value="258"/>
 						<xtce:Enumeration label="SP_PHOTO_X_MINUS"		value="259"/>
@@ -570,7 +570,7 @@
 						<xtce:Enumeration label="OBC_TEMP_GYRO"			value="271"/>
 
 					<!-- EPS PBU PARAM ID -->
-						
+
 						<xtce:Enumeration label="EPS_PBU_VOLT_BDRSUP"	value="513"/>
 						<xtce:Enumeration label="EPS_PBU_TEMP_MCU"		value="514"/>
 						<xtce:Enumeration label="EPS_PBU_VIP_IN_VOLT"	value="515"/>
@@ -612,7 +612,7 @@
 						<xtce:Enumeration label="EPS_PBU_PB3_BAT_TEMP3"	value="551"/>
 
 					<!-- EPS PDU PARAM ID -->
-						
+
 						<xtce:Enumeration label="EPS_PDU_VOLT_BRDSUP" value="769"/>
 						<xtce:Enumeration label="EPS_PDU_TEMP_MCU" value="770"/>
 						<xtce:Enumeration label="EPS_PDU_VIP_IN_VOLT" value="771"/>
@@ -658,7 +658,7 @@
 						<xtce:Enumeration label="EPS_PDU_VIP_CH8_POWE" value="811"/>
 
 					<!-- EPS PIU PARAM ID -->
-						
+
 						<xtce:Enumeration label="EPS_PIU_VOLT_BRDSUP" value="1025"/>
 						<xtce:Enumeration label="EPS_PIU_TEMP" value="1026"/>
 						<xtce:Enumeration label="EPS_PIU_VIP_DIST_IN_VOLT" value="1027"/>
@@ -770,7 +770,7 @@
 						<xtce:Enumeration label="TRA_TOT_RX_COUNT" value="1808"/>
 						<xtce:Enumeration label="TRA_TOT_TX_BYTES" value="1809"/>
 						<xtce:Enumeration label="TRA_TOT_RX_BYTES" value="1810"/>
-						
+
 					</xtce:EnumerationList>
 				</xtce:EnumeratedParameterType>
 
@@ -1033,11 +1033,11 @@
 					</xtce:DimensionList>
 				</xtce:ArrayParameterType>
 
-			
+
 			</xtce:ParameterTypeSet>
-			
+
 			<xtce:ParameterSet>
-			
+
 				<xtce:Parameter name="HK_Param_ID" parameterTypeRef="HK_Param_ID_Type"/>
 				<xtce:Parameter name="Source_CCSDS_Packet_Version_Number" parameterTypeRef="/UCF/CCSDS_Packet_Version_Number_Type"/>
 				<xtce:Parameter name="Source_CCSDS_Packet_Type" parameterTypeRef="/UCF/CCSDS_Packet_Type_Type"/>
@@ -1075,14 +1075,14 @@
 				<xtce:Parameter name="Event_ID_Array" parameterTypeRef="Event_ID_Array_t"/>
 
 			</xtce:ParameterSet>
-			
+
 		<xtce:ContainerSet>
 
 			<xtce:SequenceContainer name="Source_Data">
 				<xtce:EntryList>
 					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Packet_Version_Number"/>
 					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Packet_Type"/>
-					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Secondary_Header_Flag"/>	
+					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Secondary_Header_Flag"/>
 					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Packet_APID"/>
 					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Packet_Sequence_Flags"/>
 					<xtce:ParameterRefEntry parameterRef="Source_CCSDS_Packet_Squence_Count"/>
@@ -1397,11 +1397,11 @@
 			</xtce:SequenceContainer>
 
 		</xtce:ContainerSet>
-		
+
 		</xtce:TelemetryMetaData>
-		
+
 		<xtce:CommandMetaData>
-		
+
 			<xtce:ArgumentTypeSet>
 			<xtce:EnumeratedArgumentType name="HK_Structure_ID_Type">
 				<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
@@ -1421,7 +1421,7 @@
 					<xtce:Enumeration label="EPS_PBU_ABF" value="10"/>
 					<xtce:Enumeration label="EPS_Param" value="11"/>
 					<xtce:Enumeration label="EPS_OBC_Mode" value="12"/>
-				
+
 				<!-- SAFE MODE HK STRUCTURE ID -->
 
 					<xtce:Enumeration label="ADCS_SM" value="17"/>
@@ -1453,7 +1453,7 @@
 					<xtce:Enumeration label="Transceiver_OM" value="54"/>
 
 				<!-- DEPLOY MODE STRUCTURE ID -->
-				
+
 					<xtce:Enumeration label="ADCS_DM" value="65"/>
 					<xtce:Enumeration label="EPS_PBU_DM" value="66"/>
 					<xtce:Enumeration label="EPS_PDU_DM" value="67"/>
@@ -1480,7 +1480,7 @@
 					</xtce:Dimension>
 				</xtce:DimensionList>
 			</xtce:ArrayArgumentType>
-				
+
 			<xtce:ArrayArgumentType name="Parameter_ID_Array_Type" arrayTypeRef="Parameter_ID_Type">
 				<xtce:DimensionList>
 					<xtce:Dimension>
@@ -1520,7 +1520,7 @@
 						<xtce:Enumeration label="OBC_TEMP_GYRO"			value="271"/>
 
 					<!-- EPS PBU PARAM ID -->
-						
+
 						<xtce:Enumeration label="EPS_PBU_VOLT_BDRSUP"	value="513"/>
 						<xtce:Enumeration label="EPS_PBU_TEMP_MCU"		value="514"/>
 						<xtce:Enumeration label="EPS_PBU_VIP_IN_VOLT"	value="515"/>
@@ -1562,7 +1562,7 @@
 						<xtce:Enumeration label="EPS_PBU_PB3_BAT_TEMP3"	value="551"/>
 
 					<!-- EPS PDU PARAM ID -->
-						
+
 						<xtce:Enumeration label="EPS_PDU_VOLT_BRDSUP" value="769"/>
 						<xtce:Enumeration label="EPS_PDU_TEMP_MCU" value="770"/>
 						<xtce:Enumeration label="EPS_PDU_VIP_IN_VOLT" value="771"/>
@@ -1608,7 +1608,7 @@
 						<xtce:Enumeration label="EPS_PDU_VIP_CH8_POWE" value="811"/>
 
 					<!-- EPS PIU PARAM ID -->
-						
+
 						<xtce:Enumeration label="EPS_PIU_VOLT_BRDSUP" value="1025"/>
 						<xtce:Enumeration label="EPS_PIU_TEMP" value="1026"/>
 						<xtce:Enumeration label="EPS_PIU_VIP_DIST_IN_VOLT" value="1027"/>
@@ -1720,7 +1720,7 @@
 						<xtce:Enumeration label="TRA_TOT_RX_COUNT" value="1808"/>
 						<xtce:Enumeration label="TRA_TOT_TX_BYTES" value="1809"/>
 						<xtce:Enumeration label="TRA_TOT_RX_BYTES" value="1810"/>
-						
+
 				</xtce:EnumerationList>
 			</xtce:EnumeratedArgumentType>
 
@@ -1746,7 +1746,7 @@
 					</xtce:Dimension>
 				</xtce:DimensionList>
 			</xtce:ArrayArgumentType>
-			
+
 	<!--	<xtce:AggregateArgumentType name="Supper_Commutated_Sample_Repetition_Number_Type">
 				<xtce:MemberList>
 					<xtce:Member name="Super_Commutated_Sample_Repetition_Number" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
@@ -1965,11 +1965,11 @@
 					<xtce:Member name="TC_Function_ID" typeRef="/UCF/uint16_t"/>
 				</xtce:MemberList>
 			</xtce:AggregateArgumentType>
-			
+
 			</xtce:ArgumentTypeSet>
-			
+
 			<xtce:MetaCommandSet>
-			
+
 				<xtce:MetaCommand name="PUS_3_31" shortDescription="Change the collection interval of a certain number of HK parameters">
 					<xtce:BaseMetaCommand metaCommandRef="/UCF/CCSDS_Full_Header_TC">
 					 <xtce:ArgumentAssignmentList>
@@ -2159,7 +2159,7 @@
 						<xtce:EntryList/>
 					</xtce:CommandContainer>
 				</xtce:MetaCommand>
-				
+
 				<xtce:MetaCommand name="PUS_20_1" shortDescription="Ask the values of a certain number of parameters">
 					<xtce:BaseMetaCommand metaCommandRef="/UCF/CCSDS_Full_Header_TC">
 					 <xtce:ArgumentAssignmentList>
@@ -2371,17 +2371,17 @@
 				</xtce:MetaCommand>
 
 			</xtce:MetaCommandSet>
-		
+
 		</xtce:CommandMetaData>
-		
+
 	</xtce:SpaceSystem>
 <!--
     <xtce:SpaceSystem name="OBC" shortDescription="OBC TM and TC Packet Definition">
         <xtce:Header date="2022-11-23" validationStatus="Draft" version="1"/>
-				
+
 				<xtce:TelemetryMetaData>
 			<xtce:ParameterTypeSet>
-			
+
 				<xtce:BooleanParameterType name = "TM_OBC_FS_MOUNTED_Type" zeroStringValue="OFF" oneStringValue="ON" shortDescription="Specifies if filesystem is mounted">
 					<xtce:UnitSet/>
 					<xtce:IntegerDataEncoding bitOrder="mostSignificantBitFirst" sizeInBits="8" encoding="unsigned"/>
@@ -2395,7 +2395,7 @@
 				<xtce:IntegerParameterType name = "TM_OBC_TEMP_Type" shortDescription = "This parameter describes the measured temperature of an OBC component" >
                     <xtce:UnitSet>
 					    <xtce:Unit>Celcius</xtce:Unit>
-				    </xtce:UnitSet>	
+				    </xtce:UnitSet>
                     <xtce:IntegerDataEncoding  sizeInBits="16" encoding="unsigned">
 						<xtce:DefaultCalibrator>
 							<xtce:MathOperationCalibrator>
@@ -2410,7 +2410,7 @@
 				<xtce:IntegerParameterType name = "TM_OBC_CURRENT_CONSUPTION_Type" shortDescription = "This parameter describes the measured current consumption of each component" >
                     <xtce:UnitSet>
 					    <xtce:Unit>mA</xtce:Unit>
-				    </xtce:UnitSet>	
+				    </xtce:UnitSet>
                     <xtce:IntegerDataEncoding  sizeInBits="16" encoding="unsigned"/>
                 </xtce:IntegerParameterType>
 
@@ -2418,7 +2418,7 @@
                     <xtce:UnitSet/>
                     <xtce:IntegerDataEncoding  sizeInBits="32" encoding="unsigned"/>
                 </xtce:IntegerParameterType>
-                
+
                 <xtce:IntegerParameterType name = "TM_OBC_BOOT_CAUSE_Type" shortDescription = "This parameter describes the cause of the last boot" >
                     <xtce:UnitSet/>
                     <xtce:IntegerDataEncoding  sizeInBits="32" encoding="unsigned"/>
@@ -2538,7 +2538,7 @@
 						<xtce:ParameterRefEntry parameterRef="TM_OBC_I_PWM"/>
 						<xtce:ParameterRefEntry parameterRef="TM_OBC_RESET_CAUSE"/>
 						<xtce:ParameterRefEntry parameterRef="TM_OBC_BOOT_CAUSE"/>
-						<xtce:ParameterRefEntry parameterRef="TM_OBC_BOOT_COUNT"/>		
+						<xtce:ParameterRefEntry parameterRef="TM_OBC_BOOT_COUNT"/>
 						<xtce:ParameterRefEntry parameterRef="TM_OBC_CLOCK"/>
 						<xtce:ParameterRefEntry parameterRef="TM_OBC_UPTIME"/>
 					</xtce:EntryList>
@@ -2552,10 +2552,10 @@
 				</xtce:SequenceContainer>
 			</xtce:ContainerSet>
 		 </xtce:TelemetryMetaData>
-				
+
     </xtce:SpaceSystem>
-		
-		
+
+
     <xtce:SpaceSystem name="PAY" shortDescription="Payload TM and TC Packet Definition">
       <xtce:Header date="2022-11-23" validationStatus="Draft" version="1"/>
       <xtce:TelemetryMetaData>
@@ -2570,7 +2570,7 @@
 	      <xtce:Enumeration value="2" label="Safe"/>
 	    </xtce:EnumerationList>
 	  </xtce:EnumeratedParameterType>
-	  
+
 	  <xtce:BooleanParameterType name="TM_PAY_1_Exp_Download_Type" zeroStringValue="OFF"
 				     oneStringValue="ON"
 				     shortDescription="Specifies if Payload 1 has downloaded the experiment into OBC">
@@ -2605,7 +2605,7 @@
 	    <xtce:UnitSet/>
 	    <xtce:IntegerDataEncoding bitOrder="mostSignificantBitFirst" sizeInBits="1" encoding="unsigned"/>
 	  </xtce:BooleanParameterType>
-	
+
 		<xtce:BooleanParameterType name="TM_PAY_1_Stop1_Type" zeroStringValue="OFF"
 				     oneStringValue="ON"
 				     shortDescription="Specifies if Payload 1 has stoped the scientific run">
@@ -2642,7 +2642,7 @@
 	      <xtce:SystemName>PAY</xtce:SystemName>
 	    </xtce:ParameterProperties>
 	  </xtce:Parameter>
-		
+
 	<xtce:Parameter name="TM_PAY_1_S1_Z_Argument" parameterTypeRef="TM_PAY_1_S1_Z_Type">
 	    <xtce:ParameterProperties dataSource="telemetered" readOnly="true">
 	      <xtce:SystemName>PAY</xtce:SystemName>
@@ -2689,7 +2689,7 @@
 	      <xtce:SystemName>PAY</xtce:SystemName>
 	    </xtce:ParameterProperties>
 	  </xtce:Parameter>
-	  
+
 	</xtce:ParameterSet>
 	<xtce:ContainerSet>
 
@@ -2718,7 +2718,7 @@
 
 	</xtce:TelemetryMetaData>
 
-		 #### TELECOMMANDS #### 
+		 #### TELECOMMANDS ####
 
 	<xtce:CommandMetaData>
 
@@ -2884,9 +2884,9 @@
 			</xtce:MetaCommand>
 
 		</xtce:MetaCommandSet>
-	
+
 	</xtce:CommandMetaData>
-      
+
     </xtce:SpaceSystem>
 
 <xtce:SpaceSystem name="EPS" shortDescription="EPS TM">
@@ -2912,7 +2912,7 @@
 				<xtce:Enumeration value="3" label="ControlSystemReset"/>
 				<xtce:Enumeration value="4" label="EmergencyLowPoweredMode"/>
 			</xtce:EnumerationList>
-			</xtce:EnumeratedParameterType>		
+			</xtce:EnumeratedParameterType>
 
 		<xtce:AggregateParameterType name="EPS_System_Status_Field_Type">
 			<xtce:MemberList>
@@ -2969,7 +2969,7 @@
 				<xtce:Member name="BitflagChannelOvercurrentLatchOffOnCeroToFifteen" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
 				<xtce:Member name="BitflagChannelOvercurrentLatchOffOnFifteentoThrityone" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
 			</xtce:MemberList>
-		</xtce:AggregateParameterType>	
+		</xtce:AggregateParameterType>
 
 		<xtce:AggregateParameterType name="EPS_PBU_Housekeeping_Data_Eng_Type">
 			<xtce:MemberList>
@@ -2980,7 +2980,7 @@
 				<xtce:Member name="BPD" typeRef="EPS_BPD" sizeInBits="16" signed="false"/>
 				 TODO: Falta battery pack channel information ##
 			</xtce:MemberList>
-		</xtce:AggregateParameterType>	
+		</xtce:AggregateParameterType>
 
 		<xtce:AggregateParameterType name="EPS_Configuration_Parameter_Type">
 			<xtce:MemberList>
@@ -2988,7 +2988,7 @@
 				 TODO: Is an array of bytes. For now, we keep it as maximum (8 Bytes) ##
 				<xtce:Member name="ParameterValue" typeRef="/UCF/uint64_t" sizeInBits="64" signed="false"/>
 			</xtce:MemberList>
-		</xtce:AggregateParameterType>	
+		</xtce:AggregateParameterType>
 
 		<xtce:AggregateParameterType name="EPS_PIU_Housekeeping_Data_Eng_Type">
 			<xtce:MemberList>
@@ -3001,7 +3001,7 @@
 				<xtce:Member name="BatterPackBoardStatusBitflag" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
 				<xtce:Member name="InBetweenBatteryPackTemp" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
 				<xtce:Member name="InFrontBatteryPackTemp" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
-				<xtce:Member name="InBetweenBatteryPackTemp" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>	
+				<xtce:Member name="InBetweenBatteryPackTemp" typeRef="/UCF/uint16_t" sizeInBits="16" signed="false"/>
 			 TODO: Faltan Los ultimos bytes. No estoy seguro de si se necesitan ##
 			</xtce:MemberList>
 		</xtce:AggregateParameterType>
@@ -3112,7 +3112,7 @@
 			<xtce:IntegerParameterType name="EPS_TM_SP_TEMP_type" sizeInBits="16" shortDescription="This parameter describes the measured Solar Panel temperature">
 				<xtce:UnitSet>
 					<xtce:Unit>Celcius</xtce:Unit>
-				</xtce:UnitSet>	
+				</xtce:UnitSet>
 				<xtce:IntegerDataEncoding sizeInBits="16" encoding="unsigned">
 					<xtce:DefaultCalibrator>
 						<xtce:MathOperationCalibrator>
@@ -3204,7 +3204,7 @@
 				</xtce:SizeInBits>
 			</xtce:StringDataEncoding>
 		</xtce:BooleanParameterType>
-		
+
 	</xtce:ParameterTypeSet>
 
 
@@ -3313,8 +3313,8 @@
 				<xtce:Argument argumentTypeRef="STATUS_t" 		  			name="OBC_STATUS"/>
 				<xtce:Argument argumentTypeRef="/UCF/uint32_t/" 			name="FDIR_RAISED"/>
 				<xtce:Argument argumentTypeRef="/UCF/uint32_t/" 			name="N_EVENTS_RAISED"/>
-			</xtce:ArgumentList>				
-		
+			</xtce:ArgumentList>
+
 			<xtce:CommandContainer name="BEACON">
 				<xtce:EntryList>
 					<xtce:ArgumentRefEntry argumentRef="EPS_STATUS"/>
@@ -3326,7 +3326,7 @@
 					<xtce:ArgumentRefEntry argumentRef="N_EVENTS_RAISED"/>
 				</xtce:EntryList>
 			</xtce:CommandContainer>
-		</xtce:MetaCommand>	
+		</xtce:MetaCommand>
 
 	</xtce:MetaCommandSet>
 

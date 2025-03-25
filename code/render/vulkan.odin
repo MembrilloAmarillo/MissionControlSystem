@@ -2633,9 +2633,12 @@ init_vulkan :: proc(v_interface: ^VulkanIface) {
 			properties: vk.PhysicalDeviceProperties
 			vk.GetPhysicalDeviceProperties(device, &properties)
 			fmt.println("GPU Name: ", cstring(&properties.deviceName[0]))
+			break
+			/*
 			if properties.deviceType == .DISCRETE_GPU {
 				break
 			}
+      */
 		}
 	}
 
@@ -2786,7 +2789,7 @@ init_vulkan :: proc(v_interface: ^VulkanIface) {
 	new_bit := bitmap_push(2160, 126, &v_interface.bitmap)
 	v_interface.va_FontCache = make([dynamic]FontCache, 2, v_interface.ArenaAllocator)
 	v_interface.va_FontCache[0] = f_BuildFont(
-		18 * v_interface.va_Window.scaling_factor.x,
+		22 * v_interface.va_Window.scaling_factor.x,
 		2160,
 		126,
 		raw_data(bitmap),
@@ -2795,7 +2798,7 @@ init_vulkan :: proc(v_interface: ^VulkanIface) {
 	v_interface.va_FontCache[0].BitmapOffset = {0, 0}
 
 	v_interface.va_FontCache[1] = f_BuildFont(
-		14 * v_interface.va_Window.scaling_factor.x,
+		18 * v_interface.va_Window.scaling_factor.x,
 		2160,
 		126,
 		raw_data(new_bit),
