@@ -1,0 +1,12 @@
+56 [17356] INFO perfrun.launcher <> - Launcher main begin
+62 [17356] INFO perfrun.launcher <> - MessageCatalogInit finished
+62 [17356] INFO perfrun.launcher <> - Launcher instance created
+62 [17356] INFO perfrun.launcher <> - argc = 9; cmdline = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\amplxe-runss.exe --ui-output-format xml --ui-output-fd 1264 -r C:\devel\MissionControlSystem\MCS\r003hs --command stop 
+76 [17356] INFO perfrun.launcher <> - New signal handler callback was added
+121 [17356] INFO perfrun.perfcollector <> - SEP tool path: C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\sep.exe
+135 [17356] INFO perfrun.launcher <> - create msngr2::ICliToolContext
+135 [17356] INFO perfrun.launcher <> - create file finder object
+135 [17356] INFO perfrun.launcher <> - open the result directory: pattern = C:\devel\MissionControlSystem\MCS\r003hs
+138 [17356] INFO perfrun.launcher <> - RpcClient: IP address = 127.0.0.1; port = 4294958187
+15739 [17356] INFO perfrun.launcher <> - Application exit code: 0
+15739 [17356] INFO perfrun.launcher <> - Exit code: 0

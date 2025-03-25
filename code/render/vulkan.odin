@@ -467,18 +467,33 @@ framebuffer_resize_callback :: proc "c" (window: glfw.WindowHandle, width, heigh
 }
 // -----------------------------------------------------------------------------
 
-debugCallback :: proc "stdcall" (
-	messageSeverity: vk.DebugUtilsMessageSeverityFlagsEXT,
-	messageType: vk.DebugUtilsMessageTypeFlagsEXT,
-	pCallbackData: ^vk.DebugUtilsMessengerCallbackDataEXT,
-	pUserData: rawptr,
-) -> b32 {
-	context = runtime.default_context()
-	fmt.println("validation layer: ", pCallbackData.pMessage)
+when ODIN_OS == .Windows {
+	debugCallback :: proc "stdcall" (
+		messageSeverity: vk.DebugUtilsMessageSeverityFlagsEXT,
+		messageType: vk.DebugUtilsMessageTypeFlagsEXT,
+		pCallbackData: ^vk.DebugUtilsMessengerCallbackDataEXT,
+		pUserData: rawptr,
+	) -> b32 {
+		context = runtime.default_context()
+		fmt.println("validation layer: ", pCallbackData.pMessage)
 
-	return false
+		return false
+	}
 }
 
+when ODIN_OS == .Linux {
+	debugCallback :: proc "cdecl" (
+		messageSeverity: vk.DebugUtilsMessageSeverityFlagsEXT,
+		messageType: vk.DebugUtilsMessageTypeFlagsEXT,
+		pCallbackData: ^vk.DebugUtilsMessengerCallbackDataEXT,
+		pUserData: rawptr,
+	) -> b32 {
+		context = runtime.default_context()
+		fmt.println("validation layer: ", pCallbackData.pMessage)
+
+		return false
+	}
+}
 // -----------------------------------------------------------------------------
 
 populate_debug_messenger_create_info :: proc(createInfo: ^vk.DebugUtilsMessengerCreateInfoEXT) {
@@ -968,6 +983,7 @@ create_swap_chain :: proc(vi: ^VulkanIface) {
 }
 
 // -----------------------------------------------------------------------------
+
 create_render_pass :: proc(vi: ^VulkanIface) {
 	color_attachment := vk.AttachmentDescription {
 		format         = vi.va_SwapChain.sc_Format,
@@ -2617,9 +2633,12 @@ init_vulkan :: proc(v_interface: ^VulkanIface) {
 			properties: vk.PhysicalDeviceProperties
 			vk.GetPhysicalDeviceProperties(device, &properties)
 			fmt.println("GPU Name: ", cstring(&properties.deviceName[0]))
+			break
+			/*
 			if properties.deviceType == .DISCRETE_GPU {
 				break
 			}
+      */
 		}
 	}
 
@@ -2770,7 +2789,7 @@ init_vulkan :: proc(v_interface: ^VulkanIface) {
 	new_bit := bitmap_push(2160, 126, &v_interface.bitmap)
 	v_interface.va_FontCache = make([dynamic]FontCache, 2, v_interface.ArenaAllocator)
 	v_interface.va_FontCache[0] = f_BuildFont(
-		18 * v_interface.va_Window.scaling_factor.x,
+		22 * v_interface.va_Window.scaling_factor.x,
 		2160,
 		126,
 		raw_data(bitmap),
@@ -2779,7 +2798,7 @@ init_vulkan :: proc(v_interface: ^VulkanIface) {
 	v_interface.va_FontCache[0].BitmapOffset = {0, 0}
 
 	v_interface.va_FontCache[1] = f_BuildFont(
-		14 * v_interface.va_Window.scaling_factor.x,
+		18 * v_interface.va_Window.scaling_factor.x,
 		2160,
 		126,
 		raw_data(new_bit),

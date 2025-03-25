@@ -1008,7 +1008,7 @@ validate_xml :: proc(
 			// the attributes we have defined
 			// NOTE: Is important to know that an attr can be an user-defined
 			// type, and we should then, check that the user-defined type is conformant
-			// inside the parameter called. I think that, if the type is valid, we could
+			// inside the parameter called. If the type is valid, we could
 			// assume that the parameter definition can take that type as is. In that case
 			// we should then just not try to validate the type definition of our parameters/arguments
 			// definitions.
@@ -4602,6 +4602,8 @@ GetSpaceSystemVersion :: proc(system: ^SpaceSystemType) -> string {
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+// NOTE: Maybe it should also output the new system which it enters
+//
 GetBaseMetaCommand :: proc(system: ^space_system, ref: string) -> MetaCommandType {
 	type: MetaCommandType = {}
 
@@ -4637,7 +4639,7 @@ GetBaseMetaCommand :: proc(system: ^space_system, ref: string) -> MetaCommandTyp
 		utils.push_stack(&tmp_stack, auto_cast sys)
 
 		depth_path := 0
-		// if we have /UCF/something, we have to split it in three: ["", UCF, something], 
+		// if we have /UCF/something, we have to split it in three: ["", UCF, something],
 		// sow we start checking from index 1
 		if len(path[0]) == 0 {
 			depth_path = 1
@@ -4659,6 +4661,7 @@ GetBaseMetaCommand :: proc(system: ^space_system, ref: string) -> MetaCommandTyp
 							if CommandType.base.t_name.t_restriction.val == command_name {
 								type = CommandType
 								found = true
+								break
 							}
 						}
 					}
@@ -4720,7 +4723,7 @@ GetArgumentDecl :: proc(
 		utils.push_stack(&tmp_stack, auto_cast sys)
 
 		depth_path := 0
-		// if we have /UCF/something, we have to split it in three: ["", UCF, something], 
+		// if we have /UCF/something, we have to split it in three: ["", UCF, something],
 		// sow we start checking from index 1
 		if len(path[0]) == 0 {
 			depth_path = 1
@@ -4744,6 +4747,7 @@ GetArgumentDecl :: proc(
 							if arg.base.base.base.t_name.t_restriction.val == argument {
 								type = arg
 								found = true
+								break
 							}
 						}
 					case ArrayArgumentType:
@@ -4751,6 +4755,7 @@ GetArgumentDecl :: proc(
 							if arg.base.base.t_name.t_restriction.val == argument {
 								type = arg
 								found = true
+								break
 							}
 						}
 					case EnumeratedArgumentType:
@@ -4758,6 +4763,7 @@ GetArgumentDecl :: proc(
 							if arg.base.base.base.t_name.t_restriction.val == argument {
 								type = arg
 								found = true
+								break
 							}
 						}
 					case FloatArgumentType:
@@ -4765,6 +4771,7 @@ GetArgumentDecl :: proc(
 							if arg.base.base.base.t_name.t_restriction.val == argument {
 								type = arg
 								found = true
+								break
 							}
 						}
 					case BooleanArgumentType:
@@ -4772,6 +4779,7 @@ GetArgumentDecl :: proc(
 							if arg.base.base.base.t_name.t_restriction.val == argument {
 								type = arg
 								found = true
+								break
 							}
 						}
 					case AggregateArgumentType:
@@ -4779,6 +4787,7 @@ GetArgumentDecl :: proc(
 							if arg.base.base.t_name.t_restriction.val == argument {
 								type = arg
 								found = true
+								break
 							}
 						}
 					}
@@ -4796,6 +4805,7 @@ GetArgumentDecl :: proc(
 							if param.base.base.base.t_name.t_restriction.val == argument {
 								param_type = param
 								found = true
+								break
 							}
 						}
 					case ArrayParameterType:
@@ -4803,6 +4813,7 @@ GetArgumentDecl :: proc(
 							if param.base.base.t_name.t_restriction.val == argument {
 								param_type = param
 								found = true
+								break
 							}
 						}
 					case EnumeratedParameterType:
@@ -4810,6 +4821,7 @@ GetArgumentDecl :: proc(
 							if param.base.base.base.t_name.t_restriction.val == argument {
 								param_type = param
 								found = true
+								break
 							}
 						}
 					case FloatParameterType:
@@ -4817,6 +4829,7 @@ GetArgumentDecl :: proc(
 							if param.base.base.base.t_name.t_restriction.val == argument {
 								param_type = param
 								found = true
+								break
 							}
 						}
 					case BooleanParameterType:
@@ -4824,6 +4837,7 @@ GetArgumentDecl :: proc(
 							if param.base.base.base.t_name.t_restriction.val == argument {
 								param_type = param
 								found = true
+								break
 							}
 						}
 					case AggregateParameterType:
@@ -4831,6 +4845,7 @@ GetArgumentDecl :: proc(
 							if param.base.base.t_name.t_restriction.val == argument {
 								param_type = param
 								found = true
+								break
 							}
 						}
 					}
@@ -5017,6 +5032,7 @@ SearchTypeDeclInSystem :: proc(
 				if attr.val == path[len(path) - 1] {
 					TypeNotFound = false
 					TypeNode = node_it
+					break
 				}
 			}
 		}

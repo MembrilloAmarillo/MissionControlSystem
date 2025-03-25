@@ -92,7 +92,7 @@ TC_menu_items :: struct {
 	//
 	current_tc:    ^Box,
 
-	// Hash table containing the value (on string) of the arguments used for 
+	// Hash table containing the value (on string) of the arguments used for
 	// each metacommand in order to send them later when the user requires
 	//
 	arg_value_map: hash.Table(string, string),
@@ -137,8 +137,10 @@ orbitmcs_state :: struct {
 	udp_server:     ^net_state,
 	tcp_client:     ^net_state,
 	udp_client:     ^net_state,
+	thread_lock:    sync.Mutex,
 	menu_db:        db_menu_items,
 	menu_tc:        TC_menu_items,
+	tm_nodes:       [dynamic]^utils.node_tree(utils.tuple(string, xml.Element)),
 	tm_rec_buffer:  [dynamic]u8,
 	tm_rec_sizes:   [dynamic]int,
 	shutdown:       bool,
@@ -215,7 +217,8 @@ net_start_server :: proc(t: thread.Task) {
 						//fmt.println(app_state.udp_server.buffer)
 						net_state.send_buffer = false
 
-						net_state.total_bytes += net_state.buffer_off
+						net_state.total_bytes +=
+						auto_cast math.ceil(cast(f32)net_state.buffer_off / 8)
 						//runtime.mem_zero(&app_state.udp_server.buffer, 2048)
 						net_state.buffer_off = 0
 					}
@@ -229,10 +232,12 @@ net_start_server :: proc(t: thread.Task) {
 						//fmt.println("[ERROR] Failed to accept UDP connection", endpoint, err_accept)
 					} else {
 						fmt.println(
-							"[INFO] Accepting connection, bytes read",
+							"[INFO] Accepting udp connection, bytes read",
 							bytes_read,
 							endpoint,
 						)
+						//sync.mutex_lock(&app_state.thread_lock)
+						//defer sync.mutex_unlock(&app_state.thread_lock)
 						fmt.println("Buffer", buff[:bytes_read])
 						//new_buf := make([]u8, bytes_read)
 						//runtime.mem_copy(new_buf, buff, bytes_read)
@@ -257,21 +262,74 @@ net_start_server :: proc(t: thread.Task) {
 				port    = net_state.port,
 			}
 			if net_state.socket_function == .RECEIVE_SOCKET {
-				sock, err := net.listen_tcp(endpoint)
-				if err != nil {
+				sock, err := net.dial_tcp_from_address_and_port(addr, net_state.port)
+				net.bind(sock, endpoint)
+				listen_sock, err_listen := net.listen_tcp(endpoint)
+				if err_listen != nil {
 					fmt.println("[ERROR] Failed listening on TCP")
 				}
 				fmt.printfln("Listening on TCP: %s", net.endpoint_to_string(endpoint))
+				cli, _, err_accept := net.accept_tcp(listen_sock)
+				if err_accept != nil {
+					fmt.println("[ERROR] Failed to accept TCP connection")
+				}
 				for !app_state.shutdown {
-					cli, _, err_accept := net.accept_tcp(sock)
-					if err_accept != nil {
-						//fmt.println("[ERROR] Failed to accept TCP connection")
-					} else {
-						fmt.println("[INFO] Accepting connection", cli)
-					}
+
+					buff: [2048]u8
+					bytes_read, err := net.recv_tcp(cli, buff[:])
+					fmt.println(
+						"[INFO] Accepting tcp connection, bytes read",
+						bytes_read,
+						endpoint,
+					)
+					//sync.mutex_lock(&app_state.thread_lock)
+					//defer sync.mutex_unlock(&app_state.thread_lock)
+					fmt.println("Buffer", buff[:bytes_read])
+					//new_buf := make([]u8, bytes_read)
+					//runtime.mem_copy(new_buf, buff, bytes_read)
+					append(&app_state.tm_rec_buffer, ..buff[:bytes_read])
+					append(&app_state.tm_rec_sizes, bytes_read)
+					net_state.total_bytes += bytes_read
 				}
 				fmt.println("Closed socket")
-				net.close(sock)
+				net.close(listen_sock)
+			} else if net_state.socket_function == .SEND_SOCKET {
+				send_addr, _ := net.parse_ip4_address(net_state.ip)
+				endpoint := net.Endpoint {
+					address = addr,
+					port    = net_state.port,
+				}
+				fmt.println("Binding address", endpoint)
+				sock, err := net.dial_tcp_from_address_and_port(send_addr, net_state.port)
+
+				net.bind(sock, endpoint)
+				listen_sock, _ := net.listen_tcp(endpoint)
+				cli, _, err_accept := net.accept_tcp(listen_sock)
+				fmt.println("Bound endpoint", endpoint, "with socket", cli)
+
+				for !app_state.shutdown {
+					if net_state.send_buffer {
+						fmt.println("Sending packet...")
+						net.send_tcp(
+							cli,
+							net_state.buffer[:cast(int)math.ceil(
+								cast(f32)net_state.buffer_off / 8,
+							)],
+						)
+						net_state.send_buffer = false
+
+						net_state.total_bytes +=
+						auto_cast math.ceil(cast(f32)net_state.buffer_off / 8)
+						fmt.println(
+							"Sent buffer",
+							net_state.buffer[:cast(int)math.ceil(
+								cast(f32)net_state.buffer_off / 8,
+							)],
+						)
+						//runtime.mem_zero(&app_state.udp_server.buffer, 2048)
+						net_state.buffer_off = 0
+					}
+				}
 			}
 		}
 	}
@@ -407,7 +465,7 @@ unpack_bits :: proc(buffer: []u8, bit_offset: ^u64, bit_size: u64) -> int {
 
 	assert(end_bit <= u64(len(buffer)) * 8, "Buffer underflow during unpack")
 
-	for i: u64 = 0; i < bit_size; i += 1 {
+	for i in 0 ..< bit_size {
 		current_bit := bit_offset^ + i
 		byte_pos := current_bit / 8
 		bit_pos := current_bit % 8
@@ -442,7 +500,7 @@ pack_bits :: proc(buffer: []u8, bit_offset: ^u64, value, bit_size: u64) {
 
 orbit_show_tc_center :: proc(rect: Rect2D, handler: ^xtce.handler) {
 	/*
-    An Idea: I can have two columns, one to select the command, and the other one 
+    An Idea: I can have two columns, one to select the command, and the other one
     to show all the fields, that would make it really easy to navigate and far more
     efficient to use
   */
@@ -453,6 +511,11 @@ orbit_show_tc_center :: proc(rect: Rect2D, handler: ^xtce.handler) {
 
 	tmp_stack: utils.Stack(^xtce.space_system, 256)
 	utils.push_stack(&tmp_stack, &handler.system)
+
+	base_command_list: [dynamic]xtce.MetaCommandType = make(
+		[dynamic]xtce.MetaCommandType,
+		ui_context.per_frame_arena_allocator,
+	)
 
 	for tmp_stack.push_count > 0 {
 		system := utils.get_front_stack(&tmp_stack)
@@ -542,10 +605,7 @@ orbit_show_tc_center :: proc(rect: Rect2D, handler: ^xtce.handler) {
 		set_layout_next_row(row_it)
 
 		base_command := command_to_show.t_BaseMetaCommand
-		base_command_list: [dynamic]xtce.MetaCommandType = make(
-			[dynamic]xtce.MetaCommandType,
-			ui_context.per_frame_arena_allocator,
-		)
+
 		append(&base_command_list, command_to_show)
 		defer delete(base_command_list)
 
@@ -557,9 +617,10 @@ orbit_show_tc_center :: proc(rect: Rect2D, handler: ^xtce.handler) {
 			append(&base_command_list, base_command_type)
 			for len(base_command_type.base.t_name.t_restriction.val) > 0 {
 				base_command_type = xtce.GetBaseMetaCommand(
-					system_name,
+					&handler.system, //system_name, FIXME: The new metacommand could not be in the same system, making it not being search
 					base_command_type.t_BaseMetaCommand.t_metaCommandRef.t_restriction.val,
 				)
+
 				if len(base_command_type.base.t_name.t_restriction.val) > 0 {
 					append(&base_command_list, base_command_type)
 				}
@@ -690,38 +751,46 @@ orbit_show_tc_center :: proc(rect: Rect2D, handler: ^xtce.handler) {
 
 			if event.left_click {
 				len_arg := 0
-				for &arg in command_to_show.t_ArgumentList.t_Argument {
-					value: string
-					pointer := uintptr(&arg)
-					buffer: [1024]u8
-					pointer_string := strconv.itoa(buffer[:], cast(int)pointer)
-					val_bucket := hash.lookup_table_bucket(
-						&app_state.menu_tc.arg_value_map,
-						pointer_string,
-					)
-					for v in val_bucket {
-						if len(v) > 0 {
-							value = v
+				for command in base_command_list {
+					for &arg in command.t_ArgumentList.t_Argument {
+						value: string
+						pointer := uintptr(&arg)
+						buffer: [1024]u8
+						pointer_string := strconv.itoa(buffer[:], cast(int)pointer)
+						val_bucket := hash.lookup_table_bucket(
+							&app_state.menu_tc.arg_value_map,
+							pointer_string,
+						)
+						for v in val_bucket {
+							if len(v) > 0 {
+								value = v
+							}
 						}
-					}
 
-					if app_state.udp_client.buffer_off >= 2047 {
-						break
+						if app_state.tcp_client.buffer_off >= 2047 {
+							break
+						}
+						value_int := strconv.atoi(value)
+						SizeInBits := GetArgumentDeclSizeInBits(
+							system_name,
+							arg.t_argumentTypeRef.t_restriction.val,
+						)
+						pack_bits(
+							app_state.tcp_client.buffer[:],
+							auto_cast &app_state.tcp_client.buffer_off,
+							auto_cast value_int,
+							auto_cast SizeInBits,
+						)
+						fmt.println(SizeInBits)
+						fmt.println(
+							app_state.tcp_client.buffer[:cast(int)math.ceil(
+								cast(f32)app_state.tcp_client.buffer_off / 8,
+							)],
+						)
+						//libc.memcpy(&app_state.tcp_client.buffer[app_state.tcp_client.buffer_off], cast(rawptr)&value_int, auto_cast SizeInBits)
 					}
-					value_int := strconv.atoi(value)
-					SizeInBits := GetArgumentDeclSizeInBits(
-						system_name,
-						arg.t_argumentTypeRef.t_restriction.val,
-					)
-					pack_bits(
-						app_state.udp_client.buffer[:],
-						auto_cast &app_state.udp_client.buffer_off,
-						auto_cast value_int,
-						auto_cast SizeInBits,
-					)
-					//libc.memcpy(&app_state.udp_client.buffer[app_state.udp_client.buffer_off], cast(rawptr)&value_int, auto_cast SizeInBits)
 				}
-				app_state.udp_client.send_buffer = true
+				app_state.tcp_client.send_buffer = true
 			}
 		}
 	}
@@ -763,7 +832,7 @@ get_param_from_ref_entry :: proc(
 	xml_handler: ^xtce.handler,
 ) -> ^utils.node_tree(utils.tuple(string, xml.Element)) {
 	type_decl_it: ^utils.node_tree(utils.tuple(string, xml.Element))
-	for attr in it.element.second.attribs {
+	loop: for attr in it.element.second.attribs {
 		if attr.key == "parameterRef" {
 			type_decl_it = xtce.SearchTypeDeclInSystem("UCF", attr.val, xml_handler)
 
@@ -771,6 +840,7 @@ get_param_from_ref_entry :: proc(
 				for attr2 in type_decl_it.element.second.attribs {
 					if attr2.key == "parameterTypeRef" {
 						type_decl_it = xtce.SearchTypeDeclInSystem("UCF", attr2.val, xml_handler)
+						break loop
 					}
 				}
 			}
@@ -788,9 +858,10 @@ get_base_containers :: proc(
 	type_of_container: string,
 	xml_handler: ^xtce.handler,
 ) -> [dynamic]^utils.node_tree(utils.tuple(string, xml.Element)) {
+
 	base_containers: [dynamic]^utils.node_tree(utils.tuple(string, xml.Element)) = make(
 		[dynamic]^utils.node_tree(utils.tuple(string, xml.Element)),
-		context.temp_allocator,
+		ui_context.per_frame_arena_allocator,
 	)
 
 	tmp_stack: BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
@@ -804,7 +875,7 @@ get_base_containers :: proc(
 
 	push_stack(&tmp_stack, node)
 
-	for tmp_stack.push_count > 0 {
+	loop: for tmp_stack.push_count > 0 {
 		it := get_front_stack(&tmp_stack)
 		pop_stack(&tmp_stack)
 
@@ -933,8 +1004,7 @@ check_param_correctness :: proc(
 	node: ^utils.node_tree(utils.tuple(string, xml.Element)),
 	xml_handler: ^xtce.handler,
 	row: ^int,
-) -> bool
-{
+) -> bool {
 	tmp_stack: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
 
 	entry_list_params: [dynamic]utils.tuple(
@@ -944,26 +1014,20 @@ check_param_correctness :: proc(
 		[dynamic]utils.tuple(string, ^utils.node_tree(utils.tuple(string, xml.Element))),
 		context.temp_allocator,
 	)
-	defer delete(entry_list_params)
+	//defer delete(entry_list_params)
 
 	restriction_criterias: [dynamic]utils.tuple(string, string) = make(
 		[dynamic]utils.tuple(string, string),
 		context.temp_allocator,
 	) // value, param name
-	defer delete(restriction_criterias)
+	//defer delete(restriction_criterias)
 
-
-  base_containers := get_base_containers(node, xtce.BASE_CONTAINER_TYPE, xml_handler)
-  for base in base_containers {
-    utils.push_stack(&tmp_stack, base)
-  }
-  delete(base_containers)
-
-  utils.push_stack(&tmp_stack, node)
+	utils.push_stack(&tmp_stack, node)
 
 	list := get_param_entry_list(node, xml_handler)
 	append(&entry_list_params, ..list[:])
-	delete(list)
+	//slice.reverse(entry_list_params[:])
+	//delete(list)
 
 	for tmp_stack.push_count > 0 {
 		it := utils.get_front_stack(&tmp_stack)
@@ -979,7 +1043,25 @@ check_param_correctness :: proc(
 				if attr.key == "value" {
 					restriction.first = attr.val
 				} else if attr.key == "parameterRef" {
-					restriction.second = attr.val
+					n_depth := strings.count(attr.val, "/")
+					n_depth += 1
+					path := strings.split_n(
+						attr.val,
+						"/",
+						n_depth,
+						ui_context.per_frame_arena_allocator,
+					)
+					value: string
+					defer delete(path, ui_context.per_frame_arena_allocator)
+					if len(path) == 0 || len(path) == 1 {
+						delete(path, ui_context.per_frame_arena_allocator)
+						path = make([]string, 1, ui_context.per_frame_arena_allocator)
+						path[0] = attr.val
+						value = attr.val
+					} else {
+						value = path[len(path) - 1]
+					}
+					restriction.second = value
 				}
 			}
 			append(&restriction_criterias, restriction)
@@ -989,68 +1071,69 @@ check_param_correctness :: proc(
 	current_buffer_off := 0
 	is_container := true
 
-  if len(entry_list_params) == 0 {
-    return false
-  }
+	if len(entry_list_params) == 0 {
+		return false
+	}
 
-  restriction_criterias_met : []bool = make([]bool, len(restriction_criterias), context.temp_allocator)
-  defer delete(restriction_criterias_met, context.temp_allocator)
+	restriction_criterias_met: []bool = make(
+		[]bool,
+		len(restriction_criterias),
+		ui_context.per_frame_arena_allocator,
+	)
+	//defer delete(restriction_criterias_met, context.temp_allocator)
+	for restriction, idx in restriction_criterias {
+		for entry in entry_list_params {
+			size := get_param_size(entry.second)
 
-	for entry in entry_list_params {
-		size := get_param_size(entry.second)
+			if current_buffer_off + size >= len(buffer) {
+				is_container = false
+				break
+			}
 
-		if current_buffer_off + size >= len(buffer) {
-      is_container = false
-			break
-		}
+			value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
+			buffer_store: [64]u8
+			buf := strconv.itoa(buffer_store[:], value)
+			//current_buffer_off += size
 
-		value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
-		buffer_store: [64]u8
-		buf := strconv.itoa(buffer_store[:], value)
-		current_buffer_off += size
-
-		for restriction, idx in restriction_criterias {
 			if restriction.second == entry.first {
 				if buf != restriction.first {
 					is_container = false
+				} else {
+					restriction_criterias_met[idx] = true
 				}
-        else {
-          restriction_criterias_met[idx] = true
-        }
+			}
+
+			if !is_container {
+				break
 			}
 		}
+	}
 
-		if !is_container {
+	for res in restriction_criterias_met {
+		if res == false {
+			is_container = false
 			break
 		}
 	}
 
-  for res in restriction_criterias_met {
-    if res == false {
-      is_container = false 
-      break
-    }
-  }
-
 	current_buffer_off = 0
 	if is_container {
-
 		{
-			label_name := strings.concatenate(
-				{"TM: ", node.element.second.attribs[0].val, "#_Sequence_Name_%p"},
-			)
+			node_name :=
+				len(node.element.second.attribs) > 0 ? node.element.second.attribs[0].val : node.element.first
+			label_name := strings.concatenate({"TM: ", node_name, "#_Sequence_Name_%p"})
 			style := ui_context.theme.text
 			style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x43302FF))
 			set_next_layout_style(style)
 
-			set_layout_next_font(22, "./data/font/RobotoMonoBold.ttf")
+			set_layout_next_font(24, "./data/font/RobotoMonoBold.ttf")
 			label(label_name, cast(^byte)node)
 			unset_layout_font()
 			ui_pop_style()
 
 			set_next_layout_horizontal()
 
-			// Put values 
+			// Put values
 
 			// reset layout for next row
 
@@ -1061,9 +1144,9 @@ check_param_correctness :: proc(
 		for entry in entry_list_params {
 			size := get_param_size(entry.second)
 
-			if current_buffer_off + size >= len(buffer) {
-				break
-			}
+			//if current_buffer_off + size >= len(buffer) {
+			//	break
+			//}
 
 			value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
 			buffer_store: [64]u8
@@ -1088,14 +1171,14 @@ check_param_correctness :: proc(
 				style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x02343FF))
 				set_next_layout_style(style)
 
-				set_layout_next_font(16, "./data/font/RobotoMono.ttf")
+				set_layout_next_font(18, "./data/font/RobotoMono.ttf")
 				label(label_name, cast(^byte)entry.second)
 				unset_layout_font()
 				ui_pop_style()
 
 				set_next_layout_horizontal()
 
-				// Put values 
+				// Put values
 
 				// reset layout for next row
 
@@ -1110,7 +1193,37 @@ check_param_correctness :: proc(
 
 // ---------------------------------------------------------------------------------------------------------------------- //
 
+//TODO: OPTIMIZE
+//
 orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
+
+	@(static) tm_update_node: bool = true
+
+	render.debug_time_add_scope("TM Reception", ui_context.vulkan_iface.ArenaAllocator)
+
+	if tm_update_node {
+		tm_update_node = false
+		tmp_stack: BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
+		big_stack_init(
+			&tmp_stack,
+			^utils.node_tree(utils.tuple(string, xml.Element)),
+			64 << 10,
+			context.temp_allocator,
+		)
+		defer big_stack_delete(&tmp_stack, context.temp_allocator)
+		push_stack(&tmp_stack, &xml_handler.tree_eval)
+		for tmp_stack.push_count > 0 {
+			xml_node := get_front_stack(&tmp_stack)
+			pop_stack(&tmp_stack)
+
+			for it := xml_node.next; it != nil; it = it.right {
+				push_stack(&tmp_stack, it)
+			}
+			if xml_node.element.first == xtce.SEQUENCE_CONTAINER_TYPE {
+				append(&app_state.tm_nodes, xml_node)
+			}
+		}
+	}
 
 	layout := get_layout_stack()
 	limit_on_screen := false
@@ -1118,43 +1231,65 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 	row_start_it := begin_next_layout_scrollable_section(0, layout.box_preferred_size)
 	defer end_next_layout_scrollable_section(0)
 
-	tmp_stack: BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
-	big_stack_init(
-		&tmp_stack,
-		^utils.node_tree(utils.tuple(string, xml.Element)),
-		64 << 10,
-		context.temp_allocator,
-	)
-	defer big_stack_delete(&tmp_stack, context.temp_allocator)
-
-
 	buffer_off := 0
 	row := 0
 
 	node_it := &xml_handler.tree_eval
-  found_container := false
+	found_container := false
+
+	// =========== Set UI Title ================= //
+	{
+		style := ui_context.theme.text
+		style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x502218FF))
+		set_next_layout_style(style)
+
+		set_layout_next_font(22, "./data/font/0xProtoNerdFontMono-Bold.ttf")
+		label("TM LOGGER", cast(^byte)xml_handler)
+		unset_layout_font()
+		ui_pop_style()
+	}
+
+	//sync.mutex_lock(&app_state.thread_lock)
+	//defer sync.mutex_unlock(&app_state.thread_lock)
+
+	to_destroy := make([dynamic]bool, len(app_state.tm_rec_sizes), context.temp_allocator)
 
 	for buffer_size, idx in app_state.tm_rec_sizes {
+
 		buffer := app_state.tm_rec_buffer[buffer_off:buffer_off + buffer_size]
 		buffer_off += buffer_size
 
-    tmp_stack.push_count = 0
-    push_stack(&tmp_stack, &xml_handler.tree_eval)
-    for tmp_stack.push_count > 0 && !found_container {
-      xml_node := get_front_stack(&tmp_stack)
-      pop_stack(&tmp_stack)
+		found_container = false
+		for it := 0; it < len(app_state.tm_nodes) && !found_container; it += 1 {
+			node := app_state.tm_nodes[it]
+			found_container = check_param_correctness(buffer, node, xml_handler, &row)
+		}
 
-      for it := xml_node.next; it != nil; it = it.right {
-        push_stack(&tmp_stack, it)
-      }
+		if !found_container {
+			to_destroy[idx] = true
+		}
+	}
 
-      if xml_node.element.first == xtce.SEQUENCE_CONTAINER_TYPE {
-  		  is_container := check_param_correctness(buffer, xml_node, xml_handler, &row)
-        if is_container {
-          found_container = true
-        }
-      }
-    }
+	buffer_off = 0
+	for destroy, idx in to_destroy {
+		size := app_state.tm_rec_sizes[idx]
+
+		if destroy {
+			if idx < len(app_state.tm_rec_sizes) - 1 {
+				dst_size := app_state.tm_rec_sizes[idx + 1]
+				dst_buffer_off := buffer_off + size
+				copy(
+					app_state.tm_rec_buffer[buffer_off:buffer_off + size],
+					app_state.tm_rec_buffer[dst_buffer_off:dst_buffer_off + dst_size],
+				)
+			}
+			app_state.tcp_server.buffer_off -= size
+			app_state.tcp_server.total_bytes -= size
+			unordered_remove(&app_state.tm_rec_sizes, idx)
+			unordered_remove(&to_destroy, idx)
+		}
+
+		buffer_off += size
 	}
 }
 
@@ -2236,7 +2371,7 @@ orbit_show_db :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 													//l_it += 1
 													row += 1
 													set_layout_next_row(auto_cast row)
-													// TODO: For encoding size and value we shall search for the type it 
+													// TODO: For encoding size and value we shall search for the type it
 													// references and return it here
 													// argument_ref := SearchForArgument(system), NOTE: Can be any system
 													//
@@ -2735,7 +2870,7 @@ main :: proc() {
 
 	app_state.threading = CreatePoolWithAllocator(6)
 	thread.pool_start(&app_state.threading.Pool)
-	defer thread.pool_stop_all_tasks(&app_state.threading.Pool)
+	//defer thread.pool_stop_all_tasks(&app_state.threading.Pool)
 	// This does not work properly dont know why
 	//
 	//defer thread.pool_destroy(&app_state.threading.Pool)
@@ -2744,7 +2879,7 @@ main :: proc() {
 	xtce_state_arg.parse_proc = xtce.parse_xsd
 	xtce_state_arg.validate_proc = xtce.validate_xml
 	xtce_state_arg.schema_path = "./data/SpaceSystem.xsd"
-	xtce_state_arg.system_path = "./data/UCF.xml"
+	xtce_state_arg.system_path = "./data/xtce.xml"
 	xtce_state_arg.schema = new(xtce.xsd_schema)
 	xtce_state_arg.system = new(xtce.handler)
 
@@ -2777,7 +2912,7 @@ main :: proc() {
 
 	net_state_arg_tcp_send: ^net_state = new(net_state)
 	net_state_arg_tcp_send.ip = "127.0.0.1"
-	net_state_arg_tcp_send.port = 8081
+	net_state_arg_tcp_send.port = 8085
 	net_state_arg_tcp_send.socket_type = net.TCP_Socket{}
 	net_state_arg_tcp_send.socket_function = .SEND_SOCKET
 
@@ -2843,6 +2978,10 @@ main :: proc() {
 	push_panel_tree(&debug_panel, &right_panel)
 
 	ui_init(&vulkan_iface)
+
+	// TODO: Check if this messes something up
+	//
+	context.temp_allocator = ui_context.per_frame_arena_allocator
 
 	last_time: f64 = 0
 
@@ -2999,11 +3138,11 @@ main :: proc() {
 							push_stack(&tmp_stack, p)
 						} else {
 							if p == &command_panel {
-								home_style := ui_context.theme.front_panel
-								//home_style.color_rect00 = rgba_to_norm(hex_rgba_to_vec4(0xeee8d5ff))
-								//home_style.color_rect01 = rgba_to_norm(hex_rgba_to_vec4(0xeee8d5ff))
-								//home_style.color_rect10 = rgba_to_norm(hex_rgba_to_vec4(0xeee8d5ff))
-								//home_style.color_rect11 = rgba_to_norm(hex_rgba_to_vec4(0xeee8d5ff))
+								home_style := ui_context.theme.background_panel
+								home_style.color_rect00 *= 0.95
+								home_style.color_rect01 *= 0.95
+								home_style.color_rect10 *= 0.95
+								home_style.color_rect11 *= 0.95
 								set_next_layout_style(home_style)
 								defer pop_layout_style()
 

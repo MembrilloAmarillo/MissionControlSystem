@@ -1,0 +1,532 @@
+52 [18516] INFO perfrun.launcher <> - Launcher main begin
+58 [18516] INFO perfrun.launcher <> - MessageCatalogInit finished
+58 [18516] INFO perfrun.launcher <> - Launcher instance created
+58 [18516] INFO perfrun.launcher <> - argc = 7; cmdline = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\amplxe-runss.exe --ui-output-format xml --ui-output-fd 1228 --option-file C:\devel\MissionControlSystem\MCS\r003hs\config\runss.options 
+73 [18516] INFO perfrun.launcher <> - New signal handler callback was added
+119 [18516] INFO perfrun.perfcollector <> - SEP tool path: C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\sep.exe
+139 [18516] INFO perfrun.launcher <> - create msngr2::ICliToolContext
+139 [18516] INFO perfrun.launcher <> - create file finder object
+139 [18516] INFO perfrun.launcher <> - create a result directory: pattern = C:\devel\MissionControlSystem\MCS\r003hs pid = 4294967295
+146 [18516] INFO perfrun.launcher <> - create data directory = C:\devel\MissionControlSystem\MCS\r003hs\data.0
+151 [18516] INFO perfrun.launcher <> - Creating the master collection flag
+165 [18516] INFO perfrun.launcher <> - Done creating the master collection flag
+165 [21120] INFO perfrun.launcher <> - plugin [remoteplug] was disabled because it doesn't support the given collection type.
+166 [21120] INFO perfrun.sdk <> - Allocating TMU :C:\devel\MissionControlSystem\MCS\r003hs\data.0\systemcollector-568-marte.sc
+166 [21120] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+170 [21120] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+170 [21120] INFO perfrun.launcher <> - plugin [gpu] was disabled because it doesn't support the given collection type.
+170 [21120] INFO perfrun.launcher <> - plugin [etw.kernel] was disabled because it doesn't support the given collection type.
+170 [21120] INFO perfrun.launcher <> - plugin [etw.dx] was disabled because it doesn't support the given collection type.
+170 [21120] INFO perfrun.launcher <> - plugin [etw.wsa] was disabled because it doesn't support the given collection type.
+170 [21120] INFO perfrun.mrte <> - system-wide mode is 0
+170 [21120] INFO perfrun.mrte <> - Getting  mrte profiling environment ...
+232 [21120] INFO perfrun.mrte <> - INTEL_MRTE_DATA_DIR=C:\devel\MissionControlSystem\MCS\r003hs\data.0
+233 [21120] INFO perfrun.mrte <> - INTEL_MRTE_HOST_NAME=marte
+233 [21120] INFO perfrun.mrte <> - JAVA_TOOL_OPTIONS=-agentlib:amplxe_samplingmrte_javaprof_1.0
+233 [21120] INFO perfrun.mrte <> - PATH=C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin32\runtime;C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\runtime;C:\devel\VulkanSDK\Bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files\Git\cmd;C:\devel\glfw\lib-vc2022;C:\devel\focus-editor;C:\devel\OpenJDK\bin;C:\Program Files\dotnet\;C:\devel\OpenJDK\maven\bin;C:\devel\ols;C:\devel\Odin;C:\Program Files\Neovim\bin;C:\Program Files\Neovide\;C:\Users\sasch\.cargo\bin;C:\Users\sasch\AppData\Local\Microsoft\WindowsApps;C:\Users\sasch\.dotnet\tools;C:\Users\sasch\AppData\Local\Programs\Microsoft VS Code\bin
+233 [21120] INFO perfrun.mrte <> - COR_ENABLE_PROFILING=1
+233 [21120] INFO perfrun.mrte <> - COR_PROFILER={AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+233 [21120] INFO perfrun.mrte <> - COMPLUS_ProfAPI_ProfilerCompatibilitySetting=EnableV2Profiler
+233 [21120] INFO perfrun.mrte <> - CORECLR_ENABLE_PROFILING=1
+233 [21120] INFO perfrun.mrte <> - CORECLR_PROFILER={AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+233 [21120] INFO perfrun.mrte <> - CORECLR_PROFILER_PATH=C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64/amplxe_samplingmrte_clrprof_1.0.dll
+233 [21120] INFO perfrun.mrte <> - INTEL_MRTE_PROFILER_MODE=mixed
+233 [21120] INFO perfrun.mrte <> - Data directory: C:\devel\MissionControlSystem\MCS\r003hs\data.0
+233 [21120] INFO perfrun.mrte <> - Mrte plugin is initialized
+233 [21120] INFO perfrun.launcher <> - plugin [emon] was disabled because it doesn't support the given collection type.
+234 [21120] INFO perfrun.launcher <> - plugin [cuscol] was disabled because it doesn't support the given collection type.
+234 [21120] INFO perfrun.launcher <> - plugin [stdsrc] was disabled because it doesn't support the given collection type.
+234 [21120] INFO perfrun.launcher <> - plugin [sep] was disabled because it doesn't support the given collection type.
+234 [21120] INFO perfrun.launcher <> - plugin [vtsspp] was disabled because it doesn't support the given collection type.
+234 [21120] INFO perfrun.launcher <> - plugin [perf] was disabled because it doesn't support the given collection type.
+234 [21120] INFO perfrun.launcher <> - plugin [aoclprofile] was disabled because it doesn't support the given collection type.
+234 [21120] INFO perfrun.tpss <> - initialize tpss controller
+234 [21120] INFO perfrun.tpss <> - configure collection mode: value = cpu:counters:nostack
+235 [21120] INFO perfrun.tpss <> - configure collection mode: value = cpu:stack
+235 [21120] INFO perfrun.tpss <> - default obj-size-min=1024
+235 [21120] INFO perfrun.tpss <> - default hash-table-size=0
+235 [21120] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [power] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [ipmwatch] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [os_counters] was disabled because it doesn't support the given collection type.
+235 [21120] INFO perfrun.launcher <> - plugin [l0_metrics] was disabled because it doesn't support the given collection type.
+235 [18516] INFO perfrun.launcher <> - set environment variable: PATH = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin32\runtime;C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\runtime;C:\devel\VulkanSDK\Bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files\Git\cmd;C:\devel\glfw\lib-vc2022;C:\devel\focus-editor;C:\devel\OpenJDK\bin;C:\Program Files\dotnet\;C:\devel\OpenJDK\maven\bin;C:\devel\ols;C:\devel\Odin;C:\Program Files\Neovim\bin;C:\Program Files\Neovide\;C:\Users\sasch\.cargo\bin;C:\Users\sasch\AppData\Local\Microsoft\WindowsApps;C:\Users\sasch\.dotnet\tools;C:\Users\sasch\AppData\Local\Programs\Microsoft VS Code\bin
+235 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_LIBITTNOTIFY32 = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin32\runtime\ittnotify_collector.dll
+235 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_LIBITTNOTIFY64 = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\runtime\ittnotify_collector.dll
+236 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_ITTNOTIFY_GROUPS = 
+236 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_JIT_PROFILER32 = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin32\runtime\ittnotify_collector.dll
+236 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_JIT_PROFILER64 = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\runtime\ittnotify_collector.dll
+236 [18516] INFO perfrun.launcher <> - set environment variable: CCL_ITT_LEVEL = 1
+236 [18516] INFO perfrun.launcher <> - set environment variable: ENABLE_JITPROFILING = 1
+236 [18516] INFO perfrun.launcher <> - set environment variable: CL_CONFIG_USE_VTUNE = True
+236 [18516] INFO perfrun.launcher <> - set environment variable: KMP_FORKJOIN_FRAMES = 0
+236 [18516] INFO perfrun.launcher <> - set environment variable: KMP_FORKJOIN_FRAMES_MODE = 0
+237 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_MRTE_DATA_DIR = C:\devel\MissionControlSystem\MCS\r003hs\data.0
+237 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_MRTE_HOST_NAME = marte
+237 [18516] INFO perfrun.launcher <> - set environment variable: JAVA_TOOL_OPTIONS = -agentlib:amplxe_samplingmrte_javaprof_1.0
+237 [18516] INFO perfrun.launcher <> - set environment variable: PATH = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin32\runtime;C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\runtime;C:\devel\VulkanSDK\Bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\Program Files\Git\cmd;C:\devel\glfw\lib-vc2022;C:\devel\focus-editor;C:\devel\OpenJDK\bin;C:\Program Files\dotnet\;C:\devel\OpenJDK\maven\bin;C:\devel\ols;C:\devel\Odin;C:\Program Files\Neovim\bin;C:\Program Files\Neovide\;C:\Users\sasch\.cargo\bin;C:\Users\sasch\AppData\Local\Microsoft\WindowsApps;C:\Users\sasch\.dotnet\tools;C:\Users\sasch\AppData\Local\Programs\Microsoft VS Code\bin
+237 [18516] INFO perfrun.launcher <> - set environment variable: COR_ENABLE_PROFILING = 1
+237 [18516] INFO perfrun.launcher <> - set environment variable: COR_PROFILER = {AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+237 [18516] INFO perfrun.launcher <> - set environment variable: COMPLUS_ProfAPI_ProfilerCompatibilitySetting = EnableV2Profiler
+237 [18516] INFO perfrun.launcher <> - set environment variable: CORECLR_ENABLE_PROFILING = 1
+237 [18516] INFO perfrun.launcher <> - set environment variable: CORECLR_PROFILER = {AA5E4821-E3B1-479c-B7FF-5AD047D22CED}
+238 [18516] INFO perfrun.launcher <> - set environment variable: CORECLR_PROFILER_PATH = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64/amplxe_samplingmrte_clrprof_1.0.dll
+238 [18516] INFO perfrun.launcher <> - set environment variable: INTEL_MRTE_PROFILER_MODE = mixed
+238 [18516] INFO perfrun.launcher <> - RpcServer: run RPC server to handle requests
+265 [18516] INFO perfrun.sdk <> - IProcessUtil: the given executable 'C:\devel\MissionControlSystem\code\code.exe' is valid.
+266 [18516] INFO perfrun.launcher <> - Launcher: command line to start before modification = C:\devel\MissionControlSystem\code\code.exe
+269 [18516] INFO perfrun.launcher <> - Launcher: command line to start after modification = C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\pin.exe -error_file C:\devel\MissionControlSystem\MCS\r003hs\data.0\pinerr.tpsslog -detach_reattach -probe -follow_execv -p32 C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin32\pin.exe -p64 C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\pin.exe -t64 C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin64\tpsstool.dll -t C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0\bin32\tpsstool.dll -server_name tpss_ipc.568 -prd_dir C:\Program Files (x86)\Intel\oneAPI\vtune\2025.0 -- C:\devel\MissionControlSystem\code\code.exe
+269 [18516] INFO perfrun.launcher <> - ProcessCreator object was created
+272 [18516] INFO perfrun.launcher <> - Launcher: the process was started in suspend mode
+273 [21120] INFO perfrun.itt <> - start itt controller for pid #17320
+274 [21120] INFO perfrun.tpss <> - start tpss controller for pid #17320
+333 [18516] INFO perfrun.launcher <> - Launcher: all plugins were started
+333 [18516] INFO perfrun.launcher <> - DirectoryMonitor object was created
+333 [18516] INFO perfrun.launcher <> - DirectoryMonitor: a callback was added
+333 [18516] INFO perfrun.launcher <> - DirectoryMonitor was started with pingTime = 1000
+333 [18516] INFO perfrun.launcher <> - DeadlineTimer is going to be constructed
+334 [18516] INFO perfrun.launcher <> - DeadlineTimer: a callback was added
+360 [18516] INFO perfrun.launcher <> - Launcher: resume the profiled application and  wait its termination or stop command
+50937 [18316] INFO perfrun.launcher <> - Stopping collection by RPC request
+50977 [21120] INFO perfrun.itt <> - detach itt controller
+50977 [21120] INFO perfrun.itt <> - detach itt controller done
+50977 [21120] INFO perfrun.tpss <> - stop tpss controller
+59518 [25032] INFO perfrun.launcher <> - SignalHandler: signal #0 was caught
+59553 [25112] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59554 [9764] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59554 [22964] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59554 [21344] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59561 [14256] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59570 [24368] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59578 [19276] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59587 [6504] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59596 [24120] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59605 [28404] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59614 [6600] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59622 [6200] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59631 [5960] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59638 [18832] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59644 [24232] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59652 [5308] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59671 [4192] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59671 [29412] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59679 [28936] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59687 [564] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59696 [24520] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59703 [20908] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59711 [29588] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59718 [27704] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59727 [24668] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59734 [22868] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59743 [27796] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59751 [12328] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59760 [18428] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59768 [14616] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59776 [29516] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59782 [28596] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59794 [11800] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59806 [14892] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59815 [18804] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59825 [10096] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59832 [7740] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59839 [12784] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59848 [21228] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59856 [3768] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59865 [24000] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59871 [25272] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59878 [27664] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59888 [27064] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59900 [16712] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59910 [19236] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59918 [9064] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59927 [29244] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59936 [21952] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59945 [396] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59954 [29680] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59962 [9000] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59971 [2112] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59980 [1104] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59988 [17156] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+59998 [2944] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60006 [5940] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60014 [28496] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60022 [13760] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60033 [26596] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60040 [1476] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60050 [13456] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60054 [10396] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60063 [16408] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60070 [10676] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60079 [29144] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60088 [6844] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60095 [10296] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60103 [1968] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60122 [12344] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60123 [12932] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60132 [24200] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60141 [29420] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60149 [28924] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60162 [29076] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60169 [25280] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60178 [9084] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60187 [27392] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60194 [22204] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60204 [17632] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60209 [28380] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60218 [25084] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60230 [20468] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60239 [21172] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60536 [25300] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60546 [25236] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60555 [17844] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60566 [28788] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60573 [11448] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60582 [28772] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60591 [9132] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60598 [23936] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60604 [9924] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60613 [22572] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60622 [6272] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60632 [5300] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60641 [26796] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60649 [5544] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60665 [16656] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60675 [16744] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60684 [9332] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60693 [28928] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60702 [16156] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60707 [27240] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60714 [27880] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60721 [5116] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60730 [3332] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60739 [25324] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60748 [19504] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60756 [20760] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60764 [10092] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60772 [29176] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60791 [29608] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60800 [20276] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60809 [28544] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60817 [26752] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60824 [6076] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60832 [8488] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60841 [19900] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60850 [27116] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60859 [24616] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60867 [10716] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60877 [28992] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60885 [10372] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60894 [23444] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60905 [26844] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60918 [27188] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60928 [26948] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60935 [17192] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60943 [5572] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60950 [24048] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60958 [6736] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60967 [28956] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60975 [19872] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60982 [25588] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+60990 [22012] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61001 [13044] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61015 [4208] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61027 [13024] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61043 [976] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61056 [20720] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61066 [22560] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61077 [1400] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61089 [6044] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61100 [27260] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61111 [21256] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61120 [29408] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61128 [24208] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61142 [20620] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61153 [22220] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61163 [9684] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61172 [28852] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61180 [28684] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61188 [21004] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61199 [27500] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61211 [17792] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61222 [3628] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61232 [25436] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61242 [3360] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61254 [7472] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61271 [7220] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61284 [21864] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61294 [5856] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61306 [27816] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61315 [7440] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61324 [11984] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61333 [28452] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61344 [20896] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61622 [25480] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61632 [12936] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61642 [5628] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61652 [26632] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61661 [29044] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61669 [11684] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61677 [8548] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61686 [4996] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61695 [16724] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61702 [28964] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61710 [26628] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61718 [2140] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61726 [7184] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61742 [1496] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61753 [15248] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61762 [12768] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61769 [13924] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61777 [25920] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61783 [9824] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61799 [28944] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61804 [25684] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61809 [26900] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61814 [29620] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61822 [29552] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61830 [25848] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61837 [28144] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61845 [22768] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61853 [17568] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61864 [28576] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61875 [10280] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61884 [20692] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61894 [28208] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61902 [20308] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61910 [15860] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61920 [26580] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61927 [14120] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61936 [17796] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61944 [24572] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61952 [28384] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61960 [26344] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61974 [27792] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+61984 [26408] ERROR perfrun.launcher <> - Messenger::say: Failed to get a thread handle when attaching to the process due to OS error (Acceso denegado.
+). Data for the thread will not be collected.
+66054 [21120] INFO perfrun.sdk <> - De-allocating TMU: C:\devel\MissionControlSystem\MCS\r003hs\data.0\systemcollector-568-marte.sc
+66068 [21120] INFO perfrun.system <> - closed the system trace file: C:\devel\MissionControlSystem\MCS\r003hs\data.0\systemcollector-568-marte.sc
+66132 [18316] WARN perfrun.launcher <> - Cannot send KILL signal to the process with pid #29220 : Acceso denegado., at file: vcs\perfrun1\launcher\src\signal_handler_win.cpp:73
+66271 [18516] WARN perfrun.sdk <> - Unexpected exit status - -1073741819, at file: vcs\perfrun1\sdk\src\utils_win.cpp:541
+66496 [18316] WARN perfrun.launcher <> - Cannot send KILL signal to the process with pid #17320 : Acceso denegado., at file: vcs\perfrun1\launcher\src\signal_handler_win.cpp:73
+66496 [25032] WARN perfrun.launcher <> - Stop command is ignored because it is received when collection is already stopped, at file: vcs\perfrun1\launcher\src\command_handler.cpp:226
+66497 [18516] INFO perfrun.launcher <> - Launcher: the profiled application was terminated  with exit code = -1073741819
+66498 [18516] INFO perfrun.launcher <> - Launcher: all plugins were stopped.
+66498 [18516] INFO perfrun.launcher <> - DeadlineTimer is going to be destroyed
+66499 [18516] INFO perfrun.launcher <> - DeadlineTimer was destroyed
+66499 [18516] INFO perfrun.launcher <> - DirectoryMonitor object was destroyed
+66499 [18516] WARN perfrun.launcher <> - Stop command is ignored because it is received when collection is already stopped, at file: vcs\perfrun1\launcher\src\command_handler.cpp:226
+66501 [18516] INFO perfrun.launcher <> - Application exit code: -1073741819
+66501 [18516] INFO perfrun.launcher <> - Exit code: 4
