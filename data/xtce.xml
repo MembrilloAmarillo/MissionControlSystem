@@ -1404,7 +1404,7 @@
 
 			<xtce:ArgumentTypeSet>
 			<xtce:EnumeratedArgumentType name="HK_Structure_ID_Type">
-				<xtce:IntegerDataEncoding sizeInBits="16" signed="false"/>
+				<xtce:IntegerDataEncoding sizeInBits="8" signed="false"/>
 				<xtce:EnumerationList>
 
 				<!-- NO MODE HK STRUCTURE ID (also used for Parameter ID) -->

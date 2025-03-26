@@ -463,7 +463,9 @@ unpack_bits :: proc(buffer: []u8, bit_offset: ^u64, bit_size: u64) -> int {
 	value := 0
 	end_bit := bit_offset^ + bit_size
 
-	assert(end_bit <= u64(len(buffer)) * 8, "Buffer underflow during unpack")
+	if end_bit > u64(len(buffer)) * 8 {
+		return -1
+	}
 
 	for i in 0 ..< bit_size {
 		current_bit := bit_offset^ + i
@@ -883,20 +885,20 @@ get_base_containers :: proc(
 			push_stack(&tmp_stack, it2)
 		}
 
-		if it.element.first == type_of_container {
-			type_decl_it: ^utils.node_tree(utils.tuple(string, xml.Element))
-			for attr in it.element.second.attribs {
-				if attr.key == "containerRef" {
-					type_decl_it = xtce.SearchTypeDeclInSystem("UCF", attr.val, xml_handler)
-					if type_decl_it != nil {
-						append(&base_containers, type_decl_it)
-						// Process this node in case it has an embedded base container
-						//
-						push_stack(&tmp_stack, type_decl_it)
-					}
+		//if it.element.first == type_of_container {
+		type_decl_it: ^utils.node_tree(utils.tuple(string, xml.Element))
+		for attr in it.element.second.attribs {
+			if attr.key == "containerRef" {
+				type_decl_it = xtce.SearchTypeDeclInSystem("UCF", attr.val, xml_handler)
+				if type_decl_it != nil {
+					append(&base_containers, type_decl_it)
+					// Process this node in case it has an embedded base container
+					//
+					push_stack(&tmp_stack, type_decl_it)
 				}
 			}
 		}
+		//}
 	}
 
 	return base_containers
@@ -925,6 +927,7 @@ get_param_entry_list :: proc(
 
 	push_stack(&tmp_stack, node)
 
+	is_node_container := true
 	for tmp_stack.push_count > 0 {
 		it := get_front_stack(&tmp_stack)
 		pop_stack(&tmp_stack)
@@ -948,7 +951,12 @@ get_param_entry_list :: proc(
 				push_stack(&tmp_stack, base)
 			}
 			delete(base_containers)
-		} else if it.element.first == xtce.BASE_CONTAINER_TYPE {
+		} else if it.element.first == xtce.BASE_CONTAINER_TYPE && is_node_container {
+			// this is to ensure that we only process the base container from our tm container node, because if not
+			// we would get duplicate bases as we also search for every base container in the function below,
+			// processing it from here also would mean duplicate bases
+			//
+			is_node_container = false
 			base_containers := get_base_containers(it, xtce.BASE_CONTAINER_TYPE, xml_handler)
 			for base in base_containers {
 				push_stack(&tmp_stack, base)
@@ -965,32 +973,41 @@ get_param_entry_list :: proc(
 get_param_size :: proc(node: ^utils.node_tree(utils.tuple(string, xml.Element))) -> int {
 	size := 0
 
-	tmp_stack: BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
-	big_stack_init(
-		&tmp_stack,
-		^utils.node_tree(utils.tuple(string, xml.Element)),
-		126 << 10,
-		context.temp_allocator,
-	)
-	defer big_stack_delete(&tmp_stack, context.temp_allocator)
-
-	push_stack(&tmp_stack, node)
-
-	size_found := false
-
-	for tmp_stack.push_count > 0 && !size_found {
-		it := get_front_stack(&tmp_stack)
-		pop_stack(&tmp_stack)
-
-		for attr in it.element.second.attribs {
-			if attr.key == "sizeInBits" {
-				size = strconv.atoi(attr.val)
-				size_found = true
-			}
+	for attr in node.element.second.attribs {
+		if attr.key == "sizeInBits" {
+			size = strconv.atoi(attr.val)
 		}
+	}
 
-		for it2 := it.next; it2 != nil; it2 = auto_cast it2.right {
-			push_stack(&tmp_stack, it2)
+	if size == 0 {
+		tmp_stack: BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
+		big_stack_init(
+			&tmp_stack,
+			^utils.node_tree(utils.tuple(string, xml.Element)),
+			126 << 10,
+			context.temp_allocator,
+		)
+		defer big_stack_delete(&tmp_stack, context.temp_allocator)
+
+		push_stack(&tmp_stack, node)
+
+		size_found := false
+
+		for tmp_stack.push_count > 0 && !size_found {
+			it := get_front_stack(&tmp_stack)
+			pop_stack(&tmp_stack)
+
+			for attr in it.element.second.attribs {
+				if attr.key == "sizeInBits" {
+					size = strconv.atoi(attr.val)
+					size_found = true
+				}
+			}
+			if size_found {continue}
+
+			for it2 := it.next; it2 != nil; it2 = auto_cast it2.right {
+				push_stack(&tmp_stack, it2)
+			}
 		}
 	}
 
@@ -1004,6 +1021,7 @@ check_param_correctness :: proc(
 	node: ^utils.node_tree(utils.tuple(string, xml.Element)),
 	xml_handler: ^xtce.handler,
 	row: ^int,
+	row_start: int,
 ) -> bool {
 	tmp_stack: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
 
@@ -1074,6 +1092,9 @@ check_param_correctness :: proc(
 	if len(entry_list_params) == 0 {
 		return false
 	}
+	if len(restriction_criterias) == 0 {
+		return false
+	}
 
 	restriction_criterias_met: []bool = make(
 		[]bool,
@@ -1081,25 +1102,31 @@ check_param_correctness :: proc(
 		ui_context.per_frame_arena_allocator,
 	)
 	//defer delete(restriction_criterias_met, context.temp_allocator)
-	for restriction, idx in restriction_criterias {
+	restriction_loop: for restriction, idx in restriction_criterias {
+		current_buffer_off = 0
 		for entry in entry_list_params {
 			size := get_param_size(entry.second)
 
-			if current_buffer_off + size >= len(buffer) {
+			//if current_buffer_off + size >= len(buffer) {
+			//	is_container = false
+			//	break
+			//}
+
+			value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
+			if value == -1 {
+				//fmt.println("[ERROR] Bad unpacking value")
 				is_container = false
 				break
 			}
-
-			value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
 			buffer_store: [64]u8
 			buf := strconv.itoa(buffer_store[:], value)
-			//current_buffer_off += size
 
 			if restriction.second == entry.first {
 				if buf != restriction.first {
 					is_container = false
 				} else {
 					restriction_criterias_met[idx] = true
+					continue restriction_loop
 				}
 			}
 
@@ -1118,72 +1145,121 @@ check_param_correctness :: proc(
 
 	current_buffer_off = 0
 	if is_container {
-		{
+		//set_layout_next_row_col(cast(u32)row^ + cast(u32)len(entry_list_params), 3)
+		if row^ >= row_start || true {
+			set_layout_next_row(cast(u32)row^)
+			set_layout_next_column(0)
 			node_name :=
 				len(node.element.second.attribs) > 0 ? node.element.second.attribs[0].val : node.element.first
-			label_name := strings.concatenate({"TM: ", node_name, "#_Sequence_Name_%p"})
+			label_name := strings.concatenate({node_name, "#_Sequence_Name_%d"})
 			style := ui_context.theme.text
 			style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x43302FF))
 			set_next_layout_style(style)
 
-			set_layout_next_font(24, "./data/font/RobotoMonoBold.ttf")
-			label(label_name, cast(^byte)node)
+			set_layout_next_font(26, "./data/font/RobotoMonoBold.ttf")
+			label(label_name, cast(^byte)row)
 			unset_layout_font()
 			ui_pop_style()
 
-			set_next_layout_horizontal()
-
-			// Put values
-
-			// reset layout for next row
 
 			row^ += 1
-			set_next_layout_vertical()
+			set_layout_next_row(cast(u32)row^)
 		}
 
-		for entry in entry_list_params {
-			size := get_param_size(entry.second)
+		current_layout := get_layout_stack()
+		//set_next_layout(
+		//	current_layout.at,
+		//	current_layout.size - 2 * (current_layout.at - current_layout.position),
+		//	cast(u32)len(entry_list_params),
+		//	3,
+		//	.FIXED,
+		//)
+		//set_box_preferred_size({current_layout.size.x / 4, 40})
+		//current_layout = get_layout_stack()
+		//defer utils.pop_stack(&ui_context.layout_stack)
 
-			//if current_buffer_off + size >= len(buffer) {
-			//	break
-			//}
+		if row^ >= row_start || true {
+			set_layout_next_row(cast(u32)row^)
 
-			value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
-			buffer_store: [64]u8
-			buf := strconv.itoa(buffer_store[:], value)
+			for idx := 0;
+			    idx < len(entry_list_params) &&
+			    current_layout.at.y < (current_layout.position.y + current_layout.size.y);
+			    idx += 1 {
+				entry := entry_list_params[idx]
+				size := get_param_size(entry.second)
 
-			// UI Processing
-			{
-				buff: [64]u8
-				label_name := strings.concatenate(
-					{
-						entry.first,
-						" -VALUE: ",
-						buf,
-						"  -SIZE: ",
-						strconv.itoa(buff[:], size),
-						" bits#_name_",
-						strconv.itoa(buff[:], row^),
-						"%p",
-					},
-				)
-				style := ui_context.theme.text
-				style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x02343FF))
-				set_next_layout_style(style)
+				//if current_buffer_off + size >= len(buffer) {
+				//	break
+				//}
 
-				set_layout_next_font(18, "./data/font/RobotoMono.ttf")
-				label(label_name, cast(^byte)entry.second)
-				unset_layout_font()
-				ui_pop_style()
+				value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
+				if value == -1 {
+					break
+				}
+				buffer_store: [64]u8
+				buf := strconv.itoa(buffer_store[:], value)
 
-				set_next_layout_horizontal()
+				// UI Processing
+				{
+					buff: [64]u8
+					label_name := strings.concatenate(
+						{entry.first, "#_name_", strconv.itoa(buff[:], row^), "%d"},
+					)
+					buff2: [64]u8
+					label_value := strings.concatenate(
+						{buf, "#value_", strconv.itoa(buff2[:], row^), "%d"},
+					)
+					buff3: [64]u8
+					buff4: [64]u8
+					label_size := strings.concatenate(
+						{
+							strconv.itoa(buff3[:], size),
+							"#size_",
+							strconv.itoa(buff4[:], row^),
+							"%d",
+						},
+					)
 
-				// Put values
+					style := ui_context.theme.text
+					style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x02343FF))
+					set_next_layout_style(style)
 
-				// reset layout for next row
+					set_next_layout_horizontal()
 
-				row^ += 1
-				set_next_layout_vertical()
+					if row^ % 2 == 0 {
+						box_st := ui_context.theme.background_panel
+						box_st.color_rect00 -= box_st.color_rect00 * 0.3
+						box_st.color_rect01 -= box_st.color_rect01 * 0.3
+						box_st.color_rect10 -= box_st.color_rect10 * 0.3
+						box_st.color_rect11 -= box_st.color_rect11 * 0.3
+						box_st.corner_radius = 0
+						box_st.border_thickness = 0
+						set_next_layout_style(box_st)
+						defer pop_layout_style()
+						make_box_from_key(
+							"#_background_%d",
+							current_layout.at,
+							current_layout.size.x,
+							{.DRAW_RECT, .NO_HOVER, .NO_CLICKABLE},
+							cast(^byte)row,
+						)
+					}
+
+					set_layout_next_font(18, "./data/font/RobotoMono.ttf")
+					set_layout_next_column(0)
+					label(label_name, cast(^byte)row)
+					set_layout_next_column(1)
+					label(label_value, cast(^byte)row)
+					set_layout_next_column(2)
+					label(label_size, cast(^byte)row)
+					unset_layout_font()
+					ui_pop_style()
+
+					// reset layout for next row
+					row^ += 1
+					set_next_layout_vertical()
+					set_layout_next_row(cast(u32)row^)
+				}
 			}
 		}
 	}
@@ -1228,11 +1304,7 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 	layout := get_layout_stack()
 	limit_on_screen := false
 
-	row_start_it := begin_next_layout_scrollable_section(0, layout.box_preferred_size)
-	defer end_next_layout_scrollable_section(0)
-
 	buffer_off := 0
-	row := 0
 
 	node_it := &xml_handler.tree_eval
 	found_container := false
@@ -1241,6 +1313,8 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 	{
 		style := ui_context.theme.text
 		style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x502218FF))
+		//set_layout_next_row(0)
+		//set_layout_next_column(0)
 		set_next_layout_style(style)
 
 		set_layout_next_font(22, "./data/font/0xProtoNerdFontMono-Bold.ttf")
@@ -1254,6 +1328,13 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 
 	to_destroy := make([dynamic]bool, len(app_state.tm_rec_sizes), context.temp_allocator)
 
+	//row_start_it := 0
+	set_next_box_layout({.Y_CENTERED_STRING})
+	defer pop_box_layout()
+	row_start_it := begin_next_layout_scrollable_section(0, {rect.size.x / 4, 40})
+	defer end_next_layout_scrollable_section(0)
+	row := 1
+
 	for buffer_size, idx in app_state.tm_rec_sizes {
 
 		buffer := app_state.tm_rec_buffer[buffer_off:buffer_off + buffer_size]
@@ -1262,7 +1343,13 @@ orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 		found_container = false
 		for it := 0; it < len(app_state.tm_nodes) && !found_container; it += 1 {
 			node := app_state.tm_nodes[it]
-			found_container = check_param_correctness(buffer, node, xml_handler, &row)
+			found_container = check_param_correctness(
+				buffer,
+				node,
+				xml_handler,
+				&row,
+				row_start_it,
+			)
 		}
 
 		if !found_container {
@@ -3292,19 +3379,20 @@ main :: proc() {
 									}
 								case APP_SHOW_FLAGS.SHOW_TM:
 									{
-										set_next_box_layout({.Y_CENTERED_STRING})
+										set_next_box_layout({.Y_CENTERED_STRING, .SCROLLABLE})
 										set_next_layout(
 											p.rect.top_left,
 											p.rect.size,
 											0,
-											0,
+											4,
 											LayoutType.FIXED,
 										)
-										set_box_preferred_size({p.rect.size.x, 35})
+										set_box_preferred_size({p.rect.size.x / 4, 35})
 										if begin(
 											"Telemetry Center#TM_Center%p",
 											pointer = cast(^byte)p,
 										) {
+											//set_next_box_layout({.Y_CENTERED_STRING})
 											orbit_show_tm_received(p.rect, xtce_state_arg.system)
 										}
 									}

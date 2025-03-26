@@ -5015,6 +5015,7 @@ SearchTypeDeclInSystem :: proc(
 	}
 
 	if SpaceSystemNode == nil {
+		fmt.println("[ERROR] System not found")
 		return nil
 	}
 

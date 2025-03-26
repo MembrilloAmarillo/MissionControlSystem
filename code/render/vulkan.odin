@@ -1605,6 +1605,16 @@ add_batch2D_instanced_to_group :: proc(vi: ^VulkanIface, batch: ^Batch2D) {
 	batch.indices.allocator = vi.ArenaAllocator
 	batch.n_instances.allocator = vi.ArenaAllocator
 
+	total_vertex_size := len(batch.vertices) * size_of(Vertex2D)
+	for batch_it in vi.va_2DBufferBatch.bb_2DBatches {
+		total_vertex_size += len(batch_it.vertices) * size_of(Vertex2D)
+	}
+
+	if total_vertex_size > MAX_BUFFER_2D_SIZE_BYTES {
+		end_batch2D_instance_group(vi)
+		idx_batch = vi.va_2DBufferBatch.current_batch_idx
+	}
+
 	if idx_batch == auto_cast len(vi.va_2DBufferBatch.bb_2DBatches) {
 		append(&vi.va_2DBufferBatch.bb_2DBatches, Batch2D{})
 	}
@@ -2097,8 +2107,8 @@ init_glfw :: proc(vi: ^VulkanIface) {
 	//glfw.WindowHint(glfw.DECORATED, false)
 	glfw.WindowHint(glfw.AUTO_ICONIFY, false)
 
-	vi.va_Window.w_width = 1820
-	vi.va_Window.w_height = 860
+	vi.va_Window.w_width = 1920
+	vi.va_Window.w_height = 1080
 	vi.va_Window.w_window = glfw.CreateWindow(
 		vi.va_Window.w_width,
 		vi.va_Window.w_height,
