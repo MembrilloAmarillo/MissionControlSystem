@@ -15,6 +15,7 @@ import "core:strings"
 import "core:sync"
 import "core:thread"
 import "core:time"
+import "core:c"
 
 import "core:encoding/xml"
 
@@ -360,57 +361,26 @@ consume_app_state_events :: proc(state: ^orbitmcs_state) {
 
 // --------------------------------------------------- OrbitMCS ui function -------------------------------------------- //
 
-GetArgumentDeclSizeInBits :: proc(system: ^xtce.space_system, val: string) -> int {
+GetArgumentDeclSizeInBits :: proc(system: ^xtce.space_system, val: string) -> (int, string) {
 	ref_arg_decl, ref_par_decl := xtce.GetArgumentDecl(system, val)
 	size_in_bits := 0
+	name: string
 	buff: [64]u8
-
-	#partial switch arg_t in ref_arg_decl {
-	case xtce.IntegerArgumentType:
-		{
-			size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.integer
-		}
-	case xtce.FloatArgumentType:
-		{
-			size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.t_restriction.integer
-		}
-	case xtce.EnumeratedArgumentType:
-		{
-			#partial switch encod_t in arg_t.base.base.t_choice_0 {
-			case xtce.IntegerDataEncodingType:
-				{
-					size_in_bits = cast(int)encod_t.t_sizeInBits.t_restriction.integer
-				}
-			}
-		}
-	case xtce.ArrayArgumentType:
-		{
-			type_ref := arg_t.base.t_arrayTypeRef.t_restriction.val
-			array_ref, par_ref := xtce.GetArgumentDecl(system, type_ref)
-			#partial switch ref_t in array_ref {
-			case xtce.IntegerArgumentType:
-				{
-					size_in_bits = cast(int)ref_t.base.t_sizeInBits.t_restriction.integer
-				}
-			}
-		}
-	}
-
-	if size_in_bits > 0 {
-		return size_in_bits
-	}
 
 	#partial switch arg_t in ref_par_decl {
 	case xtce.IntegerParameterType:
 		{
 			size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.integer
+			name = arg_t.base.base.base.t_name.t_restriction.val
 		}
 	case xtce.FloatParameterType:
 		{
 			size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.t_restriction.integer
+			name = arg_t.base.base.base.t_name.t_restriction.val
 		}
 	case xtce.EnumeratedParameterType:
 		{
+			name = arg_t.base.base.base.t_name.t_restriction.val
 			#partial switch encod_t in arg_t.base.base.t_choice_0 {
 			case xtce.IntegerDataEncodingType:
 				{
@@ -420,6 +390,7 @@ GetArgumentDeclSizeInBits :: proc(system: ^xtce.space_system, val: string) -> in
 		}
 	case xtce.ArrayParameterType:
 		{
+			name = arg_t.base.base.t_name.t_restriction.val
 			type_ref := arg_t.base.t_arrayTypeRef.t_restriction.val
 			array_ref, par_ref := xtce.GetArgumentDecl(system, type_ref)
 			#partial switch ref_t in array_ref {
@@ -454,7 +425,130 @@ GetArgumentDeclSizeInBits :: proc(system: ^xtce.space_system, val: string) -> in
 			}
 		}
 	}
-	return size_in_bits
+
+
+	if size_in_bits > 0 {
+		return size_in_bits, name
+	}
+
+
+	#partial switch arg_t in ref_arg_decl {
+	case xtce.IntegerArgumentType:
+		{
+			size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.integer
+			name = arg_t.base.base.base.t_name.t_restriction.val
+		}
+	case xtce.FloatArgumentType:
+		{
+			size_in_bits = cast(int)arg_t.base.t_sizeInBits.t_restriction.t_restriction.integer
+			name = arg_t.base.base.base.t_name.t_restriction.val
+		}
+	case xtce.EnumeratedArgumentType:
+		{
+			name = arg_t.base.base.base.t_name.t_restriction.val
+			#partial switch encod_t in arg_t.base.base.t_choice_0 {
+			case xtce.IntegerDataEncodingType:
+				{
+					size_in_bits = cast(int)encod_t.t_sizeInBits.t_restriction.integer
+				}
+			}
+		}
+	case xtce.ArrayArgumentType:
+		{
+			type_ref := arg_t.base.t_arrayTypeRef.t_restriction.val
+			array_ref, par_ref := xtce.GetArgumentDecl(system, type_ref)
+			name = arg_t.base.base.t_name.t_restriction.val
+			#partial switch ref_t in array_ref {
+			case xtce.IntegerArgumentType:
+				{
+					size_in_bits = cast(int)ref_t.base.t_sizeInBits.t_restriction.integer
+				}
+			case xtce.AggregateArgumentType:
+				{
+					data_type := ref_t.base
+
+					aggregate_loop: for member in data_type.t_MemberList.t_Member {
+						agg_size := 0
+						type_arg, type_param := xtce.GetArgumentDecl(
+							system,
+							member.t_typeRef.t_restriction.val,
+						)
+						#partial switch t in type_arg {
+						case xtce.EnumeratedArgumentType:
+							{
+								#partial switch encod_t in t.base.base.t_choice_0 {
+								case xtce.IntegerDataEncodingType:
+									{
+										agg_size =
+										cast(int)encod_t.t_sizeInBits.t_restriction.integer
+									}
+								}
+							}
+						}
+						if agg_size > 0 {
+							size_in_bits += agg_size
+							continue aggregate_loop
+						}
+						#partial switch t in type_param {
+						case xtce.EnumeratedParameterType:
+							{
+								#partial switch encod_t in t.base.base.t_choice_0 {
+								case xtce.IntegerDataEncodingType:
+									{
+										agg_size +=
+										cast(int)encod_t.t_sizeInBits.t_restriction.integer
+									}
+								}
+							}
+						}
+						size_in_bits += agg_size
+					}
+				}
+			}
+		}
+	case xtce.AggregateArgumentType:
+		{
+			data_type := arg_t.base
+			name = arg_t.base.base.t_name.t_restriction.val
+
+			member_loop: for member in data_type.t_MemberList.t_Member {
+				agg_size := 0
+				type_arg, type_param := xtce.GetArgumentDecl(
+					system,
+					member.t_typeRef.t_restriction.val,
+				)
+				#partial switch t in type_arg {
+				case xtce.EnumeratedArgumentType:
+					{
+						#partial switch encod_t in t.base.base.t_choice_0 {
+						case xtce.IntegerDataEncodingType:
+							{
+								agg_size = cast(int)encod_t.t_sizeInBits.t_restriction.integer
+							}
+						}
+					}
+				}
+				if agg_size > 0 {
+					size_in_bits += agg_size
+					continue member_loop
+				}
+				#partial switch t in type_param {
+				case xtce.EnumeratedParameterType:
+					{
+						#partial switch encod_t in t.base.base.t_choice_0 {
+						case xtce.IntegerDataEncodingType:
+							{
+								agg_size += cast(int)encod_t.t_sizeInBits.t_restriction.integer
+							}
+						}
+					}
+				}
+				size_in_bits += agg_size
+			}
+		}
+	}
+
+	return size_in_bits, name
 }
 
 // --------------------------------------------------------------------------------------------------------------------- //
@@ -773,8 +867,8 @@ orbit_show_tc_center :: proc(rect: Rect2D, handler: ^xtce.handler) {
 							break
 						}
 						value_int := strconv.atoi(value)
-						SizeInBits := GetArgumentDeclSizeInBits(
-							system_name,
+						SizeInBits, _ := GetArgumentDeclSizeInBits(
+							&handler.system,
 							arg.t_argumentTypeRef.t_restriction.val,
 						)
 						pack_bits(
@@ -783,7 +877,7 @@ orbit_show_tc_center :: proc(rect: Rect2D, handler: ^xtce.handler) {
 							auto_cast value_int,
 							auto_cast SizeInBits,
 						)
-						fmt.println(SizeInBits)
+						fmt.println(arg.base.t_name.t_restriction.val, SizeInBits)
 						fmt.println(
 							app_state.tcp_client.buffer[:cast(int)math.ceil(
 								cast(f32)app_state.tcp_client.buffer_off / 8,
@@ -833,8 +927,10 @@ get_param_from_ref_entry :: proc(
 	it: ^utils.node_tree(utils.tuple(string, xml.Element)),
 	xml_handler: ^xtce.handler,
 ) -> ^utils.node_tree(utils.tuple(string, xml.Element)) {
-	type_decl_it: ^utils.node_tree(utils.tuple(string, xml.Element))
-	loop: for attr in it.element.second.attribs {
+
+	type_decl_it: ^utils.node_tree(utils.tuple(string, xml.Element)) = it
+
+	loop: for attr in type_decl_it.element.second.attribs {
 		if attr.key == "parameterRef" {
 			type_decl_it = xtce.SearchTypeDeclInSystem("UCF", attr.val, xml_handler)
 
@@ -1104,7 +1200,7 @@ check_param_correctness :: proc(
 	//defer delete(restriction_criterias_met, context.temp_allocator)
 	restriction_loop: for restriction, idx in restriction_criterias {
 		current_buffer_off = 0
-		for entry in entry_list_params {
+		inner_loop: for entry in entry_list_params {
 			size := get_param_size(entry.second)
 
 			//if current_buffer_off + size >= len(buffer) {
@@ -1116,7 +1212,7 @@ check_param_correctness :: proc(
 			if value == -1 {
 				//fmt.println("[ERROR] Bad unpacking value")
 				is_container = false
-				break
+				break inner_loop
 			}
 			buffer_store: [64]u8
 			buf := strconv.itoa(buffer_store[:], value)
@@ -1131,7 +1227,7 @@ check_param_correctness :: proc(
 			}
 
 			if !is_container {
-				break
+				break restriction_loop
 			}
 		}
 	}
@@ -1161,22 +1257,11 @@ check_param_correctness :: proc(
 			unset_layout_font()
 			ui_pop_style()
 
-
 			row^ += 1
 			set_layout_next_row(cast(u32)row^)
 		}
 
 		current_layout := get_layout_stack()
-		//set_next_layout(
-		//	current_layout.at,
-		//	current_layout.size - 2 * (current_layout.at - current_layout.position),
-		//	cast(u32)len(entry_list_params),
-		//	3,
-		//	.FIXED,
-		//)
-		//set_box_preferred_size({current_layout.size.x / 4, 40})
-		//current_layout = get_layout_stack()
-		//defer utils.pop_stack(&ui_context.layout_stack)
 
 		if row^ >= row_start || true {
 			set_layout_next_row(cast(u32)row^)
@@ -1187,10 +1272,6 @@ check_param_correctness :: proc(
 			    idx += 1 {
 				entry := entry_list_params[idx]
 				size := get_param_size(entry.second)
-
-				//if current_buffer_off + size >= len(buffer) {
-				//	break
-				//}
 
 				value := unpack_bits(buffer[:], auto_cast &current_buffer_off, auto_cast size)
 				if value == -1 {
@@ -1268,15 +1349,279 @@ check_param_correctness :: proc(
 }
 
 // ---------------------------------------------------------------------------------------------------------------------- //
+// EXPERIMENTAL
+orbit_show_tm_reception :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
+
+	buffer_off := 0
+	to_destroy := make([dynamic]bool, ui_context.per_frame_arena_allocator)
+
+	showing_info := make([dynamic]utils.tuple(string, int), ui_context.per_frame_arena_allocator);
+
+	for buffer_size, idx in app_state.tm_rec_sizes {
+
+		buffer := app_state.tm_rec_buffer[buffer_off:buffer_off + buffer_size]
+		buffer_off += buffer_size
+		{
+			buffer_processing: for system := &xml_handler.system; system != nil; system = auto_cast system.next {
+				for tm_container in xtce.GetSequenceContainer(system.element) {
+				    tm_info :=  make([dynamic]utils.tuple(string, int), ui_context.per_frame_arena_allocator);
+					defer delete(tm_info);
+                    restriction_criterias := make(
+        				[dynamic]utils.tuple(string, string),
+        				ui_context.per_frame_arena_allocator,
+                    )
+                    defer delete(restriction_criterias)
+					container := tm_container.(xtce.SequenceContainerType)
+					sequence_containers := make(
+						[dynamic]xtce.SequenceContainerType,
+						ui_context.per_frame_arena_allocator,
+					)
+					append(&sequence_containers, container)
+
+					append(&tm_info, utils.tuple(string, int){container.base.base.t_name.t_restriction.val, cast(int)c.INT64_MAX})
+					// ------------------------ base container process ----------------------------
+					//
+					base := container.t_BaseContainer
+					inner: for len(base.t_containerRef.t_restriction.val) > 0 {
+						new_base := xtce.GetBaseContainer(
+							&xml_handler.system,
+							base.t_containerRef.t_restriction.val,
+						)
+						// check if base found
+						//
+						if len(new_base.base.base.t_name.t_restriction.val) > 0 {
+							append(&sequence_containers, new_base)
+							base = new_base.t_BaseContainer
+						} else {break inner}
+					}
+
+					// ------------------------ ref container process ----------------------------
+					//
+					bool_ref_container_entry := true
+					container_entry_list := container.t_EntryList.t_choice_0
+					for bool_ref_container_entry {
+						bool_ref_container_entry = false
+						for entry in container_entry_list {
+							#partial switch ref in entry {
+							case xtce.ContainerRefEntryType:
+								{
+									reference_name := ref.t_containerRef.t_restriction.val
+									ref_sequence := xtce.GetBaseContainer(
+										&xml_handler.system,
+										reference_name,
+									)
+									if len(ref_sequence.base.base.t_name.t_restriction.val) > 0 {
+										append(&sequence_containers, ref_sequence)
+										container_entry_list = ref_sequence.t_EntryList.t_choice_0
+										bool_ref_container_entry = true
+									}
+								}
+							}
+						}
+					}
+
+					// ---------------------- Process this specific sequence container ------------
+					//
+					base_to_seq_containers : type_of(sequence_containers) = make(type_of(sequence_containers), len(sequence_containers), ui_context.per_frame_arena_allocator);
+					copy(base_to_seq_containers[:], sequence_containers[:]);
+					slice.reverse(base_to_seq_containers[:]);
+
+					container_loop: for container_it, idx_container in base_to_seq_containers {
+						// Check and append for restriction criterias of that sequence container
+						//
+						#partial switch restriction in
+							container_it.t_BaseContainer.t_RestrictionCriteria.base.t_choice_0 {
+						case xtce.ComparisonType:
+							{
+								comparison_name :=
+									restriction.base.base.t_parameterRef.t_restriction.val
+								comparison_val := restriction.t_value.val
+								n_depth := strings.count(comparison_name, "/")
+								n_depth += 1
+								path := strings.split_n(
+									comparison_name,
+									"/",
+									n_depth,
+									ui_context.per_frame_arena_allocator,
+								)
+								value: string
+								defer delete(path, ui_context.per_frame_arena_allocator)
+								if len(path) == 0 || len(path) == 1 {
+									delete(path, ui_context.per_frame_arena_allocator)
+									path = make([]string, 1, ui_context.per_frame_arena_allocator)
+									path[0] = comparison_name
+									value = comparison_name
+								} else {
+									value = path[len(path) - 1]
+								}
+								append(
+									&restriction_criterias,
+									utils.tuple(string, string){value, comparison_val},
+								)
+							}
+						case xtce.ComparisonListType:
+							{
+								for comparision in restriction.t_Comparison {
+									comparison_name :=
+										comparision.base.base.t_parameterRef.t_restriction.val
+									comparison_val := comparision.t_value.val
+									n_depth := strings.count(comparison_name, "/")
+									n_depth += 1
+									path := strings.split_n(
+										comparison_name,
+										"/",
+										n_depth,
+										ui_context.per_frame_arena_allocator,
+									)
+									value: string
+									defer delete(path, ui_context.per_frame_arena_allocator)
+									if len(path) == 0 || len(path) == 1 {
+										delete(path, ui_context.per_frame_arena_allocator)
+										path = make([]string, 1, ui_context.per_frame_arena_allocator)
+										path[0] = comparison_name
+										value = comparison_name
+									} else {
+										value = path[len(path) - 1]
+									}
+									append(
+										&restriction_criterias,
+										utils.tuple(string, string) {
+											value,
+											comparison_val,
+										},
+									)
+								}
+							}
+						}
+					}
+					buffer_bit_off := 0
+					n_restrictions := len(restriction_criterias);
+					// ------- Check for type references inside the entry list of this sequence container -----------
+					//
+					tmp_offset_buffer := 0;
+					container_loop_2: for container_it, idx_container in base_to_seq_containers {
+						entry_loop: for entry in container_it.t_EntryList.t_choice_0 {
+							size := 0
+							name: string
+							switch entry_type in entry {
+							case xtce.ParameterRefEntryType:
+								{
+									name = entry_type.t_parameterRef.t_restriction.val
+									type := xtce.GetParamDefinition(&xml_handler.system, name)
+									#partial switch t in type {
+									case xtce.ParameterType:
+										{
+										  dec : string
+											size, dec = GetArgumentDeclSizeInBits(
+												&xml_handler.system,
+												t.t_parameterTypeRef.t_restriction.val,
+											)
+										}
+									}
+								}
+							case xtce.ContainerRefEntryType:
+								// we process this type earlier as it is including another base container to it
+								{
+								}
+							case xtce.StreamSegmentEntryType:
+								{}
+							case xtce.ContainerSegmentRefEntryType:
+								{}
+							case xtce.ParameterSegmentRefEntryType:
+								{}
+							case xtce.IndirectParameterRefEntryType:
+								{}
+							case xtce.ArrayParameterRefEntryType:
+								{}
+							}
+							unpacked_val := unpack_bits(buffer[:], auto_cast &tmp_offset_buffer, auto_cast size)
+							//fmt.println(name, size, unpacked_val);
+							append(&tm_info, utils.tuple(string, int){ name, unpacked_val });
+							for restriction in restriction_criterias {
+								if restriction.first == name && unpacked_val == strconv.atoi(restriction.second) {
+								    n_restrictions -= 1;
+								}
+							}
+						}
+					}
+
+					if n_restrictions == 0 && len(restriction_criterias) > 0 {
+					   append(&showing_info, ..tm_info[:]);
+					   break buffer_processing;
+					}
+					//slice.reverse(sequence_containers[:])
+
+					// here goes actual TM processing
+					//
+
+					clear(&sequence_containers)
+				}
+			}
+		}
+	}
+
+	layout := get_layout_stack()
+
+	// =========== Set UI Title ================= //
+	{
+		style := ui_context.theme.text
+		style.color_text = rgba_to_norm(hex_rgba_to_vec4(0x502218FF))
+		style.border_thickness = 0;
+		//set_layout_next_row(0)
+		//set_layout_next_column(0)
+		set_next_layout_style(style)
+
+		set_layout_next_row_col(auto_cast len(showing_info), 4);
+
+		start_row := begin_next_layout_scrollable_section(auto_cast len(showing_info), {300, 35});
+
+		set_layout_next_font(24, "./data/font/0xProtoNerdFontMono-Bold.ttf")
+		set_layout_next_column(0);
+		set_layout_next_row(0);
+		label("TM LOGGER", cast(^byte)xml_handler)
+		set_layout_next_row(1);
+		unset_layout_font()
+
+		set_layout_next_font(20, "./data/font/RobotoMono.ttf");
+		idx := 1;
+		render_loop : for info in showing_info {
+		  idx += 1;
+		  if idx < start_row {
+			continue render_loop;
+		  }
+			set_layout_next_column(0);
+			if cast(i64)info.second == c.INT64_MAX {
+			 set_layout_next_font(23, "./data/font/RobotoMonoBold.ttf");
+			}
+			make_box_from_key(text = strings.concatenate({info.first, "#_first_col_%d"}), box_flags = {.DRAW_STRING, .NO_HOVER, .NO_CLICKABLE}, key = cast(^byte)&idx);
+			if cast(i64)info.second != c.INT64_MAX {
+    			buff : [64]u8;
+    			second_val := strconv.itoa(buff[:], info.second);
+    			set_layout_next_column(1);
+    			make_box_from_key(text = strings.concatenate({second_val, "#_second_col_%d"}), box_flags = {.DRAW_STRING, .NO_HOVER, .NO_CLICKABLE}, key = cast(^byte)&idx);
+			}
+
+			if cast(i64)info.second == c.INT64_MAX {
+			 unset_layout_font();
+			}
+			set_layout_next_row(auto_cast idx);
+		}
+		unset_layout_font();
+		end_next_layout_scrollable_section(auto_cast len(showing_info));
+		ui_pop_style()
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------------------------- //
 
 //TODO: OPTIMIZE
 //
 orbit_show_tm_received :: proc(rect: Rect2D, xml_handler: ^xtce.handler) {
 
-	@(static) tm_update_node: bool = true
 
 	render.debug_time_add_scope("TM Reception", ui_context.vulkan_iface.ArenaAllocator)
 
+	@(static) tm_update_node: bool = true
 	if tm_update_node {
 		tm_update_node = false
 		tmp_stack: BigStack(^utils.node_tree(utils.tuple(string, xml.Element)))
@@ -3393,7 +3738,8 @@ main :: proc() {
 											pointer = cast(^byte)p,
 										) {
 											//set_next_box_layout({.Y_CENTERED_STRING})
-											orbit_show_tm_received(p.rect, xtce_state_arg.system)
+											//orbit_show_tm_received(p.rect, xtce_state_arg.system)
+											orbit_show_tm_reception(p.rect, xtce_state_arg.system)
 										}
 									}
 								case APP_SHOW_FLAGS.SHOW_DB:

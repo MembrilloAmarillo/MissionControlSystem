@@ -304,13 +304,13 @@ get_default_ui_dark_style :: proc() -> UI_Style {
 
 	style: UI_Style
 
-	liquid_lava := rgba_to_norm(hex_rgba_to_vec4(0xEF6024FF))
-	dark_void := rgba_to_norm(hex_rgba_to_vec4(0x191b1cFF))
+	liquid_lava := rgba_to_norm(hex_rgba_to_vec4(0xD97904FF))
+	dark_void := rgba_to_norm(hex_rgba_to_vec4(0x0D0D0DFF))
 	//dark_void   := rgba_to_norm(hex_rgba_to_vec4(0x000000FF))
-	dusty_grey := rgba_to_norm(hex_rgba_to_vec4(0x878787FF))
-	gluon_grey := rgba_to_norm(hex_rgba_to_vec4(0x1f2223FF))
+	dusty_grey := rgba_to_norm(hex_rgba_to_vec4(0x6E7073FF))
+	gluon_grey := rgba_to_norm(hex_rgba_to_vec4(0x3C3E40FF))
 	slate_grey := rgba_to_norm(hex_rgba_to_vec4(0x262626FF))
-	snow := rgba_to_norm(hex_rgba_to_vec4(0xdddee0FF))
+	snow := rgba_to_norm(hex_rgba_to_vec4(0xF2F2F2FF))
 
 	style.background_panel = {
 		color_border     = liquid_lava,

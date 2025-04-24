@@ -1222,7 +1222,7 @@ validate_xml :: proc(
 					array_type: ArrayParameterType
 					t: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 2000)
 					utils.push_stack(&t, node_it_dst)
-					for t.push_count > 0 {
+					loop: for t.push_count > 0 {
 						n := utils.get_front_stack(&t)
 						utils.pop_stack(&t)
 						//fmt.println(n.element.second)
@@ -1234,6 +1234,7 @@ validate_xml :: proc(
 									n,
 									"DimensionList",
 								)
+								break loop
 							}
 						}
 						for b := n.next; b != nil; b = b.right {
@@ -2296,7 +2297,36 @@ LoadParameterInstanceRefType :: proc(
 ) -> ParameterInstanceRefType {
 	type: ParameterInstanceRefType
 
-	utils.TODO(#procedure)
+
+	stack: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+	utils.push_stack(&stack, node)
+
+	for stack.push_count > 0 {
+		n := utils.get_front_stack(&stack)
+		utils.pop_stack(&stack)
+
+		element := n.element.second
+
+		for attr in element.attribs {
+			if attr.key == "parameterRef" {
+				member := LoadNameReferenceType(n, attr.key)
+				param_ref: ParameterRefType = {
+					t_parameterRef = member,
+				}
+				type.base = param_ref
+			} else if attr.key == "instance" {
+				type.t_instance = xs_long_get_default()
+				type.t_instance.integer = auto_cast strconv.atoi(attr.val)
+			} else if attr.key == "useCalibratedValue" {
+				type.t_useCalibratedValue = xs_boolean_get_default()
+				type.t_useCalibratedValue.val = attr.val == "true" ? true : false
+			}
+		}
+
+		for it := n.next; it != nil; it = it.right {
+			utils.push_stack(&stack, it)
+		}
+	}
 
 	return type
 }
@@ -2967,7 +2997,7 @@ LoadRestrictionCriteriaType :: proc(
 	element: string,
 ) -> RestrictionCriteriaType {
 	type: RestrictionCriteriaType = {
-		base = LoadMatchCriteriaType(node),
+		//base = LoadMatchCriteriaType(node),
 		//t_choice_0 = LoadContainerRefType(node)
 	}
 	stack: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
@@ -2981,7 +3011,12 @@ LoadRestrictionCriteriaType :: proc(
 			c_typeref: ContainerRefType
 			c_typeref.t_containerRef = LoadNameReferenceType(n, "containerRef")
 			type.t_choice_0 = c_typeref
-			break
+			//break
+		}
+
+		if n.element.first == RESTRICTION_CRITERIA_TYPE {
+		  fmt.println("RestrictionCriteria");
+		  type.base = LoadMatchCriteriaType(n);
 		}
 
 		for it := n.next; it != nil; it = it.right {
@@ -3738,6 +3773,33 @@ LoadArrayArgumentType :: proc(
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+LoadAggregateArgumentType :: proc(
+	node: ^utils.node_tree(utils.tuple(string, xml.Element)),
+) -> AggregateArgumentType {
+	type := AggregateArgumentType{}
+
+	stack: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+	utils.push_stack(&stack, node)
+
+	loop: for stack.push_count > 0 {
+		n := utils.get_front_stack(&stack)
+		utils.pop_stack(&stack)
+
+		if n.element.first == AGGREGATE_DATA_TYPE {
+			LoadAggregateDataType(n, &type.base)
+			break loop
+		}
+
+		for it := n.next; it != nil; it = it.right {
+			utils.push_stack(&stack, it)
+		}
+	}
+
+	return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
 LoadArgumentTypeSetType :: proc(
 	node: ^utils.node_tree(utils.tuple(string, xml.Element)),
 ) -> ArgumentTypeSetType {
@@ -4209,6 +4271,8 @@ LoadIntegerDataType :: proc(
 ) {
 	data.base = LoadBaseDataType(node)
 	data.t_ToString = LoadToStringType(node)
+	attr, _ := internal_DepthFirstSearch_Node(node, "sizeInBits")
+	data.t_sizeInBits.t_restriction.integer = auto_cast strconv.atoi(attr.val)
 }
 
 // ----------------------------------------------------------------------------------------------------------------- //
@@ -4393,8 +4457,47 @@ LoadComparisonType :: proc(
 	node: ^utils.node_tree(utils.tuple(string, xml.Element)),
 ) -> ComparisonType {
 	type: ComparisonType = {}
+	type.base = LoadParameterInstanceRefType(node);
 
-	utils.TODO(#procedure)
+	stack: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+	utils.push_stack(&stack, node)
+
+	type_found := false
+	for stack.push_count > 0 {
+		n := utils.get_front_stack(&stack)
+		utils.pop_stack(&stack)
+
+		element := n.element.second
+
+		for attr in element.attribs {
+            switch attr.key {
+            case "comparisonOperator":{
+                type.t_comparisonOperator.t_restriction = xs_string_get_default();
+                type.t_comparisonOperator.t_restriction.val = attr.val;
+                if !slice.contains(t_ComparisonOperatorsType_Enumeration[:], attr.val) {
+                    fmt.println("[ERROR] Comparison operator", attr.val, "not supported by standard");
+                    fmt.println("Use of comparison operators", t_ComparisonOperatorsType_Enumeration);
+                }
+            }
+            case "value":{
+                type.t_value = xs_string_get_default();
+                type.t_value.val = attr.val;
+            }
+            }
+		}
+
+		for it := n.next; it != nil; it = it.right {
+			utils.push_stack(&stack, it)
+		}
+	}
+
+	if len(type.t_comparisonOperator.t_restriction.val) == 0 {
+	   type.t_comparisonOperator.t_restriction.val = "==";
+	}
+
+	if len(type.t_value.val) == 0 {
+        fmt.println("[ERROR] ComparisonType has no value specified in node", node);
+	}
 
 	return type
 }
@@ -4406,7 +4509,26 @@ LoadComparisonListType :: proc(
 ) -> ComparisonListType {
 	type: ComparisonListType = {}
 
-	utils.TODO(#procedure)
+	stack: utils.Stack(^utils.node_tree(utils.tuple(string, xml.Element)), 4096)
+	utils.push_stack(&stack, node)
+
+	type_found := false
+	for stack.push_count > 0 {
+		n := utils.get_front_stack(&stack)
+		utils.pop_stack(&stack)
+
+		element := n.element.second
+
+		if n.element.first == COMPARISON_TYPE {
+		    comparison := LoadComparisonType(n);
+			append(&type.t_Comparison, comparison);
+		}
+
+		for it := n.next; it != nil; it = it.right {
+			utils.push_stack(&stack, it)
+		}
+	}
+
 
 	return type
 }
@@ -4478,30 +4600,32 @@ LoadMatchCriteriaType :: proc(
 		if type_found {
 			break
 		}
-		for at in element.attribs {
-			switch at.key {
-			case "Comparison":
-				{
-					type.t_choice_0 = LoadComparisonType(n)
-					type_found = true
-				}
-			case "ComparisonList":
-				{
-					type.t_choice_0 = LoadComparisonListType(n)
-					type_found = true
-				}
-			case "BooleanExpresion":
-				{
-					type.t_choice_0 = LoadBooleanExpressionType(n)
-					type_found = true
-				}
-			case "CustomAlgorithm":
-				{
-					type.t_choice_0 = LoadInputAlgorithmType(n)
-					type_found = true
-				}
-			}
-		}
+
+        switch n.element.first {
+        case COMPARISON_TYPE:
+     			{
+        				type.t_choice_0 = LoadComparisonType(n)
+        				type_found = true
+     			}
+        case COMPARISON_LIST_TYPE:
+     			{
+        				type.t_choice_0 = LoadComparisonListType(n)
+        				type_found = true
+     			}
+        case BOOLEAN_EXPRESSION_TYPE:
+     			{
+        				type.t_choice_0 = LoadBooleanExpressionType(n)
+        				type_found = true
+     			}
+        case INPUT_ALGORITHM_TYPE:
+     			{
+        				type.t_choice_0 = LoadInputAlgorithmType(n)
+        				type_found = true
+     			}
+        }
+
+    		fmt.println("[MATCH CRITERIA]", type.t_choice_0)
+      //}
 
 		for it := n.next; it != nil; it = it.right {
 			utils.push_stack(&stack, it)
@@ -4602,6 +4726,78 @@ GetSpaceSystemVersion :: proc(system: ^SpaceSystemType) -> string {
 
 // ----------------------------------------------------------------------------------------------------------------- //
 
+GetBaseContainer :: proc(system: ^space_system, ref: string) -> SequenceContainerType {
+	type: SequenceContainerType = {}
+
+	if len(ref) == 0 {
+		return type
+	}
+
+	sys := system
+
+	n_depth := strings.count(ref, "/")
+	n_depth += 1 // if we have /UCF/something, we have to split it in three: ["", UCF, something]
+	path := strings.split_n(ref, "/", n_depth, context.temp_allocator)
+	defer delete(path, context.temp_allocator)
+	if len(path) == 0 || len(path) == 1 {
+		delete(path, context.temp_allocator)
+		path = make([]string, 1, context.temp_allocator)
+		path[0] = ref
+	}
+
+	last_ss_path: string
+
+	if n_depth >= 3 { 	// /UCF/something --> ["", "UCF", "something"]
+		l := len(path)
+		last_ss_path = path[n_depth - 2]
+	}
+
+	if strings.contains(ref, "/") {
+		for ; sys.parent != nil; sys = auto_cast sys.parent {}
+	}
+
+	{
+		tmp_stack: utils.Stack(^space_system, 256)
+		utils.push_stack(&tmp_stack, auto_cast sys)
+
+		depth_path := 0
+		// if we have /UCF/something, we have to split it in three: ["", UCF, something],
+		// sow we start checking from index 1
+		if len(path[0]) == 0 {
+			depth_path = 1
+		}
+		found := false
+		for tmp_stack.push_count > 0 && !found {
+			ss := utils.get_front_stack(&tmp_stack)
+			utils.pop_stack(&tmp_stack)
+
+			// we have readched to the system we needed to
+			// e.x. /UCF/EPS/eps_arg_1
+			//
+			if ss.element.base.t_name.t_restriction.val == last_ss_path || len(path) == 1 {
+				for sequence in GetSequenceContainer(ss.element) {
+					container := sequence.(SequenceContainerType)
+					sequence_name := path[len(path) - 1]
+
+					if container.base.base.t_name.t_restriction.val == sequence_name {
+						type = container
+						found = true
+						break
+					}
+				}
+			}
+
+			if ss.element.base.t_name.t_restriction.val == path[depth_path] {
+				depth_path += 1
+				for it := ss.next; it != nil; it = it.right {
+					utils.push_stack(&tmp_stack, auto_cast it)
+				}
+			}
+		}
+	}
+
+	return type
+}
 // NOTE: Maybe it should also output the new system which it enters
 //
 GetBaseMetaCommand :: proc(system: ^space_system, ref: string) -> MetaCommandType {
@@ -4663,6 +4859,89 @@ GetBaseMetaCommand :: proc(system: ^space_system, ref: string) -> MetaCommandTyp
 								found = true
 								break
 							}
+						}
+					}
+				}
+			}
+
+			if ss.element.base.t_name.t_restriction.val == path[depth_path] {
+				depth_path += 1
+				for it := ss.next; it != nil; it = it.right {
+					utils.push_stack(&tmp_stack, auto_cast it)
+				}
+			}
+		}
+	}
+
+	return type
+}
+
+// ----------------------------------------------------------------------------------------------------------------- //
+
+GetParamDefinition :: proc(system: ^space_system, ref: string) -> t_ParameterSetType0 {
+	type: t_ParameterSetType0
+
+	if len(ref) == 0 {
+		return type
+	}
+
+	sys := system
+
+	n_depth := strings.count(ref, "/")
+	n_depth += 1 // if we have /UCF/something, we have to split it in three: ["", UCF, something]
+	path := strings.split_n(ref, "/", n_depth, context.temp_allocator)
+	defer delete(path, context.temp_allocator)
+	if len(path) == 0 || len(path) == 1 {
+		delete(path, context.temp_allocator)
+		path = make([]string, 1, context.temp_allocator)
+		path[0] = ref
+	}
+
+	last_ss_path: string
+
+	if n_depth >= 3 { 	// /UCF/something --> ["", "UCF", "something"]
+		l := len(path)
+		last_ss_path = path[n_depth - 2]
+	}
+
+	if strings.contains(ref, "/") {
+		for ; sys.parent != nil; sys = auto_cast sys.parent {}
+	}
+
+	{
+		tmp_stack: utils.Stack(^space_system, 256)
+		utils.push_stack(&tmp_stack, auto_cast sys)
+
+		depth_path := 0
+		// if we have /UCF/something, we have to split it in three: ["", UCF, something],
+		// sow we start checking from index 1
+		if len(path[0]) == 0 {
+			depth_path = 1
+		}
+		found := false
+		loop: for tmp_stack.push_count > 0 && !found {
+			ss := utils.get_front_stack(&tmp_stack)
+			utils.pop_stack(&tmp_stack)
+
+			// we have readched to the system we needed to
+			// e.x. /UCF/EPS/eps_arg_1
+			//
+			if ss.element.base.t_name.t_restriction.val == last_ss_path || len(path) == 1 {
+				argument := path[len(path) - 1]
+
+				for ParamType in ss.element.t_TelemetryMetaData.t_ParameterSet.t_choice_0 {
+					#partial switch param in ParamType {
+					case ParameterType:
+						{
+							if param.base.t_name.t_restriction.val == argument {
+								type = ParamType
+								found = true
+								break loop
+							}
+						}
+					case ParameterRefType:
+						{
+							// I think I dont need this
 						}
 					}
 				}

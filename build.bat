@@ -14,16 +14,16 @@ pushd .
 cd code
 
 IF "%1" == "debug" (
-	odin build . -debug -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
+	..\Odin\odin build . -debug -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
  echo "Debug mode enabled"
 ) ELSE IF "%1" == "sanitize" (
-	odin build . -sanitize:address -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
+	..\Odin\odin build . -sanitize:address -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
  echo "Sanitize mode enabled"
 ) ELSE IF "%1" == "release" (
-	odin build . -o:speed -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
+	..\Odin\odin build . -o:speed -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
  echo "Release mode enabled"
 ) ELSE (
-	odin build . -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
+	..\Odin\odin build . -collection:simple_hash=.\simple_hash -collection:xtce_parser=.\xtce_parser
  echo "No optimization mode enabled"
 )
 

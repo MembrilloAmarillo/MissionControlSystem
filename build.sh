@@ -10,7 +10,7 @@ pushd .
 
 cd ./code
 
-compiler=~/devel/Odin/odin
+compiler=../Odin/odin
 collection="-collection:simple_hash=simple_hash -collection:xtce_parser=xtce_parser"
 compilation_mode=" build ."
 output_name="-out:OrbitMCS"
